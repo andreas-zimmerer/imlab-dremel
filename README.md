@@ -72,5 +72,23 @@ Then use the parsed schema to generate C++ code with a schema compiler:
 * [Schema compiler H](include/imlab/schemac/schema_compiler.h)
 * [Schema compiler CC](tools/schemac/schema_compiler.cc)
 
+## Task 3
+
+* Implement the [Delivery](data/delivery.sql) transaction.
+* Execute 1 million transactions [composed of a mix](tools/imlabdb.cc) of [New Order](data/new_order.sql) (90%) and [Delivery](data/delivery.sql) (10%) transactions.
+* Implement [this analytical query](data/olap.sql) using STL datastructures for the join implementation.<br/>
+    * Do not use any existing existing index structures.
+    * Follow [this interface](include/imlab/database.h).
+    * The result of the query [our dataset](https://db.in.tum.de/teaching/ws1718/imlab/tpcc_5w.tar.gz) should be *1367872001.25*.
+* Execute OLTP and OLAP queries concurrently.
+    * Execute 1 million transactions of the NewOrder/Delivery mix.
+    * Run the analytical concurrently using the **fork** system call (in [imlabdb.cc](tools/imlabdb.cc)).
+    * Whenever an analytical query is finished, create a new snapshot using fork, such that exactly one snapshot and query is active at any given time.
+    * [This example](data/fork_example.cc) for using fork may be helpful.
+* Implement your own lazy hash table using [this interface](include/imlab/infra/hash_table.h).
+* Measure the runtimes of the analytical query with the STL datastructure and your hash table.
+
+How many transactions per second can your implementation execute?
+
 Make sure your builds are not failing! <br/>
 *Left Sidebar > CI /CD > Pipelines*

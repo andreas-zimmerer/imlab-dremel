@@ -380,6 +380,13 @@ void Database::NewOrder(
     }
 }
 
+void Database::Delivery(
+        Integer w_id,
+        Integer o_carrier_id,
+        Timestamp datetime) {
+    // TODO
+}
+
 template <> size_t Database::Size<tpcc::kcustomer>()    { return customerTable.get_size(); }
 template <> size_t Database::Size<tpcc::kdistrict>()    { return districtTable.get_size(); }
 template <> size_t Database::Size<tpcc::khistory>()     { return historyTable.get_size(); }

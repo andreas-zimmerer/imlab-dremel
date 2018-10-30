@@ -50,6 +50,17 @@ class Database {
         std::array<Integer, 15> &qty,
         Timestamp datetime);
 
+    // Create a delivery
+    void Delivery(
+        Integer w_id,
+        Integer o_carrier_id,
+        Timestamp datetime);
+
+    // Run an analytical query with STL datastructures
+    Numeric<12, 2> AnalyticalQuerySTL();
+    // Run an analytical query with a lazy hash table
+    Numeric<12, 2> AnalyticalQueryLHT();
+
     // Returns the number of tuples in a relation.
     template <tpcc::Relation> size_t Size();
 
