@@ -1,0 +1,14 @@
+" ---------------------------------------------------------------------------
+" IMLAB
+" ---------------------------------------------------------------------------
+
+" Indentation
+set expandtab
+set smarttab
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+
+" Plugins
+let g:ycm_auto_trigger=1
+
