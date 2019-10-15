@@ -1,7 +1,7 @@
 FROM ubuntu:latest AS build
 
 RUN apt-get update && apt-get install -y clang-6.0 llvm-6.0 cmake ninja-build python3 git
-ENV CXX /usr/bin/clang-6.0
+ENV CXX /usr/bin/clang++-6.0
 
 COPY . /imlabdb
 RUN mkdir -p /imlabdb/docker-build
