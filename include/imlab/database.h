@@ -14,116 +14,116 @@
 
 namespace imlab {
 
-    struct WarehouseTable {
-        std::vector<Integer> w_id;
-        std::vector<Varchar<10>> w_name;
-        std::vector<Varchar<20>> w_street_1;
-        std::vector<Varchar<20>> w_street_2;
-        std::vector<Varchar<20>> w_city;
-        std::vector<Varchar<2>> w_state;
-        std::vector<Char<9>> w_zip;
-        std::vector<Numeric<4, 4>> w_tax;
-        std::vector<Numeric<12, 2>> w_ytd;
-    };
-    struct DistrictTable {
-        std::vector<Integer> d_id;
-        std::vector<Integer> d_w_id;
-        std::vector<Varchar<10>> d_name;
-        std::vector<Varchar<20>> d_street_1;
-        std::vector<Varchar<20>> d_street_2;
-        std::vector<Varchar<20>> d_city;
-        std::vector<Char<2>> d_state;
-        std::vector<Char<9>> d_zip;
-        std::vector<Numeric<4,4>> d_tax;
-        std::vector<Numeric<12,2>> d_ytd;
-        std::vector<Integer> d_next_o_id;
-    };
-    struct CustomerTable {
-        std::vector<Integer> c_id;
-        std::vector<Integer> c_d_id;
-        std::vector<Integer> c_w_id;
-        std::vector<Varchar<16>> c_first;
-        std::vector<Char<2>> c_middle;
-        std::vector<Varchar<16>> c_last;
-        std::vector<Varchar<20>> c_street_1;
-        std::vector<Varchar<20>> c_street_2;
-        std::vector<Varchar<20>> c_city;
-        std::vector<Char<2>> c_state;
-        std::vector<Char<9>> c_zip;
-        std::vector<Char<16>> c_phone;
-        std::vector<Timestamp> c_since;
-        std::vector<Char<2>> c_credit;
-        std::vector<Numeric<12,2>> c_credit_lim;
-        std::vector<Numeric<4,4>> c_discount;
-        std::vector<Numeric<12,2>> c_balance;
-        std::vector<Numeric<12,2>> c_ytd_paymenr;
-        std::vector<Numeric<4,0>> c_payment_cnt;
-        std::vector<Numeric<4,0>> c_delivery_cnt;
-        std::vector<Varchar<500>> c_data;
-    };
-    struct HistoryTable {
-        std::vector<Integer> h_c_id;
-        std::vector<Integer> h_c_d_id;
-        std::vector<Integer> h_c_w_id;
-        std::vector<Integer> h_d_id;
-        std::vector<Integer> h_w_id;
-        std::vector<Timestamp> h_date;
-        std::vector<Numeric<6,2>> h_amount;
-        std::vector<Varchar<24>> h_data;
-    };
-    struct NeworderTable {
-        std::vector<Integer> no_o_id;
-        std::vector<Integer> no_d_id;
-        std::vector<Integer> no_w_id;
-    };
-    struct OrderTable {
-        std::vector<Integer> o_id;
-        std::vector<Integer> o_d_id;
-        std::vector<Integer> o_w_id;
-        std::vector<Integer> o_c_id;
-        std::vector<Timestamp> o_entry_d;
-        std::vector<Integer> o_carrier_id;
-        std::vector<Numeric<2,0>> o_ol_cnt;
-        std::vector<Numeric<1,0>> o_all_local;
-    };
-    struct OrderlineTable {
-        std::vector<Integer> ol_o_id;
-        std::vector<Integer> ol_d_id;
-        std::vector<Integer> ol_w_id;
-        std::vector<Integer> ol_number;
-        std::vector<Integer> ol_i_id;
-        std::vector<Integer> ol_supply_w_id;
-        std::vector<Timestamp> ol_delivery_d;
-        std::vector<Numeric<2,0>> ol_quantity;
-        std::vector<Numeric<6,2>> ol_amount;
-        std::vector<Char<24>> ol_dist_info;
-    };
-    struct ItemTable {
-        std::vector<Integer> i_id;
-        std::vector<Integer> i_im_id;
-        std::vector<Varchar<24>> i_name;
-        std::vector<Numeric<5,2>> i_price;
-        std::vector<Varchar<50>> i_data;
-    };
-    struct StockTable {
-        std::vector<Integer> s_i_id;
-        std::vector<Integer> s_w_id;
-        std::vector<Numeric<4,0>> s_quantity;
-        std::vector<Char<24>> s_dist_01;
-        std::vector<Char<24>> s_dist_02;
-        std::vector<Char<24>> s_dist_03;
-        std::vector<Char<24>> s_dist_04;
-        std::vector<Char<24>> s_dist_05;
-        std::vector<Char<24>> s_dist_06;
-        std::vector<Char<24>> s_dist_07;
-        std::vector<Char<24>> s_dist_08;
-        std::vector<Char<24>> s_dist_09;
-        std::vector<Char<24>> s_dist_10;
-        std::vector<Numeric<8,0>> s_ytd;
-        std::vector<Numeric<4,0>> s_order_cnt;
-        std::vector<Numeric<4,0>> s_remote_cnt;
-        std::vector<Varchar<50>> s_data;
-    };
+struct WarehouseTable {
+    std::vector<Integer> w_id;
+    std::vector<Varchar<10>> w_name;
+    std::vector<Varchar<20>> w_street_1;
+    std::vector<Varchar<20>> w_street_2;
+    std::vector<Varchar<20>> w_city;
+    std::vector<Varchar<2>> w_state;
+    std::vector<Char<9>> w_zip;
+    std::vector<Numeric<4, 4>> w_tax;
+    std::vector<Numeric<12, 2>> w_ytd;
+};
+struct DistrictTable {
+    std::vector<Integer> d_id;
+    std::vector<Integer> d_w_id;
+    std::vector<Varchar<10>> d_name;
+    std::vector<Varchar<20>> d_street_1;
+    std::vector<Varchar<20>> d_street_2;
+    std::vector<Varchar<20>> d_city;
+    std::vector<Char<2>> d_state;
+    std::vector<Char<9>> d_zip;
+    std::vector<Numeric<4, 4>> d_tax;
+    std::vector<Numeric<12, 2>> d_ytd;
+    std::vector<Integer> d_next_o_id;
+};
+struct CustomerTable {
+    std::vector<Integer> c_id;
+    std::vector<Integer> c_d_id;
+    std::vector<Integer> c_w_id;
+    std::vector<Varchar<16>> c_first;
+    std::vector<Char<2>> c_middle;
+    std::vector<Varchar<16>> c_last;
+    std::vector<Varchar<20>> c_street_1;
+    std::vector<Varchar<20>> c_street_2;
+    std::vector<Varchar<20>> c_city;
+    std::vector<Char<2>> c_state;
+    std::vector<Char<9>> c_zip;
+    std::vector<Char<16>> c_phone;
+    std::vector<Timestamp> c_since;
+    std::vector<Char<2>> c_credit;
+    std::vector<Numeric<12, 2>> c_credit_lim;
+    std::vector<Numeric<4, 4>> c_discount;
+    std::vector<Numeric<12, 2>> c_balance;
+    std::vector<Numeric<12, 2>> c_ytd_paymenr;
+    std::vector<Numeric<4, 0>> c_payment_cnt;
+    std::vector<Numeric<4, 0>> c_delivery_cnt;
+    std::vector<Varchar<500>> c_data;
+};
+struct HistoryTable {
+    std::vector<Integer> h_c_id;
+    std::vector<Integer> h_c_d_id;
+    std::vector<Integer> h_c_w_id;
+    std::vector<Integer> h_d_id;
+    std::vector<Integer> h_w_id;
+    std::vector<Timestamp> h_date;
+    std::vector<Numeric<6, 2>> h_amount;
+    std::vector<Varchar<24>> h_data;
+};
+struct NeworderTable {
+    std::vector<Integer> no_o_id;
+    std::vector<Integer> no_d_id;
+    std::vector<Integer> no_w_id;
+};
+struct OrderTable {
+    std::vector<Integer> o_id;
+    std::vector<Integer> o_d_id;
+    std::vector<Integer> o_w_id;
+    std::vector<Integer> o_c_id;
+    std::vector<Timestamp> o_entry_d;
+    std::vector<Integer> o_carrier_id;
+    std::vector<Numeric<2, 0>> o_ol_cnt;
+    std::vector<Numeric<1, 0>> o_all_local;
+};
+struct OrderlineTable {
+    std::vector<Integer> ol_o_id;
+    std::vector<Integer> ol_d_id;
+    std::vector<Integer> ol_w_id;
+    std::vector<Integer> ol_number;
+    std::vector<Integer> ol_i_id;
+    std::vector<Integer> ol_supply_w_id;
+    std::vector<Timestamp> ol_delivery_d;
+    std::vector<Numeric<2, 0>> ol_quantity;
+    std::vector<Numeric<6, 2>> ol_amount;
+    std::vector<Char<24>> ol_dist_info;
+};
+struct ItemTable {
+    std::vector<Integer> i_id;
+    std::vector<Integer> i_im_id;
+    std::vector<Varchar<24>> i_name;
+    std::vector<Numeric<5, 2>> i_price;
+    std::vector<Varchar<50>> i_data;
+};
+struct StockTable {
+    std::vector<Integer> s_i_id;
+    std::vector<Integer> s_w_id;
+    std::vector<Numeric<4, 0>> s_quantity;
+    std::vector<Char<24>> s_dist_01;
+    std::vector<Char<24>> s_dist_02;
+    std::vector<Char<24>> s_dist_03;
+    std::vector<Char<24>> s_dist_04;
+    std::vector<Char<24>> s_dist_05;
+    std::vector<Char<24>> s_dist_06;
+    std::vector<Char<24>> s_dist_07;
+    std::vector<Char<24>> s_dist_08;
+    std::vector<Char<24>> s_dist_09;
+    std::vector<Char<24>> s_dist_10;
+    std::vector<Numeric<8, 0>> s_ytd;
+    std::vector<Numeric<4, 0>> s_order_cnt;
+    std::vector<Numeric<4, 0>> s_remote_cnt;
+    std::vector<Varchar<50>> s_data;
+};
 
 
 class Database {
