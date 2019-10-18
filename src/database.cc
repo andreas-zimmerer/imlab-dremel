@@ -57,14 +57,14 @@ void Database::NewOrder(
     // TODO
 }
 
-template <> size_t Database::Size<tpcc::kCustomer>()    { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kDistrict>()    { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kHistory>()     { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kItem>()        { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kNewOrder>()    { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kOrder>()       { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kOrderLine>()   { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kStock>()       { /* TODO */ return 0; }
-template <> size_t Database::Size<tpcc::kWarehouse>()   { /* TODO */ return 0; }
+template <> size_t Database::Size<tpcc::kCustomer>()    { return customerTable.c_id.size(); }
+template <> size_t Database::Size<tpcc::kDistrict>()    { return districtTable.d_id.size(); }
+template <> size_t Database::Size<tpcc::kHistory>()     { return historyTable.h_c_id.size(); }
+template <> size_t Database::Size<tpcc::kItem>()        { return itemTable.i_id.size(); }
+template <> size_t Database::Size<tpcc::kNewOrder>()    { return neworderTable.no_o_id.size(); }
+template <> size_t Database::Size<tpcc::kOrder>()       { return orderTable.o_id.size(); }
+template <> size_t Database::Size<tpcc::kOrderLine>()   { return orderlineTable.ol_o_id.size(); }
+template <> size_t Database::Size<tpcc::kStock>()       { return stockTable.s_i_id.size(); }
+template <> size_t Database::Size<tpcc::kWarehouse>()   { return warehouseTable.w_id.size(); }
 
 }  // namespace imlab
