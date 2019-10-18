@@ -38,7 +38,35 @@ void Database::LoadWarehouse(std::istream &in) {
 }
 
 void Database::LoadDistrict(std::istream &in) {
-    // TODO
+    std::string tmp = "";
+
+    while(in.peek() != EOF) {
+        std::getline(in, tmp,'|');
+        auto d_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_w_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_name = Varchar<10>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_street_1 = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_street_2 = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_city = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_state = Char<2>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_zip = Char<9>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_tax = Numeric<4, 4>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto d_ytd = Numeric<12, 2>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'\n');
+        auto d_next_o_id = Integer::castString(tmp.c_str(), tmp.size());
+
+        districtTable.append_row(d_id, d_w_id, d_name, d_street_1, d_street_2, d_city,
+                                  d_state, d_zip, d_tax, d_ytd, d_next_o_id);
+    }
 }
 
 void Database::LoadCustomer(std::istream &in) {
@@ -50,7 +78,18 @@ void Database::LoadHistory(std::istream &in) {
 }
 
 void Database::LoadNewOrder(std::istream &in) {
-    // TODO
+    std::string tmp = "";
+
+    while(in.peek() != EOF) {
+        std::getline(in, tmp,'|');
+        auto no_o_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto no_d_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'\n');
+        auto no_w_id = Integer::castString(tmp.c_str(), tmp.size());
+
+        noworderTable.append_row(no_o_id, no_d_id, no_w_id);
+    }
 }
 
 void Database::LoadOrder(std::istream &in) {
@@ -62,7 +101,22 @@ void Database::LoadOrderLine(std::istream &in) {
 }
 
 void Database::LoadItem(std::istream &in) {
-    // TODO
+    std::string tmp = "";
+
+    while(in.peek() != EOF) {
+        std::getline(in, tmp,'|');
+        auto i_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto i_im_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto i_name = Varchar<24>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto i_price = Numeric<5, 2>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'\n');
+        auto i_data = Varchar<50>::castString(tmp.c_str(), tmp.size());
+
+        itemTable.append_row(i_id, i_im_id, i_name, i_price, i_data);
+    }
 }
 
 void Database::LoadStock(std::istream& in) {

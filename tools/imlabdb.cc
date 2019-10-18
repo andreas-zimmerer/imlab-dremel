@@ -55,6 +55,12 @@ void RandomNewOrder(imlab::Database &db) {
 }  // namespace
 
 int main(int argc, char *argv[]) {
-    // TODO
+    // TODO load input files
+
+    // TODO print number of tuples in tables
+
+    // TODO Run NewOrder 1000000 times
+
+    // TODO print number of tuples in tables
     return 0;
 }

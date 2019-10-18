@@ -60,6 +60,8 @@ struct WarehouseTable {
     }
 };
 struct DistrictTable {
+    uint64_t size = 0;
+
     std::vector<Integer> d_id;
     std::vector<Integer> d_w_id;
     std::vector<Varchar<10>> d_name;
@@ -73,8 +75,45 @@ struct DistrictTable {
     std::vector<Integer> d_next_o_id;
 
     std::unordered_map<Key<Integer, Integer>, uint64_t> index_prim_key;
+
+    void append_row(Integer d_id_val, Integer d_w_id_val, Varchar<10> d_name_val,
+            Varchar<20> d_street_1_val, Varchar<20> d_street_2_val, Varchar<20> d_city_val,
+            Char<2> d_state_val, Char<9> d_zip_val, Numeric<4, 4> d_tax_val,
+            Numeric<12, 2> d_ytd_val, Integer d_next_o_id_val) {
+
+        d_id.push_back(d_id_val);
+        d_w_id.push_back(d_w_id_val);
+        d_name.push_back(d_name_val);
+        d_street_1.push_back(d_street_1_val);
+        d_street_2.push_back(d_street_2_val);
+        d_city.push_back(d_city_val);
+        d_state.push_back(d_state_val);
+        d_zip.push_back(d_zip_val);
+        d_tax.push_back(d_tax_val);
+        d_ytd.push_back(d_ytd_val);
+        d_next_o_id.push_back(d_next_o_id_val);
+
+        index_prim_key[Key(d_w_id_val, d_id_val)] = size;
+
+        size++;
+
+        assert(d_id.size() == size
+        && d_w_id.size() == size
+        && d_name.size() == size
+        && d_street_1.size() == size
+        && d_street_2.size() == size
+        && d_city.size() == size
+        && d_state.size() == size
+        && d_zip.size() == size
+        && d_tax.size() == size
+        && d_ytd.size() == size
+        && d_next_o_id.size() == size
+        && index_prim_key.size() == size);
+    }
 };
 struct CustomerTable {
+    uint64_t size = 0;
+
     std::vector<Integer> c_id;
     std::vector<Integer> c_d_id;
     std::vector<Integer> c_w_id;
@@ -101,6 +140,8 @@ struct CustomerTable {
     std::unordered_map<Key<Integer, Integer, Varchar<16>, Varchar<16>>, uint64_t> index_wdl;
 };
 struct HistoryTable {
+    uint64_t size = 0;
+
     std::vector<Integer> h_c_id;
     std::vector<Integer> h_c_d_id;
     std::vector<Integer> h_c_w_id;
@@ -111,13 +152,33 @@ struct HistoryTable {
     std::vector<Varchar<24>> h_data;
 };
 struct NeworderTable {
+    uint64_t size = 0;
+
     std::vector<Integer> no_o_id;
     std::vector<Integer> no_d_id;
     std::vector<Integer> no_w_id;
 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key;
+
+    void append_row(Integer no_o_id_val, Integer no_d_id_val, Integer no_w_id_val) {
+
+        no_o_id.push_back(no_o_id_val);
+        no_d_id.push_back(no_d_id_val);
+        no_w_id.push_back(no_w_id_val);
+
+        index_prim_key[Key(no_o_id_val, no_d_id_val, no_w_id_val)] = size;
+
+        size++;
+
+        assert(no_o_id.size() == size
+        && no_d_id.size() == size
+        && no_w_id.size() == size
+        && index_prim_key.size() == size);
+    }
 };
 struct OrderTable {
+    uint64_t size = 0;
+
     std::vector<Integer> o_id;
     std::vector<Integer> o_d_id;
     std::vector<Integer> o_w_id;
@@ -131,6 +192,8 @@ struct OrderTable {
     std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_wdc;
 };
 struct OrderlineTable {
+    uint64_t size = 0;
+
     std::vector<Integer> ol_o_id;
     std::vector<Integer> ol_d_id;
     std::vector<Integer> ol_w_id;
@@ -145,6 +208,8 @@ struct OrderlineTable {
     std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_prim_key;
 };
 struct ItemTable {
+    uint64_t size = 0;
+
     std::vector<Integer> i_id;
     std::vector<Integer> i_im_id;
     std::vector<Varchar<24>> i_name;
@@ -152,8 +217,31 @@ struct ItemTable {
     std::vector<Varchar<50>> i_data;
 
     std::unordered_map<Key<Integer>, uint64_t> index_prim_key;
+
+    void append_row(Integer i_id_val, Integer i_im_id_val, Varchar<24> i_name_val,
+            Numeric<5, 2> i_price_val, Varchar<50> i_data_val) {
+
+        i_id.push_back(i_id_val);
+        i_im_id.push_back(i_im_id_val);
+        i_name.push_back(i_name_val);
+        i_price.push_back(i_price_val);
+        i_data.push_back(i_data_val);
+
+        index_prim_key[Key(i_id_val)] = size;
+
+        size++;
+
+        assert(i_id.size() == size
+        && i_im_id.size() == size
+        && i_name.size() == size
+        && i_price.size() == size
+        && i_data.size() == size
+        && index_prim_key.size() == size);
+    }
 };
 struct StockTable {
+    uint64_t size = 0;
+
     std::vector<Integer> s_i_id;
     std::vector<Integer> s_w_id;
     std::vector<Numeric<4, 0>> s_quantity;
