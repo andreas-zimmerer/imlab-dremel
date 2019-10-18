@@ -7,6 +7,7 @@
 #include "imlab/infra/error.h"
 #include "imlab/infra/types.h"
 #include "../include/imlab/infra/types.h"
+#include "../include/imlab/database.h"
 
 namespace imlab {
 
@@ -295,6 +296,8 @@ void Database::NewOrder(
         std::array<Integer, 15> &qty,
         Timestamp datetime) {
 
+    auto t = warehouseTable.index_prim_key.at(Key(w_id));
+
     auto w_tax = warehouseTable.w_tax[warehouseTable.index_prim_key.at(Key(w_id))];
     auto c_discount = customerTable.c_discount[customerTable.index_prim_key.at(Key(w_id, d_id, c_id))];
     auto o_id = districtTable.d_next_o_id[districtTable.index_prim_key.at(Key(w_id, d_id))];
@@ -308,7 +311,8 @@ void Database::NewOrder(
             all_local = 0;
     }
 
-    // TODO: inserts
+    orderTable.append_row(o_id, d_id, w_id, c_id, datetime, Integer(0), Numeric<2, 0>(items), Numeric<1, 0>(all_local));
+    neworderTable.append_row(o_id, d_id, w_id);
 
     for (int index = 0; index < items.value; index++) {
         auto i_price = itemTable.i_price[itemTable.index_prim_key.at(Key(itemid[index]))];
@@ -345,7 +349,7 @@ void Database::NewOrder(
         Numeric<6, 2> ol_amount = (Numeric<5, 2>(qty[index]) * i_price * (Numeric<4, 4>(1) + w_tax + d_tax).castS<5>() * (Numeric<4, 4>(1) - c_discount)
                 .castP2().castP2().castS<5>()).castS<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>();
 
-        // TODO last insert
+        orderlineTable.append_row(o_id, d_id, w_id, Integer(index + 1), itemid[index], supware[index], Timestamp(0), Numeric<2, 0>(qty[index]), ol_amount, s_dist);
     }
 }
 
