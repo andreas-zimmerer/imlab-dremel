@@ -15,17 +15,49 @@
 namespace imlab {
 
 struct WarehouseTable {
+    uint64_t size = 0;
+
     std::vector<Integer> w_id;
     std::vector<Varchar<10>> w_name;
     std::vector<Varchar<20>> w_street_1;
     std::vector<Varchar<20>> w_street_2;
     std::vector<Varchar<20>> w_city;
-    std::vector<Varchar<2>> w_state;
+    std::vector<Char<2>> w_state;
     std::vector<Char<9>> w_zip;
     std::vector<Numeric<4, 4>> w_tax;
     std::vector<Numeric<12, 2>> w_ytd;
 
     std::unordered_map<Key<Integer>, uint64_t> index_prim_key;
+
+    void append_row(Integer w_id_val, Varchar<10> w_name_val, Varchar<20> w_street_1_val,
+            Varchar<20> w_street_2_val, Varchar<20> w_city_val, Char<2> w_state_val,
+            Char<9> w_zip_val, Numeric<4, 4> w_tax_val, Numeric<12, 2> w_ytd_val) {
+
+        w_id.push_back(w_id_val);
+        w_name.push_back(w_name_val);
+        w_street_1.push_back(w_street_1_val);
+        w_street_2.push_back(w_street_2_val);
+        w_city.push_back(w_city_val);
+        w_state.push_back(w_state_val);
+        w_zip.push_back(w_zip_val);
+        w_tax.push_back(w_tax_val);
+        w_ytd.push_back(w_ytd_val);
+
+        index_prim_key[Key(w_id_val)] = size;
+
+        size++;
+
+        assert(w_id.size() == size
+        && w_name.size() == size
+        && w_street_1.size() == size
+        && w_street_2.size() == size
+        && w_city.size() == size
+        && w_state.size() == size
+        && w_zip.size() == size
+        && w_tax.size() == size
+        && w_ytd.size() == size
+        && index_prim_key.size() == size);
+    }
 };
 struct DistrictTable {
     std::vector<Integer> d_id;

@@ -10,7 +10,31 @@
 namespace imlab {
 
 void Database::LoadWarehouse(std::istream &in) {
-    // TODO
+    std::string tmp = "";
+
+    while(in.peek() != EOF) {
+        std::getline(in, tmp,'|');
+        auto w_id = Integer::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_name = Varchar<10>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_street_1 = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_street_2 = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_city = Varchar<20>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_state = Char<2>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_zip = Char<9>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'|');
+        auto w_tax = Numeric<4, 4>::castString(tmp.c_str(), tmp.size());
+        std::getline(in, tmp,'\n');
+        auto w_ytd = Numeric<12, 2>::castString(tmp.c_str(), tmp.size());
+
+        warehouseTable.append_row(w_id, w_name, w_street_1, w_street_2, w_city,
+                w_state, w_zip, w_tax, w_ytd);
+    }
 }
 
 void Database::LoadDistrict(std::istream &in) {
