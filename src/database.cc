@@ -142,7 +142,7 @@ void Database::LoadHistory(std::istream &in) {
         auto h_date = Timestamp::castString(tmp.c_str(), tmp.size());
         std::getline(in, tmp, '|');
         auto h_amount = Numeric<6, 2>::castString(tmp.c_str(), tmp.size());
-        std::getline(in, tmp, '|');
+        std::getline(in, tmp, '\n');
         auto h_data = Varchar<24>::castString(tmp.c_str(), tmp.size());
 
         historyTable.append_row(h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date,
@@ -183,7 +183,7 @@ void Database::LoadOrder(std::istream &in) {
         auto o_carrier_id = Integer::castString(tmp.c_str(), tmp.size());
         std::getline(in, tmp, '|');
         auto o_ol_cnt = Numeric<2, 0>::castString(tmp.c_str(), tmp.size());
-        std::getline(in, tmp, '|');
+        std::getline(in, tmp, '\n');
         auto o_all_local = Numeric<1, 0>::castString(tmp.c_str(), tmp.size());
 
         orderTable.append_row(o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id,
@@ -213,7 +213,7 @@ void Database::LoadOrderLine(std::istream &in) {
         auto ol_quantity = Numeric<2, 0>::castString(tmp.c_str(), tmp.size());
         std::getline(in, tmp, '|');
         auto ol_amount = Numeric<6, 2>::castString(tmp.c_str(), tmp.size());
-        std::getline(in, tmp, '|');
+        std::getline(in, tmp, '\n');
         auto ol_dist_info = Char<24>::castString(tmp.c_str(), tmp.size());
 
         orderlineTable.append_row(ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id,
