@@ -23,6 +23,7 @@ find_package(Threads REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+include("${CMAKE_SOURCE_DIR}/vendor/benchmark.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/googletest.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/gflags.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/cpplint.cmake")
@@ -37,6 +38,7 @@ include_directories(
     ${GTEST_INCLUDE_DIR}
     ${GMOCK_INCLUDE_DIR}
     ${GFLAGS_INCLUDE_DIR}
+    ${BENCHMARK_INCLUDE_DIR}
 )
 
 # ---------------------------------------------------------------------------
@@ -46,6 +48,7 @@ include_directories(
 include("${CMAKE_SOURCE_DIR}/src/local.cmake")
 include("${CMAKE_SOURCE_DIR}/test/local.cmake")
 include("${CMAKE_SOURCE_DIR}/tools/local.cmake")
+include("${CMAKE_SOURCE_DIR}/bench/local.cmake")
 
 # ---------------------------------------------------------------------------
 # Linting

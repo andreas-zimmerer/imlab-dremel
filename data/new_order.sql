@@ -3,6 +3,7 @@ create transaction newOrder ( integer w_id, integer d_id, integer c_id, integer 
     select w_tax from warehouse w where w.w_id=w_id;
     select c_discount from customer c where c_w_id=w_id and c_d_id=d_id and c.c_id=c_id;
     select d_next_o_id as o_id,d_tax from district d where d_w_id=w_id and d.d_id=d_id;
+
     update district set d_next_o_id=o_id+1 where d_w_id=w_id and district.d_id=d_id;
 
     var integer all_local = 1;
