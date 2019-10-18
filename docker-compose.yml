@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  gdbserver:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile.develop
+    image: cpp_imlab_dev
+    security_opt:
+      - seccomp:unconfined
+    container_name: cpp_imlab_dev
+    ports:
+      - "22:22"
+      - "7777:7777"
+    volumes:
+      - type: bind
+        source: .
+        target: /data
+    working_dir: /data
+    hostname: debug
