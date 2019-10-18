@@ -88,7 +88,7 @@ void Database::LoadNewOrder(std::istream &in) {
         std::getline(in, tmp,'\n');
         auto no_w_id = Integer::castString(tmp.c_str(), tmp.size());
 
-        noworderTable.append_row(no_o_id, no_d_id, no_w_id);
+        neworderTable.append_row(no_o_id, no_d_id, no_w_id);
     }
 }
 
