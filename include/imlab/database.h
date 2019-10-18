@@ -24,6 +24,8 @@ struct WarehouseTable {
     std::vector<Char<9>> w_zip;
     std::vector<Numeric<4, 4>> w_tax;
     std::vector<Numeric<12, 2>> w_ytd;
+
+    std::unordered_map<Key<Integer>, uint64_t> index_prim_key;
 };
 struct DistrictTable {
     std::vector<Integer> d_id;
@@ -37,6 +39,8 @@ struct DistrictTable {
     std::vector<Numeric<4, 4>> d_tax;
     std::vector<Numeric<12, 2>> d_ytd;
     std::vector<Integer> d_next_o_id;
+
+    std::unordered_map<Key<Integer, Integer>, uint64_t> index_prim_key;
 };
 struct CustomerTable {
     std::vector<Integer> c_id;
@@ -60,6 +64,9 @@ struct CustomerTable {
     std::vector<Numeric<4, 0>> c_payment_cnt;
     std::vector<Numeric<4, 0>> c_delivery_cnt;
     std::vector<Varchar<500>> c_data;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key;
+    std::unordered_map<Key<Integer, Integer, Varchar<16>, Varchar<16>>, uint64_t> index_wdl;
 };
 struct HistoryTable {
     std::vector<Integer> h_c_id;
@@ -75,6 +82,8 @@ struct NeworderTable {
     std::vector<Integer> no_o_id;
     std::vector<Integer> no_d_id;
     std::vector<Integer> no_w_id;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key;
 };
 struct OrderTable {
     std::vector<Integer> o_id;
@@ -85,6 +94,9 @@ struct OrderTable {
     std::vector<Integer> o_carrier_id;
     std::vector<Numeric<2, 0>> o_ol_cnt;
     std::vector<Numeric<1, 0>> o_all_local;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key;
+    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_wdc;
 };
 struct OrderlineTable {
     std::vector<Integer> ol_o_id;
@@ -97,6 +109,8 @@ struct OrderlineTable {
     std::vector<Numeric<2, 0>> ol_quantity;
     std::vector<Numeric<6, 2>> ol_amount;
     std::vector<Char<24>> ol_dist_info;
+
+    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_prim_key;
 };
 struct ItemTable {
     std::vector<Integer> i_id;
@@ -104,6 +118,8 @@ struct ItemTable {
     std::vector<Varchar<24>> i_name;
     std::vector<Numeric<5, 2>> i_price;
     std::vector<Varchar<50>> i_data;
+
+    std::unordered_map<Key<Integer>, uint64_t> index_prim_key;
 };
 struct StockTable {
     std::vector<Integer> s_i_id;
@@ -123,6 +139,8 @@ struct StockTable {
     std::vector<Numeric<4, 0>> s_order_cnt;
     std::vector<Numeric<4, 0>> s_remote_cnt;
     std::vector<Varchar<50>> s_data;
+
+    std::unordered_map<Key<Integer, Integer>, uint64_t> index_prim_key;
 };
 
 
@@ -150,18 +168,6 @@ class Database {
     OrderlineTable orderlineTable;
     ItemTable itemTable;
     StockTable stockTable;
-
-    // Index structures
-    std::unordered_map<Key<Integer>, uint64_t> index_prim_key_warehouse;
-    std::unordered_map<Key<Integer, Integer>, uint64_t> index_prim_key_district;
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key_customer;
-    std::unordered_map<Key<Integer, Integer, Varchar<16>, Varchar<16>>, uint64_t> index_customer_wdl;
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key_neworder;
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key_order;
-    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_order_wdc;
-    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> index_prim_key_orderline;
-    std::unordered_map<Key<Integer>, uint64_t> index_prim_key_item;
-    std::unordered_map<Key<Integer, Integer>, uint64_t> index_prim_key_stock;
 
     // Place a new order.
     void NewOrder(
