@@ -75,11 +75,15 @@ void RandomNewOrderBenchmark(benchmark::State &state) {
     std::fstream stock_file ("../data/tpcc_5w/tpcc_stock.tbl", std::fstream::in);
     database.LoadStock(stock_file);
 
+    database.Print();
+
     for (auto _ : state) {
         RandomNewOrder(database);
     }
 
     state.SetItemsProcessed(state.iterations());
+
+    database.Print();
 }
 
 }  // namespace

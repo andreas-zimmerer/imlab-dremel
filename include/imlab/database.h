@@ -488,6 +488,8 @@ class Database {
 
     // Returns the number of tuples in a relation.
     template <tpcc::Relation> size_t Size();
+
+    void Print();
 };
 
 }  // namespace imlab

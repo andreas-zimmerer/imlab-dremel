@@ -4,6 +4,7 @@
 
 #include "imlab/database.h"
 #include <array>
+#include <iostream>
 #include "imlab/infra/error.h"
 #include "imlab/infra/types.h"
 #include "../include/imlab/infra/types.h"
@@ -360,4 +361,16 @@ template <> size_t Database::Size<tpcc::kOrderLine>()   { return orderlineTable.
 template <> size_t Database::Size<tpcc::kStock>()       { return stockTable.s_i_id.size(); }
 template <> size_t Database::Size<tpcc::kWarehouse>()   { return warehouseTable.w_id.size(); }
 
+void Database::Print() {
+    std::cout << "-------------\n"
+              << "Warehouse: " << Size<imlab::tpcc::kWarehouse>() << "\n"
+              << "District: " << Size<imlab::tpcc::kDistrict>() << "\n"
+              << "Customer: " << Size<imlab::tpcc::kCustomer>() << "\n"
+              << "History: " << Size<imlab::tpcc::kHistory>() << "\n"
+              << "Neworder: " << Size<imlab::tpcc::kNewOrder>() << "\n"
+              << "Order: " << Size<imlab::tpcc::kOrder>() << "\n"
+              << "Orderline: " << Size<imlab::tpcc::kOrderLine>() << "\n"
+              << "Item: " << Size<imlab::tpcc::kItem>() << "\n"
+              << "Stock: " << Size<imlab::tpcc::kStock>() << "\n";
+}
 }  // namespace imlab
