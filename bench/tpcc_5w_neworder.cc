@@ -84,7 +84,8 @@ void RandomNewOrderBenchmark(benchmark::State &state) {
 
 }  // namespace
 
-BENCHMARK(RandomNewOrderBenchmark);
+BENCHMARK(RandomNewOrderBenchmark)
+    ->Iterations(1000000);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
