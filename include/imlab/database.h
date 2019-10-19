@@ -32,7 +32,6 @@ struct WarehouseTable {
     void append_row(Integer w_id_val, Varchar<10> w_name_val, Varchar<20> w_street_1_val,
             Varchar<20> w_street_2_val, Varchar<20> w_city_val, Char<2> w_state_val,
             Char<9> w_zip_val, Numeric<4, 4> w_tax_val, Numeric<12, 2> w_ytd_val) {
-
         w_id.push_back(w_id_val);
         w_name.push_back(w_name_val);
         w_street_1.push_back(w_street_1_val);
@@ -80,7 +79,6 @@ struct DistrictTable {
             Varchar<20> d_street_1_val, Varchar<20> d_street_2_val, Varchar<20> d_city_val,
             Char<2> d_state_val, Char<9> d_zip_val, Numeric<4, 4> d_tax_val,
             Numeric<12, 2> d_ytd_val, Integer d_next_o_id_val) {
-
         d_id.push_back(d_id_val);
         d_w_id.push_back(d_w_id_val);
         d_name.push_back(d_name_val);
@@ -146,7 +144,6 @@ struct CustomerTable {
             Char<2> c_credit_val, Numeric<12, 2> c_credit_lim_val, Numeric<4, 4> c_discount_val,
             Numeric<12, 2> c_balance_val, Numeric<12, 2> c_ytd_paymenr_val,
             Numeric<4, 0> c_payment_cnt_val, Numeric<4, 0> c_delivery_cnt_val, Varchar<500> c_data_val) {
-
         c_id.push_back(c_id_val);
         c_d_id.push_back(c_d_id_val);
         c_w_id.push_back(c_w_id_val);
