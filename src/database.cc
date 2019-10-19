@@ -295,9 +295,6 @@ void Database::NewOrder(
         std::array<Integer, 15> &itemid,
         std::array<Integer, 15> &qty,
         Timestamp datetime) {
-
-    auto t = warehouseTable.index_prim_key.at(Key(w_id));
-
     auto w_tax = warehouseTable.w_tax[warehouseTable.index_prim_key.at(Key(w_id))];
     auto c_discount = customerTable.c_discount[customerTable.index_prim_key.at(Key(w_id, d_id, c_id))];
     auto o_id = districtTable.d_next_o_id[districtTable.index_prim_key.at(Key(w_id, d_id))];
@@ -320,7 +317,7 @@ void Database::NewOrder(
         auto s_remote_cnt = stockTable.s_remote_cnt[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
         auto s_order_cnt = stockTable.s_order_cnt[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
         auto s_dist = [&](Integer d_id) {
-           switch(d_id.value) {
+           switch (d_id.value) {
                case 1: return stockTable.s_dist_01[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
                case 2: return stockTable.s_dist_02[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
                case 3: return stockTable.s_dist_03[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];

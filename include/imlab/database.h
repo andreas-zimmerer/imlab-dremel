@@ -212,7 +212,6 @@ struct HistoryTable {
     void append_row(Integer h_c_id_val, Integer h_c_d_id_val, Integer h_c_w_id_val,
             Integer h_d_id_val, Integer h_w_id_val, Timestamp h_date_val,
             Numeric<6, 2> h_amount_val, Varchar<24> h_data_val) {
-
         h_c_id.push_back(h_c_id_val);
         h_c_d_id.push_back(h_c_d_id_val);
         h_c_w_id.push_back(h_c_w_id_val);
@@ -244,7 +243,6 @@ struct NeworderTable {
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> index_prim_key;
 
     void append_row(Integer no_o_id_val, Integer no_d_id_val, Integer no_w_id_val) {
-
         no_o_id.push_back(no_o_id_val);
         no_d_id.push_back(no_d_id_val);
         no_w_id.push_back(no_w_id_val);
@@ -277,7 +275,6 @@ struct OrderTable {
     void append_row(Integer o_id_val, Integer o_d_id_val, Integer o_w_id_val,
             Integer o_c_id_val, Timestamp o_entry_d_val, Integer o_carrier_id_val,
             Numeric<2, 0> o_ol_cnt_val, Numeric<1, 0> o_all_local_val) {
-
         o_id.push_back(o_id_val);
         o_d_id.push_back(o_d_id_val);
         o_w_id.push_back(o_w_id_val);
@@ -324,7 +321,6 @@ struct OrderlineTable {
             Integer ol_number_val, Integer ol_i_id_val, Integer ol_supply_w_id_val,
             Timestamp ol_delivery_d_val, Numeric<2, 0> ol_quantity_val,
             Numeric<6, 2> ol_amount_val, Char<24> ol_dist_info_val) {
-
         ol_o_id.push_back(ol_o_id_val);
         ol_d_id.push_back(ol_d_id_val);
         ol_w_id.push_back(ol_w_id_val);
@@ -366,7 +362,6 @@ struct ItemTable {
 
     void append_row(Integer i_id_val, Integer i_im_id_val, Varchar<24> i_name_val,
             Numeric<5, 2> i_price_val, Varchar<50> i_data_val) {
-
         i_id.push_back(i_id_val);
         i_im_id.push_back(i_im_id_val);
         i_name.push_back(i_name_val);
@@ -414,7 +409,6 @@ struct StockTable {
             Char<24> s_dist_07_val, Char<24> s_dist_08_val, Char<24> s_dist_09_val,
             Char<24> s_dist_10_val, Numeric<8, 0> s_ytd_val, Numeric<4, 0> s_order_cnt_val,
             Numeric<4, 0> s_remote_cnt_val, Varchar<50> s_data_val) {
-
         s_i_id.push_back(s_i_id_val);
         s_w_id.push_back(s_w_id_val);
         s_quantity.push_back(s_quantity_val);
