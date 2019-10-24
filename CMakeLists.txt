@@ -15,11 +15,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fsanitize=address")
 
+# Unfortunately, macOS (<= High Sierra) ships with a too old bison version.
+# You need to manually install bison and flex via homebrew.
+# (It's a good thing to have homebrew installed anyway)
+# https://brew.sh/index_de.html
+# - brew update
+# - brew install bison flex
+#
+# As homebrew won't override the system's default bison, we need to tell
+# cmake where it should look.
+if (APPLE)
+    list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/bison)
+    list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/flex)
+endif (APPLE)
+
 # ---------------------------------------------------------------------------
 # Dependencies
 # ---------------------------------------------------------------------------
 
 find_package(Threads REQUIRED)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
