@@ -8,7 +8,7 @@ stages:
 
 build_debug:
     stage: build
-    script: 
+    script:
         - mkdir -p build
         - cd build
         - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
@@ -21,6 +21,7 @@ build_debug:
     artifacts:
         paths:
             - ./build/tester
+            - ./build/tester_schema
         expire_in: 1 hrs
     tags:
         - "clang-6.0"
@@ -32,6 +33,18 @@ tester:
     stage: test
     script:
         - ./build/tester
+    dependencies:
+        - build_debug
+    tags:
+        - "clang-6.0"
+        - "llvm-6.0"
+        - "cmake"
+        - "python3"
+
+tester-schema:
+    stage: test
+    script:
+        - ./build/tester_schema
     dependencies:
         - build_debug
     tags:
