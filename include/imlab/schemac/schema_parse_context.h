@@ -102,18 +102,6 @@ struct Schema {
     std::vector<Index> indexes;
 };
 // ---------------------------------------------------------------------------------------------------
-// Some declaration for the example grammar
-struct SomeDeclaration {
-    // The identifier
-    std::string id;
-    // The type
-    Type type;
-
-    // Constructor
-    explicit SomeDeclaration(const std::string &id = "", Type type = Type::Integer())
-        : id(id), type(type) {}
-};
-// ---------------------------------------------------------------------------------------------------
 // Schema parse context
 class SchemaParseContext {
     friend SchemaParser;
@@ -139,8 +127,8 @@ class SchemaParseContext {
     void endScan();
 
     // Define a table
-    void defineFoo(const std::string &id, const std::vector<SomeDeclaration> &declarations);
-    // TODO
+    void createSchema(const Schema &schema);
+    Schema schema;
 
     // Trace the scanning
     bool trace_scanning_;

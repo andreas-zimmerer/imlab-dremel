@@ -89,9 +89,23 @@ loc.step ();
 ","                 { return SchemaParser::make_COMMA(loc); }
 "{"                 { return SchemaParser::make_LCB(loc); }
 "}"                 { return SchemaParser::make_RCB(loc); }
+"("                 { return SchemaParser::make_LPAR(loc); }
+")"                 { return SchemaParser::make_RPAR(loc); }
+"="                 { return SchemaParser::make_EQUAL(loc); }
 "integer"           { return SchemaParser::make_INTEGER(loc); }
+"timestamp"         { return SchemaParser::make_TIMESTAMP(loc); }
+"numeric"           { return SchemaParser::make_NUMERIC(loc); }
 "char"              { return SchemaParser::make_CHAR(loc); }
-"foo"               { return SchemaParser::make_FOO(loc); }
+"varchar"           { return SchemaParser::make_VARCHAR(loc); }
+"not null"          { return SchemaParser::make_NOTNULL(loc); }
+"create"            { return SchemaParser::make_CREATE(loc); }
+"table"             { return SchemaParser::make_TABLE(loc); }
+"with"              { return SchemaParser::make_WITH(loc); }
+"key_index_type"    { return SchemaParser::make_KEY_INDEX_TYPE(loc); }
+"unordered_map"     { return SchemaParser::make_INDEX_TYPE_UNORDERED_MAP(loc); }
+"map"               { return SchemaParser::make_INDEX_TYPE_STL_MAP(loc); }
+"stx_map"           { return SchemaParser::make_INDEX_TYPE_STX_MAP(loc); }
+"primary key"       { return SchemaParser::make_PRIMARY_KEY(loc); }
 [a-z][a-z0-9_]*     { return SchemaParser::make_IDENTIFIER(yytext, loc); }
 [0-9]+              {
                         uint32_t value = 0;

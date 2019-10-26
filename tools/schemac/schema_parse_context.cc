@@ -60,8 +60,7 @@ Schema SchemaParseContext::Parse(std::istream &in) {
     parser.parse();
     endScan();
 
-    // TODO
-    return {};
+    return this->schema;
 }
 // ---------------------------------------------------------------------------------------------------
 // Yield an error
@@ -77,11 +76,8 @@ void SchemaParseContext::Error(uint32_t line, uint32_t column, const std::string
 }
 // ---------------------------------------------------------------------------------------------------
 // Define a table
-void SchemaParseContext::defineFoo(const std::string &id, const std::vector<SomeDeclaration> &declarations) {
-    std::cout << "FOO " << id << std::endl;
-    for (auto &decl : declarations) {
-        std::cout << "    " << decl.id << " " << decl.type.Name() << std::endl;
-    }
+void SchemaParseContext::createSchema(const Schema &schema) {
+    this->schema = schema;
 }
 // ---------------------------------------------------------------------------------------------------
 

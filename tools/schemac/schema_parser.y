@@ -40,47 +40,97 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 }
 // ---------------------------------------------------------------------------------------------------
 // Token definitions
-%token <int>            INTEGER_VALUE    "integer_value"
-%token <std::string>    IDENTIFIER       "identifier"
+%token SEMICOLON        "semicolon"
+%token COMMA            "comma"
 %token LCB              "left_curly_brackets"
 %token RCB              "right_curly_brackets"
-%token SEMICOLON        "semicolon"
+%token LPAR             "left_parentheses"
+%token RPAR             "right_parentheses"
+%token EQUAL            "equal"
 %token INTEGER          "integer"
+%token TIMESTAMP        "timestamp"
+%token NUMERIC          "numeric"
 %token CHAR             "char"
-%token COMMA            "comma"
-%token FOO              "foo"
-%token BAR              "bar"
+%token VARCHAR          "varchar"
+%token NOTNULL          "not_null"
+%token CREATE           "create"
+%token TABLE            "table"
+%token WITH             "with"
+%token KEY_INDEX_TYPE   "key_index_type"
+%token INDEX_TYPE_UNORDERED_MAP         "index_type_unordered_map"
+%token INDEX_TYPE_STL_MAP               "index_type_stl_map"
+%token INDEX_TYPE_STX_MAP               "index_type_stx_map"
+%token PRIMARY_KEY      "primary_key"
+%token <int>            INTEGER_VALUE    "integer_value"
+%token <std::string>    IDENTIFIER       "identifier"
 %token EOF 0            "eof"
 // ---------------------------------------------------------------------------------------------------
-%type <std::vector<imlab::schemac::SomeDeclaration>> some_declaration_list;
-%type <imlab::schemac::SomeDeclaration> some_declaration;
-%type <imlab::schemac::Type> some_type;
+%type <imlab::schemac::Schema> schema;
+%type <imlab::schemac::Table> table;
+%type <std::vector<imlab::schemac::Table>> table_list;
+%type <imlab::schemac::Column> column;
+%type <std::vector<imlab::schemac::Column>> column_list;
+%type <imlab::schemac::IndexType> with_key_index_type;
+%type <imlab::schemac::IndexType> key_index_type;
+%type <imlab::schemac::Index> index;
+%type <std::vector<imlab::schemac::Index>> index_list;
+%type <imlab::schemac::Type> type;
 // ---------------------------------------------------------------------------------------------------
 %%
 
-%start foo_statement_list;
+%start create_schema;
 
-foo_statement_list:
-    foo_statement_list foo_statment
- |  %empty
-    ;
+create_schema:
+    schema                                              { sc.createSchema($1); }
 
-foo_statment:
-    FOO IDENTIFIER LCB some_declaration_list RCB SEMICOLON         { sc.defineFoo($2, $4); }
-    ;
-
-some_declaration_list:
-    some_declaration_list COMMA some_declaration        { $1.push_back($3); std::swap($$, $1); }
- |  some_declaration                                    { $$ = std::vector<imlab::schemac::SomeDeclaration> { $1 }; }
+schema:
+    table_list                                          { $$ = imlab::schemac::Schema {$1}; }
  |  %empty                                              {}
     ;
 
-some_declaration:
-    IDENTIFIER some_type                                { $$ = imlab::schemac::SomeDeclaration($1, $2); }
+table_list:
+    table_list table                                    { $1.push_back($2); std::swap($$, $1); }
+ |  table                                               { $$ = std::vector<imlab::schemac::Table> { $1 }; }
+ |  %empty                                              {}
+    ;
 
-some_type:
+table:
+    CREATE TABLE IDENTIFIER LPAR column_list RPAR with_key_index_type SEMICOLON         { $$ = imlab::schemac::Table {$3, $5}; }
+
+column_list:
+    column_list COMMA column                            { $1.push_back($3); std::swap($$, $1); }
+ |  column                                              { $$ = std::vector<imlab::schemac::Column> { $1 }; }
+ |  %empty                                              {}
+    ;
+
+column:
+    IDENTIFIER type NOTNULL                            { $$ = imlab::schemac::Column {$1, $2}; }
+
+with_key_index_type:
+    WITH LPAR KEY_INDEX_TYPE EQUAL key_index_type RPAR  { $$ = $5; }
+ |  %empty                                              {}
+    ;
+
+key_index_type:
+    INDEX_TYPE_UNORDERED_MAP                            { $$ = imlab::schemac::IndexType::kSTLUnorderedMap; }
+ |  INDEX_TYPE_STL_MAP                                  { $$ = imlab::schemac::IndexType::kSTLMap; }
+ |  INDEX_TYPE_STX_MAP                                  { $$ = imlab::schemac::IndexType::kSTXMap; }
+
+index_list:
+    index_list index                                    { $1.push_back($2); std::swap($$, $1); }
+ |  index                                               { $$ = std::vector<imlab::schemac::Index> { $1 }; }
+ |  %empty                                              {}
+    ;
+
+index:
+    %empty                                              { $$ = imlab::schemac::Index(); }
+
+type:
     INTEGER                                             { $$ = Type::Integer(); }
- |  CHAR LCB INTEGER_VALUE RCB                          { $$ = Type::Char($3); }
+ |  TIMESTAMP                                           { $$ = Type::Timestamp(); }
+ |  NUMERIC LPAR INTEGER_VALUE COMMA INTEGER_VALUE RPAR { $$ = Type::Numeric($3, $5); }
+ |  CHAR LPAR INTEGER_VALUE RPAR                        { $$ = Type::Char($3); }
+ |  VARCHAR LPAR INTEGER_VALUE RPAR                     { $$ = Type::Varchar($3); }
 
 %%
 // ---------------------------------------------------------------------------------------------------
