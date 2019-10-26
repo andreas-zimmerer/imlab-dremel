@@ -18,3 +18,10 @@ services:
         target: /data
     working_dir: /data
     hostname: debug
+
+# when Clion complains about docker file paths:
+# $ rm -r build
+# $ mkdir build
+# $ cd build
+# $ cmake ..
+# Now right-clock on the project and select "Reload CMake Project"
