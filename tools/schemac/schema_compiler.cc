@@ -184,7 +184,6 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
             impl_ << "tuple." << column.id << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         impl_ << ")] = tid;" << std::endl;
-        impl_ << std::endl;
     }
 
     impl_ << "}" << std::endl;

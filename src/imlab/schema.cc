@@ -57,7 +57,6 @@ void warehouseTable::update_tuple(const uint64_t tid, const warehouseTuple& tupl
 
     // update index on primary key
     primary_key[Key(tuple.w_id)] = tid;
-
 }
 
 void warehouseTable::delete_tuple(const uint64_t tid) {
@@ -126,7 +125,6 @@ void districtTable::update_tuple(const uint64_t tid, const districtTuple& tuple)
 
     // update index on primary key
     primary_key[Key(tuple.d_w_id, tuple.d_id)] = tid;
-
 }
 
 void districtTable::delete_tuple(const uint64_t tid) {
@@ -226,7 +224,6 @@ void customerTable::update_tuple(const uint64_t tid, const customerTuple& tuple)
 
     // update index on primary key
     primary_key[Key(tuple.c_w_id, tuple.c_d_id, tuple.c_id)] = tid;
-
 }
 
 void customerTable::delete_tuple(const uint64_t tid) {
@@ -321,7 +318,6 @@ void neworderTable::update_tuple(const uint64_t tid, const neworderTuple& tuple)
 
     // update index on primary key
     primary_key[Key(tuple.no_w_id, tuple.no_d_id, tuple.no_o_id)] = tid;
-
 }
 
 void neworderTable::delete_tuple(const uint64_t tid) {
@@ -382,7 +378,6 @@ void orderTable::update_tuple(const uint64_t tid, const orderTuple& tuple) {
 
     // update index on primary key
     primary_key[Key(tuple.o_w_id, tuple.o_d_id, tuple.o_id)] = tid;
-
 }
 
 void orderTable::delete_tuple(const uint64_t tid) {
@@ -450,7 +445,6 @@ void orderlineTable::update_tuple(const uint64_t tid, const orderlineTuple& tupl
 
     // update index on primary key
     primary_key[Key(tuple.ol_w_id, tuple.ol_d_id, tuple.ol_o_id, tuple.ol_number)] = tid;
-
 }
 
 void orderlineTable::delete_tuple(const uint64_t tid) {
@@ -500,7 +494,6 @@ void itemTable::update_tuple(const uint64_t tid, const itemTuple& tuple) {
 
     // update index on primary key
     primary_key[Key(tuple.i_id)] = tid;
-
 }
 
 void itemTable::delete_tuple(const uint64_t tid) {
@@ -587,7 +580,6 @@ void stockTable::update_tuple(const uint64_t tid, const stockTuple& tuple) {
 
     // update index on primary key
     primary_key[Key(tuple.s_w_id, tuple.s_i_id)] = tid;
-
 }
 
 void stockTable::delete_tuple(const uint64_t tid) {
