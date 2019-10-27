@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 #include "imlab/infra/hash.h"
-#include "../../tools/schemac/gen/schema.h"
+#include "imlab/schema.h"
 
 namespace imlab {
 

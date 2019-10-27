@@ -6,7 +6,7 @@
 #include "imlab/test/data.h"
 #include "imlab/database.h"
 #include "gtest/gtest.h"
-#include "../tools/schemac/gen/schema.h"
+#include "imlab/schema.h"
 
 namespace {
 

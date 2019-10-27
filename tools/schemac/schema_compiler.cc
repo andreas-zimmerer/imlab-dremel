@@ -41,7 +41,7 @@ void SchemaCompiler::createHeader(Schema &schema) {
     header_ << "    virtual void update_tuple(const uint64_t tid, const Tuple& tuple) = 0;" << std::endl;
     header_ << "    virtual void delete_tuple(const uint64_t tid) = 0;" << std::endl;
     header_ << "    uint64_t get_size() { return size; }" << std::endl;
-    header_ << " private:" << std::endl;
+    header_ << " protected:" << std::endl;
     header_ << "    uint64_t size = 0;" << std::endl;
     header_ << "};" << std::endl;
     header_ << std::endl;
@@ -84,9 +84,9 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
     header_ << std::endl;
 
     header_ << "    uint64_t insert_tuple(const " << table.id << "Tuple& tuple) override;" << std::endl;
-    header_ << "    virtual " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
-    header_ << "    virtual void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
-    header_ << "    virtual void delete_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << "    " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << "    void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
+    header_ << "    void delete_tuple(const uint64_t tid) override;" << std::endl;
     header_ << std::endl;
 
     header_ << " private:" << std::endl;
@@ -99,7 +99,7 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
 }
 
 void SchemaCompiler::createSource(Schema &schema) {
-    impl_ << "#include \"./foo/schema.h\"" << std::endl;
+    impl_ << "#include \"imlab/schema.h\"" << std::endl;
     impl_ << std::endl;
 
     impl_ << "namespace imlab {" << std::endl;
@@ -117,12 +117,10 @@ void SchemaCompiler::createSource(Schema &schema) {
 
 void SchemaCompiler::generateTableClassSource(Table &table) {
     // functions: insert
-    impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(" << table.id << "Tuple" << " tuple) {" << std::endl;
+    impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(const " << table.id << "Tuple" << "& tuple) {" << std::endl;
 
-    auto index = 0;
     for(auto& column : table.columns) {
-        impl_ << "    " << column.id << ".push_back(" << "std::get<" << index << ">(tuple)" << ");" << std::endl;
-        index++;
+        impl_ << "    " << column.id << ".push_back(tuple." << column.id << ");" << std::endl;
     }
     impl_ << std::endl;
     impl_ << "    auto insert_pos = size;" << std::endl;
@@ -130,10 +128,8 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     // update primary key index if exists
     if(table.primary_key.size() > 0) {
         impl_ << "    " << "primary_key[Key(";
-        auto index = 0;
         for(auto& column : table.primary_key) {
-            impl_ << "std::get<" << index << ">(tuple),";
-            index++;
+            impl_ << "tuple." << column.id << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         impl_ << ")] = insert_pos;" << std::endl;
         impl_ << std::endl;
@@ -151,7 +147,7 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     impl_ << std::endl;
 
     // functions: update
-    impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, " << table.id << "Tuple" << " tuple) {" << std::endl;
+    impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, const " << table.id << "Tuple" << "& tuple) {" << std::endl;
 
     impl_ << "}" << std::endl;
     impl_ << std::endl;
