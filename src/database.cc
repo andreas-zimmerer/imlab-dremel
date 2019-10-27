@@ -296,12 +296,12 @@ void Database::NewOrder(
         std::array<Integer, 15> &itemid,
         std::array<Integer, 15> &qty,
         Timestamp datetime) {
-    auto w_tax = warehouseTable.w_tax[warehouseTable.index_prim_key.at(Key(w_id))];
-    auto c_discount = customerTable.c_discount[customerTable.index_prim_key.at(Key(w_id, d_id, c_id))];
-    auto o_id = districtTable.d_next_o_id[districtTable.index_prim_key.at(Key(w_id, d_id))];
-    auto d_tax = districtTable.d_tax[districtTable.index_prim_key.at(Key(w_id, d_id))];
+    auto w_tax = warehouseTable.read_tuple(warehouseTable.primary_key.at(Key(w_id))).w_tax;
+    auto c_discount = customerTable.read_tuple(customerTable.primary_key.at(Key(w_id, d_id, c_id))).c_discount;
+    auto o_id = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_next_o_id;
+    auto d_tax = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_tax;
 
-    districtTable.d_next_o_id[districtTable.index_prim_key.at(Key(w_id, d_id))] = o_id + Integer(1);
+    districtTable.update_tuple(districtTable.primary_key.at(Key(w_id, d_id)), {.d_next_o_id = o_id + Integer(1)});
 
     int all_local = 1;
     for (int index = 0; index < items.value; index++) {
@@ -313,35 +313,37 @@ void Database::NewOrder(
     neworderTable.insert_tuple({o_id, d_id, w_id});
 
     for (int index = 0; index < items.value; index++) {
-        auto i_price = itemTable.i_price[itemTable.index_prim_key.at(Key(itemid[index]))];
-        auto s_quantity = stockTable.s_quantity[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-        auto s_remote_cnt = stockTable.s_remote_cnt[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-        auto s_order_cnt = stockTable.s_order_cnt[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
+        auto i_price = itemTable.read_tuple(itemTable.primary_key.at(Key(itemid[index]))).i_price;
+
+        auto stockTableTuple = stockTable.read_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])));
+        auto s_quantity = stockTableTuple.s_quantity;
+        auto s_remote_cnt = stockTableTuple.s_remote_cnt;
+        auto s_order_cnt = stockTableTuple.s_order_cnt;
         auto s_dist = [&](Integer d_id) {
-           switch (d_id.value) {
-               case 1: return stockTable.s_dist_01[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 2: return stockTable.s_dist_02[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 3: return stockTable.s_dist_03[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 4: return stockTable.s_dist_04[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 5: return stockTable.s_dist_05[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 6: return stockTable.s_dist_06[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 7: return stockTable.s_dist_07[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 8: return stockTable.s_dist_08[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 9: return stockTable.s_dist_09[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
-               case 10: return stockTable.s_dist_10[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))];
+            switch (d_id.value) {
+                case 1: return stockTableTuple.s_dist_01;
+                case 2: return stockTableTuple.s_dist_02;
+                case 3: return stockTableTuple.s_dist_03;
+                case 4: return stockTableTuple.s_dist_04;
+                case 5: return stockTableTuple.s_dist_05;
+                case 6: return stockTableTuple.s_dist_06;
+                case 7: return stockTableTuple.s_dist_07;
+                case 8: return stockTableTuple.s_dist_08;
+                case 9: return stockTableTuple.s_dist_09;
+                case 10: return stockTableTuple.s_dist_10;
            }
         }(d_id);
 
         if (s_quantity > Numeric<4, 0>(qty[index])) {
-            stockTable.s_quantity[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))] = s_quantity - Numeric<4, 0>(qty[index]);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), {.s_quantity = s_quantity - Numeric<4, 0>(qty[index])});
         } else {
-            stockTable.s_quantity[stockTable.index_prim_key.at(Key(supware[index], itemid[index]))] = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index]);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), {.s_quantity = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index])});
         }
 
         if (supware[index] != w_id) {
-            stockTable.s_remote_cnt[stockTable.index_prim_key.at(Key(w_id, itemid[index]))] = s_remote_cnt + Numeric<4, 0>(1);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), {.s_remote_cnt = s_remote_cnt + Numeric<4, 0>(1)});
         } else {
-            stockTable.s_remote_cnt[stockTable.index_prim_key.at(Key(w_id, itemid[index]))] = s_order_cnt + Numeric<4, 0>(1);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), {.s_remote_cnt = s_order_cnt + Numeric<4, 0>(1)});
         }
 
         Numeric<6, 2> ol_amount = (Numeric<5, 2>(qty[index]) * i_price * (Numeric<4, 4>(1) + w_tax + d_tax).castS<5>() * (Numeric<4, 4>(1) - c_discount)
@@ -351,26 +353,26 @@ void Database::NewOrder(
     }
 }
 
-template <> size_t Database::Size<tpcc::kCustomer>()    { return customerTable.get_size(); }
-template <> size_t Database::Size<tpcc::kDistrict>()    { return districtTable.get_size(); }
-template <> size_t Database::Size<tpcc::kHistory>()     { return historyTable.get_size(); }
-template <> size_t Database::Size<tpcc::kItem>()        { return itemTable.get_size(); }
-template <> size_t Database::Size<tpcc::kNewOrder>()    { return neworderTable.get_size(); }
-template <> size_t Database::Size<tpcc::kOrder>()       { return orderTable.get_size(); }
-template <> size_t Database::Size<tpcc::kOrderLine>()   { return orderlineTable.get_size(); }
-template <> size_t Database::Size<tpcc::kStock>()       { return stockTable.get_size(); }
-template <> size_t Database::Size<tpcc::kWarehouse>()   { return warehouseTable.get_size(); }
+template <> size_t Database::Size<tpcc::kcustomer>()    { return customerTable.get_size(); }
+template <> size_t Database::Size<tpcc::kdistrict>()    { return districtTable.get_size(); }
+template <> size_t Database::Size<tpcc::khistory>()     { return historyTable.get_size(); }
+template <> size_t Database::Size<tpcc::kitem>()        { return itemTable.get_size(); }
+template <> size_t Database::Size<tpcc::kneworder>()    { return neworderTable.get_size(); }
+template <> size_t Database::Size<tpcc::korder>()       { return orderTable.get_size(); }
+template <> size_t Database::Size<tpcc::korderline>()   { return orderlineTable.get_size(); }
+template <> size_t Database::Size<tpcc::kstock>()       { return stockTable.get_size(); }
+template <> size_t Database::Size<tpcc::kwarehouse>()   { return warehouseTable.get_size(); }
 
 void Database::Print() {
     std::cout << "-------------\n"
-              << "Warehouse: " << Size<imlab::tpcc::kWarehouse>() << "\n"
-              << "District: " << Size<imlab::tpcc::kDistrict>() << "\n"
-              << "Customer: " << Size<imlab::tpcc::kCustomer>() << "\n"
-              << "History: " << Size<imlab::tpcc::kHistory>() << "\n"
-              << "Neworder: " << Size<imlab::tpcc::kNewOrder>() << "\n"
-              << "Order: " << Size<imlab::tpcc::kOrder>() << "\n"
-              << "Orderline: " << Size<imlab::tpcc::kOrderLine>() << "\n"
-              << "Item: " << Size<imlab::tpcc::kItem>() << "\n"
-              << "Stock: " << Size<imlab::tpcc::kStock>() << "\n";
+              << "Warehouse: " << Size<imlab::tpcc::kwarehouse>() << "\n"
+              << "District: " << Size<imlab::tpcc::kdistrict>() << "\n"
+              << "Customer: " << Size<imlab::tpcc::kcustomer>() << "\n"
+              << "History: " << Size<imlab::tpcc::khistory>() << "\n"
+              << "Neworder: " << Size<imlab::tpcc::kneworder>() << "\n"
+              << "Order: " << Size<imlab::tpcc::korder>() << "\n"
+              << "Orderline: " << Size<imlab::tpcc::korderline>() << "\n"
+              << "Item: " << Size<imlab::tpcc::kitem>() << "\n"
+              << "Stock: " << Size<imlab::tpcc::kstock>() << "\n";
 }
 }  // namespace imlab

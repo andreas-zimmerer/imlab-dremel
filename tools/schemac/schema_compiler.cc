@@ -30,15 +30,16 @@ void SchemaCompiler::createHeader(Schema &schema) {
     header_ << std::endl;
 
     header_ << "namespace imlab {" << std::endl;
+    header_ << "namespace tpcc {" << std::endl;
     header_ << std::endl;
 
-    header_ << "template<typename... Types>" << std::endl;
+    header_ << "template<typename Tuple>" << std::endl;
     header_ << "class TableBase {" << std::endl;
     header_ << " public:" << std::endl;
-    header_ << "    uint64_t insert_tuple(const std::tuple<Types ...>& tuple);" << std::endl;
-    header_ << "    std::tuple<Types ...> read_tuple(const uint64_t tid);" << std::endl;
-    header_ << "    void update_tuple(const uint64_t tid, const std::tuple<Types ...>& tuple);" << std::endl;
-    header_ << "    void delete_tuple(const uint64_t tid);" << std::endl;
+    header_ << "    virtual uint64_t insert_tuple(const Tuple& tuple) = 0;" << std::endl;
+    header_ << "    virtual Tuple read_tuple(const uint64_t tid) = 0;" << std::endl;
+    header_ << "    virtual void update_tuple(const uint64_t tid, const Tuple& tuple) = 0;" << std::endl;
+    header_ << "    virtual void delete_tuple(const uint64_t tid) = 0;" << std::endl;
     header_ << "    uint64_t get_size() { return size; }" << std::endl;
     header_ << " private:" << std::endl;
     header_ << "    uint64_t size = 0;" << std::endl;
@@ -57,52 +58,66 @@ void SchemaCompiler::createHeader(Schema &schema) {
         header_ << std::endl;
     }
 
+    header_ << "}  // namespace tpcc" << std::endl;
     header_ << "}  // namespace imlab" << std::endl;
     header_ << "#endif  // INCLUDE_IMLAB_SCHEMA_H_" << std::endl;
 }
 
 void SchemaCompiler::generateTableClassHeader(Table &table) {
-    header_ << "class " << table.id << "Table" << " : public TableBase<";
+    header_ << "struct " << table.id << "Tuple {" << std::endl;
     for(auto& column : table.columns) {
-        header_ << generateTypeName(column.type) << ((&column != &*table.columns.end() - 1)? ", " : "");
+        header_ << "    " << generateTypeName(column.type) << " " << column.id << ";" << std::endl;
     }
-    header_ << "> {" << std::endl;
+    header_ << "};" << std::endl;
 
-    // vectors for columns
-    for(auto& column : table.columns) {
-        header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
-    }
+    header_ << "class " << table.id << "Table" << " : public TableBase<" << table.id << "Tuple" << "> {" << std::endl;
 
+    header_ << " public:" << std::endl;
     // primary key
     if(table.primary_key.size() > 0) {
-        header_ << std::endl;
         header_ << "    std::unordered_map<Key<";
         for(auto& column : table.primary_key) {
             header_ << generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         header_ << ">, uint64_t> primary_key;" << std::endl;
     }
+    header_ << std::endl;
+
+    header_ << "    uint64_t insert_tuple(const " << table.id << "Tuple& tuple) override;" << std::endl;
+    header_ << "    virtual " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << "    virtual void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
+    header_ << "    virtual void delete_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << std::endl;
+
+    header_ << " private:" << std::endl;
+    // vectors for columns
+    for(auto& column : table.columns) {
+        header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
+    }
 
     header_ << "};" << std::endl;
 }
 
 void SchemaCompiler::createSource(Schema &schema) {
-    impl_ << "#include \"schema.h\"" << std::endl;
+    impl_ << "#include \"./foo/schema.h\"" << std::endl;
+    impl_ << std::endl;
+
+    impl_ << "namespace imlab {" << std::endl;
+    impl_ << "namespace tpcc {" << std::endl;
     impl_ << std::endl;
 
     for(auto& table : schema.tables) {
         generateTableClassSource(table);
         impl_ << std::endl;
     }
+
+    impl_ << "}  // namespace tpcc" << std::endl;
+    impl_ << "}  // namespace imlab" << std::endl;
 }
 
 void SchemaCompiler::generateTableClassSource(Table &table) {
     // functions: insert
-    impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(std::tuple<";
-    for(auto& column : table.columns) {
-        impl_ << generateTypeName(column.type) << ((&column != &*table.columns.end() - 1)? ", " : "");
-    }
-    impl_ << "> tuple) {" << std::endl;
+    impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(" << table.id << "Tuple" << " tuple) {" << std::endl;
 
     auto index = 0;
     for(auto& column : table.columns) {
@@ -130,21 +145,13 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     impl_ << std::endl;
 
     // functions: read
-    impl_ << "std::tuple<";
-    for(auto& column : table.columns) {
-        impl_ << generateTypeName(column.type) << ((&column != &*table.columns.end() - 1)? ", " : "");
-    }
-    impl_ << "> " << table.id << "Table" << "::" << "read_tuple(const uint64_t tid) {" << std::endl;
+    impl_ << table.id << "Tuple " << table.id << "Table" << "::" << "read_tuple(const uint64_t tid) {" << std::endl;
 
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: update
-    impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, std::tuple<";
-    for(auto& column : table.columns) {
-        impl_ << generateTypeName(column.type) << ((&column != &*table.columns.end() - 1)? ", " : "");
-    }
-    impl_ << "> tuple) {" << std::endl;
+    impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, " << table.id << "Tuple" << " tuple) {" << std::endl;
 
     impl_ << "}" << std::endl;
     impl_ << std::endl;

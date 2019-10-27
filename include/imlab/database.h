@@ -29,15 +29,15 @@ class Database {
     void LoadWarehouse(std::istream &in);
 
     // Tables
-    warehouseTable warehouseTable;
-    districtTable districtTable;
-    customerTable customerTable;
-    historyTable historyTable;
-    neworderTable neworderTable;
-    orderTable orderTable;
-    orderlineTable orderlineTable;
-    itemTable itemTable;
-    stockTable stockTable;
+    tpcc::warehouseTable warehouseTable;
+    tpcc::districtTable districtTable;
+    tpcc::customerTable customerTable;
+    tpcc::historyTable historyTable;
+    tpcc::neworderTable neworderTable;
+    tpcc::orderTable orderTable;
+    tpcc::orderlineTable orderlineTable;
+    tpcc::itemTable itemTable;
+    tpcc::stockTable stockTable;
 
     // Place a new order.
     void NewOrder(
@@ -51,7 +51,7 @@ class Database {
         Timestamp datetime);
 
     // Returns the number of tuples in a relation.
-    template <Relation> size_t Size();
+    template <tpcc::Relation> size_t Size();
 
     void Print();
 };
