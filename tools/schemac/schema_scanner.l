@@ -119,6 +119,7 @@ loc.step ();
                         }
                         return SchemaParser::make_INTEGER_VALUE(value, loc);
                     }
+"/*"([^*]|(\*+[^*/]))*\*+\/ { /* ignore comments */ }
 <<EOF>>             { return SchemaParser::make_EOF(loc); }
 .                   { sc.Error(loc.begin.line, loc.begin.column, "invalid character"); }
 

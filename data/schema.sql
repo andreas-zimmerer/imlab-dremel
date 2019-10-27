@@ -51,7 +51,7 @@ create table customer (
     primary key (c_w_id, c_d_id, c_id)
 );
 
-create index customer_wdl on customer(c_w_id, c_d_id, c_last, c_first);
+/* create index customer_wdl on customer(c_w_id, c_d_id, c_last, c_first); */
 
 create table history (
     h_c_id integer not null,
@@ -83,7 +83,7 @@ create table "order" (
     primary key (o_w_id, o_d_id, o_id)
 );
 
-create index order_wdc on "order"(o_w_id, o_d_id, o_c_id, o_id);
+/* create index order_wdc on "order"(o_w_id, o_d_id, o_c_id, o_id); */
 
 create table orderline (
     ol_o_id integer not null,
