@@ -296,12 +296,16 @@ void Database::NewOrder(
         std::array<Integer, 15> &itemid,
         std::array<Integer, 15> &qty,
         Timestamp datetime) {
-    auto w_tax = warehouseTable.read_tuple(warehouseTable.primary_key.at(Key(w_id))).w_tax;
-    auto c_discount = customerTable.read_tuple(customerTable.primary_key.at(Key(w_id, d_id, c_id))).c_discount;
-    auto o_id = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_next_o_id;
-    auto d_tax = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_tax;
+    auto w_tax = warehouseTable.read_tuple(warehouseTable.primary_key.at(Key(w_id)))->w_tax;
+    auto c_discount = customerTable.read_tuple(customerTable.primary_key.at(Key(w_id, d_id, c_id)))->c_discount;
+    auto o_id = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id)))->d_next_o_id;
+    auto d_tax = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id)))->d_tax;
 
-    districtTable.update_tuple(districtTable.primary_key.at(Key(w_id, d_id)), tpcc::districtTuple {.d_next_o_id = o_id + Integer(1)});
+    {
+        auto new_value = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).value();
+        new_value.d_next_o_id = o_id + Integer(1);
+        districtTable.update_tuple(districtTable.primary_key.at(Key(w_id, d_id)), new_value);
+    }
 
     int all_local = 1;
     for (int index = 0; index < items.value; index++) {
@@ -313,9 +317,9 @@ void Database::NewOrder(
     neworderTable.insert_tuple({o_id, d_id, w_id});
 
     for (int index = 0; index < items.value; index++) {
-        auto i_price = itemTable.read_tuple(itemTable.primary_key.at(Key(itemid[index]))).i_price;
+        auto i_price = itemTable.read_tuple(itemTable.primary_key.at(Key(itemid[index])))->i_price;
 
-        auto stockTableTuple = stockTable.read_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])));
+        auto stockTableTuple = stockTable.read_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
         auto s_quantity = stockTableTuple.s_quantity;
         auto s_remote_cnt = stockTableTuple.s_remote_cnt;
         auto s_order_cnt = stockTableTuple.s_order_cnt;
@@ -335,15 +339,23 @@ void Database::NewOrder(
         }(d_id);
 
         if (s_quantity > Numeric<4, 0>(qty[index])) {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), tpcc::stockTuple {.s_quantity = s_quantity - Numeric<4, 0>(qty[index])});
+            auto new_value = stockTable.read_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
+            new_value.s_quantity = s_quantity - Numeric<4, 0>(qty[index]);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), new_value);
         } else {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), tpcc::stockTuple {.s_quantity = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index])});
+            auto new_value = stockTable.read_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
+            new_value.s_quantity = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index]);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), new_value);
         }
 
         if (supware[index] != w_id) {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), tpcc::stockTuple {.s_remote_cnt = s_remote_cnt + Numeric<4, 0>(1)});
+            auto new_value = stockTable.read_tuple(stockTable.primary_key.at(Key(w_id, itemid[index]))).value();
+            new_value.s_remote_cnt = s_remote_cnt + Numeric<4, 0>(1);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), new_value);
         } else {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), tpcc::stockTuple {.s_remote_cnt = s_order_cnt + Numeric<4, 0>(1)});
+            auto new_value = stockTable.read_tuple(stockTable.primary_key.at(Key(w_id, itemid[index]))).value();
+            new_value.s_remote_cnt = s_order_cnt + Numeric<4, 0>(1);
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), new_value);
         }
 
         Numeric<6, 2> ol_amount = (Numeric<5, 2>(qty[index]) * i_price * (Numeric<4, 4>(1) + w_tax + d_tax).castS<5>() * (Numeric<4, 4>(1) - c_discount)

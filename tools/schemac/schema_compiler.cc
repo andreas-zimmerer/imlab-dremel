@@ -37,7 +37,7 @@ void SchemaCompiler::createHeader(Schema &schema) {
     header_ << "class TableBase {" << std::endl;
     header_ << " public:" << std::endl;
     header_ << "    virtual uint64_t insert_tuple(const Tuple& tuple) = 0;" << std::endl;
-    header_ << "    virtual Tuple read_tuple(const uint64_t tid) = 0;" << std::endl;
+    header_ << "    virtual std::optional<Tuple> read_tuple(const uint64_t tid) = 0;" << std::endl;
     header_ << "    virtual void update_tuple(const uint64_t tid, const Tuple& tuple) = 0;" << std::endl;
     header_ << "    virtual void delete_tuple(const uint64_t tid) = 0;" << std::endl;
     header_ << "    uint64_t get_size() { return size; }" << std::endl;
@@ -74,7 +74,7 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
 
     header_ << " public:" << std::endl;
     header_ << "    uint64_t insert_tuple(const " << table.id << "Tuple& tuple) override;" << std::endl;
-    header_ << "    " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << "    std::optional<" << table.id << "Tuple> read_tuple(const uint64_t tid) override;" << std::endl;
     header_ << "    void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
     header_ << "    void delete_tuple(const uint64_t tid) override;" << std::endl;
     header_ << std::endl;
@@ -90,6 +90,7 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
     }
 
     header_ << " private:" << std::endl;
+    header_ << "    std::vector<bool> deleted;" << std::endl;
     // vectors for columns
     for (auto& column : table.columns) {
         header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
@@ -119,11 +120,13 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     // functions: insert
     impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(const " << table.id << "Tuple" << "& tuple) {" << std::endl;
 
+    impl_ << "    auto insert_pos = size;" << std::endl;
+
     for (auto& column : table.columns) {
         impl_ << "    " << column.id << ".push_back(tuple." << column.id << ");" << std::endl;
     }
+    impl_ << "    deleted.push_back(false);" << std::endl;
     impl_ << std::endl;
-    impl_ << "    auto insert_pos = size;" << std::endl;
 
     // update primary key index if exists
     if (table.primary_key.size() > 0) {
@@ -140,20 +143,56 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     impl_ << std::endl;
 
     // functions: read
-    impl_ << table.id << "Tuple " << table.id << "Table" << "::" << "read_tuple(const uint64_t tid) {" << std::endl;
-    impl_ << "    return {};" << std::endl;
+    impl_ << "std::optional<" << table.id << "Tuple> " << table.id << "Table" << "::" << "read_tuple(const uint64_t tid) {" << std::endl;
+    impl_ << "    if (deleted[tid] == true) {" << std::endl;
+    impl_ << "        return std::nullopt;" << std::endl;
+    impl_ << "    }" << std::endl;
+    impl_ << std::endl;
+    impl_ << "    return " << table.id << "Tuple {" << std::endl;
+    for (auto& column : table.columns) {
+        impl_ << "        " << column.id << "[tid]," << std::endl;
+    }
+    impl_ << "    };" << std::endl;
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: update
     impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, const " << table.id << "Tuple" << "& tuple) {" << std::endl;
-    impl_ << "return;" << std::endl;
+
+    if (table.primary_key.size() > 0) {
+        impl_ << "    // delete the entry from the primary key index" << std::endl;
+        for (auto& column : table.primary_key) {
+            impl_ << "    auto " << column.id << "_old = " << column.id << "[tid];" << std::endl;
+        }
+        impl_ << "    primary_key.erase(Key(";
+        for (auto& column : table.primary_key) {
+            impl_ << column.id << "_old" << ((&column != &*table.primary_key.end() - 1)? ", " : "");
+        }
+        impl_ << "));" << std::endl;
+        impl_ << std::endl;
+    }
+
+    for (auto& column : table.columns) {
+        impl_ << "    " << column.id << "[tid] = tuple." << column.id << ";" << std::endl;
+    }
+
+    if (table.primary_key.size() > 0) {
+        impl_ << std::endl;
+        impl_ << "    // update index on primary key" << std::endl;
+        impl_ << "    " << "primary_key[Key(";
+        for (auto& column : table.primary_key) {
+            impl_ << "tuple." << column.id << ((&column != &*table.primary_key.end() - 1)? ", " : "");
+        }
+        impl_ << ")] = tid;" << std::endl;
+        impl_ << std::endl;
+    }
+
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: delete
     impl_ << "void " << table.id << "Table" << "::" << "delete_tuple(const uint64_t tid) {" << std::endl;
-    impl_ << "return;" << std::endl;
+    impl_ << "    deleted[tid] = true;" << std::endl;
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 }

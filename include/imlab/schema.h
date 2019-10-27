@@ -13,7 +13,7 @@ template<typename Tuple>
 class TableBase {
  public:
     virtual uint64_t insert_tuple(const Tuple& tuple) = 0;
-    virtual Tuple read_tuple(const uint64_t tid) = 0;
+    virtual std::optional<Tuple> read_tuple(const uint64_t tid) = 0;
     virtual void update_tuple(const uint64_t tid, const Tuple& tuple) = 0;
     virtual void delete_tuple(const uint64_t tid) = 0;
     uint64_t get_size() { return size; }
@@ -47,13 +47,14 @@ struct warehouseTuple {
 class warehouseTable : public TableBase<warehouseTuple> {
  public:
     uint64_t insert_tuple(const warehouseTuple& tuple) override;
-    warehouseTuple read_tuple(const uint64_t tid) override;
+    std::optional<warehouseTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const warehouseTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> w_id;
     std::vector<Varchar<10>> w_name;
     std::vector<Varchar<20>> w_street_1;
@@ -81,13 +82,14 @@ struct districtTuple {
 class districtTable : public TableBase<districtTuple> {
  public:
     uint64_t insert_tuple(const districtTuple& tuple) override;
-    districtTuple read_tuple(const uint64_t tid) override;
+    std::optional<districtTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const districtTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> d_id;
     std::vector<Integer> d_w_id;
     std::vector<Varchar<10>> d_name;
@@ -127,13 +129,14 @@ struct customerTuple {
 class customerTable : public TableBase<customerTuple> {
  public:
     uint64_t insert_tuple(const customerTuple& tuple) override;
-    customerTuple read_tuple(const uint64_t tid) override;
+    std::optional<customerTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const customerTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> c_id;
     std::vector<Integer> c_d_id;
     std::vector<Integer> c_w_id;
@@ -170,11 +173,12 @@ struct historyTuple {
 class historyTable : public TableBase<historyTuple> {
  public:
     uint64_t insert_tuple(const historyTuple& tuple) override;
-    historyTuple read_tuple(const uint64_t tid) override;
+    std::optional<historyTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const historyTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> h_c_id;
     std::vector<Integer> h_c_d_id;
     std::vector<Integer> h_c_w_id;
@@ -193,13 +197,14 @@ struct neworderTuple {
 class neworderTable : public TableBase<neworderTuple> {
  public:
     uint64_t insert_tuple(const neworderTuple& tuple) override;
-    neworderTuple read_tuple(const uint64_t tid) override;
+    std::optional<neworderTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const neworderTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> no_o_id;
     std::vector<Integer> no_d_id;
     std::vector<Integer> no_w_id;
@@ -218,13 +223,14 @@ struct orderTuple {
 class orderTable : public TableBase<orderTuple> {
  public:
     uint64_t insert_tuple(const orderTuple& tuple) override;
-    orderTuple read_tuple(const uint64_t tid) override;
+    std::optional<orderTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const orderTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> o_id;
     std::vector<Integer> o_d_id;
     std::vector<Integer> o_w_id;
@@ -250,13 +256,14 @@ struct orderlineTuple {
 class orderlineTable : public TableBase<orderlineTuple> {
  public:
     uint64_t insert_tuple(const orderlineTuple& tuple) override;
-    orderlineTuple read_tuple(const uint64_t tid) override;
+    std::optional<orderlineTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const orderlineTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> ol_o_id;
     std::vector<Integer> ol_d_id;
     std::vector<Integer> ol_w_id;
@@ -279,13 +286,14 @@ struct itemTuple {
 class itemTable : public TableBase<itemTuple> {
  public:
     uint64_t insert_tuple(const itemTuple& tuple) override;
-    itemTuple read_tuple(const uint64_t tid) override;
+    std::optional<itemTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const itemTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> i_id;
     std::vector<Integer> i_im_id;
     std::vector<Varchar<24>> i_name;
@@ -315,13 +323,14 @@ struct stockTuple {
 class stockTable : public TableBase<stockTuple> {
  public:
     uint64_t insert_tuple(const stockTuple& tuple) override;
-    stockTuple read_tuple(const uint64_t tid) override;
+    std::optional<stockTuple> read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const stockTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
 
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:
+    std::vector<bool> deleted;
     std::vector<Integer> s_i_id;
     std::vector<Integer> s_w_id;
     std::vector<Numeric<4, 0>> s_quantity;
