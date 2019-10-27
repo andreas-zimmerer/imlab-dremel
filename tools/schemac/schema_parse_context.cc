@@ -76,8 +76,22 @@ void SchemaParseContext::Error(uint32_t line, uint32_t column, const std::string
 }
 // ---------------------------------------------------------------------------------------------------
 // Define a table
+Table SchemaParseContext::createTable(const std::string &id, std::vector<Column> &columns, std::vector<std::string> &primary_keys, IndexType &indexType) {
+    std::vector<Column> prim_keys_columns;
+    for(auto& prim_key : primary_keys) {
+        auto c_it = std::find_if(columns.begin(), columns.end(), [&](const Column& c) { return c.id == prim_key; });
+        if(c_it != columns.end()) {
+            prim_keys_columns.push_back(*c_it);
+        } else {
+            std::stringstream ss;
+            ss << "Column name " << prim_key << " not found in table " << id << " while creating primary index.";
+            Error(ss.str());
+        }
+    }
+    return Table { id, columns, prim_keys_columns, indexType };
+}
+
 void SchemaParseContext::createSchema(const Schema &schema) {
     this->schema = schema;
 }
 // ---------------------------------------------------------------------------------------------------
-

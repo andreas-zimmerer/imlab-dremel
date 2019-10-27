@@ -126,9 +126,12 @@ class SchemaParseContext {
     // End a scan
     void endScan();
 
-    // Define a table
+    // Only need for storing the result -> is there a nicer way?
     void createSchema(const Schema &schema);
     Schema schema;
+
+    // create a table
+    Table createTable(const std::string &id, std::vector<Column> &columns, std::vector<std::string> &primary_keys, IndexType &indexType);
 
     // Trace the scanning
     bool trace_scanning_;

@@ -70,11 +70,13 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 %type <std::vector<imlab::schemac::Table>> table_list;
 %type <imlab::schemac::Column> column;
 %type <std::vector<imlab::schemac::Column>> column_list;
+%type <std::vector<std::string>> primary_key;
 %type <imlab::schemac::IndexType> with_key_index_type;
 %type <imlab::schemac::IndexType> key_index_type;
 %type <imlab::schemac::Index> index;
 %type <std::vector<imlab::schemac::Index>> index_list;
 %type <imlab::schemac::Type> type;
+%type <std::vector<std::string>> identifier_list;
 // ---------------------------------------------------------------------------------------------------
 %%
 
@@ -95,7 +97,7 @@ table_list:
     ;
 
 table:
-    CREATE TABLE IDENTIFIER LPAR column_list RPAR with_key_index_type SEMICOLON         { $$ = imlab::schemac::Table {$3, $5}; }
+    CREATE TABLE IDENTIFIER LPAR column_list primary_key RPAR with_key_index_type SEMICOLON         { $$ = sc.createTable($3, $5, $6, $8); }
 
 column_list:
     column_list COMMA column                            { $1.push_back($3); std::swap($$, $1); }
@@ -104,7 +106,11 @@ column_list:
     ;
 
 column:
-    IDENTIFIER type NOTNULL                            { $$ = imlab::schemac::Column {$1, $2}; }
+    IDENTIFIER type NOTNULL                             { $$ = imlab::schemac::Column {$1, $2}; }
+
+primary_key:
+    COMMA PRIMARY_KEY LPAR identifier_list RPAR         { $$ = $4; }
+ |  %empty                                              {}
 
 with_key_index_type:
     WITH LPAR KEY_INDEX_TYPE EQUAL key_index_type RPAR  { $$ = $5; }
@@ -123,7 +129,7 @@ index_list:
     ;
 
 index:
-    %empty                                              { $$ = imlab::schemac::Index(); }
+    %empty                                              { $$ = imlab::schemac::Index {}; }
 
 type:
     INTEGER                                             { $$ = Type::Integer(); }
@@ -131,6 +137,12 @@ type:
  |  NUMERIC LPAR INTEGER_VALUE COMMA INTEGER_VALUE RPAR { $$ = Type::Numeric($3, $5); }
  |  CHAR LPAR INTEGER_VALUE RPAR                        { $$ = Type::Char($3); }
  |  VARCHAR LPAR INTEGER_VALUE RPAR                     { $$ = Type::Varchar($3); }
+
+identifier_list:
+        identifier_list COMMA IDENTIFIER                { $1.push_back($3); std::swap($$, $1); }
+ |  IDENTIFIER                                          { $$ = std::vector<std::string> { $1 }; }
+ |  %empty                                              {}
+    ;
 
 %%
 // ---------------------------------------------------------------------------------------------------
