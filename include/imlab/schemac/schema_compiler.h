@@ -26,7 +26,11 @@ class SchemaCompiler {
 
     void createHeader(Schema &schema);
 
-    void generateTableStruct(Table &table);
+    void createSource(Schema &schema);
+
+    void generateTableClassHeader(Table &table);
+
+    void generateTableClassSource(Table &table);
 
     std::string generateTypeName(Type &type);
 };
