@@ -46,12 +46,12 @@ struct warehouseTuple {
 };
 class warehouseTable : public TableBase<warehouseTuple> {
  public:
-    std::unordered_map<Key<Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const warehouseTuple& tuple) override;
     warehouseTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const warehouseTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> w_id;
@@ -80,12 +80,12 @@ struct districtTuple {
 };
 class districtTable : public TableBase<districtTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const districtTuple& tuple) override;
     districtTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const districtTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> d_id;
@@ -126,12 +126,12 @@ struct customerTuple {
 };
 class customerTable : public TableBase<customerTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const customerTuple& tuple) override;
     customerTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const customerTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> c_id;
@@ -169,7 +169,6 @@ struct historyTuple {
 };
 class historyTable : public TableBase<historyTuple> {
  public:
-
     uint64_t insert_tuple(const historyTuple& tuple) override;
     historyTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const historyTuple& tuple) override;
@@ -193,12 +192,12 @@ struct neworderTuple {
 };
 class neworderTable : public TableBase<neworderTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const neworderTuple& tuple) override;
     neworderTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const neworderTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> no_o_id;
@@ -218,12 +217,12 @@ struct orderTuple {
 };
 class orderTable : public TableBase<orderTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const orderTuple& tuple) override;
     orderTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const orderTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> o_id;
@@ -250,12 +249,12 @@ struct orderlineTuple {
 };
 class orderlineTable : public TableBase<orderlineTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const orderlineTuple& tuple) override;
     orderlineTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const orderlineTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> ol_o_id;
@@ -279,12 +278,12 @@ struct itemTuple {
 };
 class itemTable : public TableBase<itemTuple> {
  public:
-    std::unordered_map<Key<Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const itemTuple& tuple) override;
     itemTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const itemTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> i_id;
@@ -315,12 +314,12 @@ struct stockTuple {
 };
 class stockTable : public TableBase<stockTuple> {
  public:
-    std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
-
     uint64_t insert_tuple(const stockTuple& tuple) override;
     stockTuple read_tuple(const uint64_t tid) override;
     void update_tuple(const uint64_t tid, const stockTuple& tuple) override;
     void delete_tuple(const uint64_t tid) override;
+
+    std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:
     std::vector<Integer> s_i_id;

@@ -73,6 +73,12 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
     header_ << "class " << table.id << "Table" << " : public TableBase<" << table.id << "Tuple" << "> {" << std::endl;
 
     header_ << " public:" << std::endl;
+    header_ << "    uint64_t insert_tuple(const " << table.id << "Tuple& tuple) override;" << std::endl;
+    header_ << "    " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << "    void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
+    header_ << "    void delete_tuple(const uint64_t tid) override;" << std::endl;
+    header_ << std::endl;
+
     // primary key
     if (table.primary_key.size() > 0) {
         header_ << "    std::unordered_map<Key<";
@@ -80,14 +86,8 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
             header_ << generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         header_ << ">, uint64_t> primary_key;" << std::endl;
+        header_ << std::endl;
     }
-    header_ << std::endl;
-
-    header_ << "    uint64_t insert_tuple(const " << table.id << "Tuple& tuple) override;" << std::endl;
-    header_ << "    " << table.id << "Tuple read_tuple(const uint64_t tid) override;" << std::endl;
-    header_ << "    void update_tuple(const uint64_t tid, const " << table.id << "Tuple& tuple) override;" << std::endl;
-    header_ << "    void delete_tuple(const uint64_t tid) override;" << std::endl;
-    header_ << std::endl;
 
     header_ << " private:" << std::endl;
     // vectors for columns
