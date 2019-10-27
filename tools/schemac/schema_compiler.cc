@@ -47,13 +47,13 @@ void SchemaCompiler::createHeader(Schema &schema) {
     header_ << std::endl;
 
     header_ << "enum Relation {" << std::endl;
-    for(auto& table : schema.tables) {
+    for (auto& table : schema.tables) {
         header_ << "    k" << table.id << "," << std::endl;
     }
     header_ << "};" << std::endl;
     header_ << std::endl;
 
-    for(auto& table : schema.tables) {
+    for (auto& table : schema.tables) {
         generateTableClassHeader(table);
         header_ << std::endl;
     }
@@ -65,7 +65,7 @@ void SchemaCompiler::createHeader(Schema &schema) {
 
 void SchemaCompiler::generateTableClassHeader(Table &table) {
     header_ << "struct " << table.id << "Tuple {" << std::endl;
-    for(auto& column : table.columns) {
+    for (auto& column : table.columns) {
         header_ << "    " << generateTypeName(column.type) << " " << column.id << ";" << std::endl;
     }
     header_ << "};" << std::endl;
@@ -74,9 +74,9 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
 
     header_ << " public:" << std::endl;
     // primary key
-    if(table.primary_key.size() > 0) {
+    if (table.primary_key.size() > 0) {
         header_ << "    std::unordered_map<Key<";
-        for(auto& column : table.primary_key) {
+        for (auto& column : table.primary_key) {
             header_ << generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         header_ << ">, uint64_t> primary_key;" << std::endl;
@@ -91,7 +91,7 @@ void SchemaCompiler::generateTableClassHeader(Table &table) {
 
     header_ << " private:" << std::endl;
     // vectors for columns
-    for(auto& column : table.columns) {
+    for (auto& column : table.columns) {
         header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
     }
 
@@ -106,7 +106,7 @@ void SchemaCompiler::createSource(Schema &schema) {
     impl_ << "namespace tpcc {" << std::endl;
     impl_ << std::endl;
 
-    for(auto& table : schema.tables) {
+    for (auto& table : schema.tables) {
         generateTableClassSource(table);
         impl_ << std::endl;
     }
@@ -119,16 +119,16 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     // functions: insert
     impl_ << "uint64_t " << table.id << "Table" << "::" << "insert_tuple(const " << table.id << "Tuple" << "& tuple) {" << std::endl;
 
-    for(auto& column : table.columns) {
+    for (auto& column : table.columns) {
         impl_ << "    " << column.id << ".push_back(tuple." << column.id << ");" << std::endl;
     }
     impl_ << std::endl;
     impl_ << "    auto insert_pos = size;" << std::endl;
 
     // update primary key index if exists
-    if(table.primary_key.size() > 0) {
+    if (table.primary_key.size() > 0) {
         impl_ << "    " << "primary_key[Key(";
-        for(auto& column : table.primary_key) {
+        for (auto& column : table.primary_key) {
             impl_ << "tuple." << column.id << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         impl_ << ")] = insert_pos;" << std::endl;
@@ -160,7 +160,7 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
 
 std::string SchemaCompiler::generateTypeName(Type &type) {
     std::stringstream ss;
-    switch(type.tclass) {
+    switch (type.tclass) {
         case Type::kNumeric:
             ss << "Numeric<" << type.length << ", " << type.precision << ">"; break;
         case Type::kChar:
