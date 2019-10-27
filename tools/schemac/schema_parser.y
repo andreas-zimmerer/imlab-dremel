@@ -47,6 +47,7 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 %token LPAR             "left_parentheses"
 %token RPAR             "right_parentheses"
 %token EQUAL            "equal"
+%token QUOTE            "quote"
 %token INTEGER          "integer"
 %token TIMESTAMP        "timestamp"
 %token NUMERIC          "numeric"
@@ -77,6 +78,7 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 %type <std::vector<imlab::schemac::Index>> index_list;
 %type <imlab::schemac::Type> type;
 %type <std::vector<std::string>> identifier_list;
+%type <std::string> identifier;
 // ---------------------------------------------------------------------------------------------------
 %%
 
@@ -97,7 +99,7 @@ table_list:
     ;
 
 table:
-    CREATE TABLE IDENTIFIER LPAR column_list primary_key RPAR with_key_index_type SEMICOLON         { $$ = sc.createTable($3, $5, $6, $8); }
+    CREATE TABLE identifier LPAR column_list primary_key RPAR with_key_index_type SEMICOLON         { $$ = sc.createTable($3, $5, $6, $8); }
 
 column_list:
     column_list COMMA column                            { $1.push_back($3); std::swap($$, $1); }
@@ -106,7 +108,7 @@ column_list:
     ;
 
 column:
-    IDENTIFIER type NOTNULL                             { $$ = imlab::schemac::Column {$1, $2}; }
+    identifier type NOTNULL                             { $$ = imlab::schemac::Column {$1, $2}; }
 
 primary_key:
     COMMA PRIMARY_KEY LPAR identifier_list RPAR         { $$ = $4; }
@@ -139,10 +141,14 @@ type:
  |  VARCHAR LPAR INTEGER_VALUE RPAR                     { $$ = Type::Varchar($3); }
 
 identifier_list:
-        identifier_list COMMA IDENTIFIER                { $1.push_back($3); std::swap($$, $1); }
- |  IDENTIFIER                                          { $$ = std::vector<std::string> { $1 }; }
+        identifier_list COMMA identifier                { $1.push_back($3); std::swap($$, $1); }
+ |  identifier                                          { $$ = std::vector<std::string> { $1 }; }
  |  %empty                                              {}
     ;
+
+identifier:
+    QUOTE IDENTIFIER QUOTE                              { $$ = $2; }
+ |  IDENTIFIER                                          { $$ = $1; }
 
 %%
 // ---------------------------------------------------------------------------------------------------

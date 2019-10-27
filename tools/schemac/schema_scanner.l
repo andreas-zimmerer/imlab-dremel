@@ -92,6 +92,7 @@ loc.step ();
 "("                 { return SchemaParser::make_LPAR(loc); }
 ")"                 { return SchemaParser::make_RPAR(loc); }
 "="                 { return SchemaParser::make_EQUAL(loc); }
+"\""                { return SchemaParser::make_QUOTE(loc); }
 "integer"           { return SchemaParser::make_INTEGER(loc); }
 "timestamp"         { return SchemaParser::make_TIMESTAMP(loc); }
 "numeric"           { return SchemaParser::make_NUMERIC(loc); }
