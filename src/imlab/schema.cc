@@ -22,12 +22,15 @@ uint64_t warehouseTable::insert_tuple(const warehouseTuple& tuple) {
 }
 
 warehouseTuple warehouseTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void warehouseTable::update_tuple(const uint64_t tid, const warehouseTuple& tuple) {
+return;
 }
 
 void warehouseTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -52,12 +55,15 @@ uint64_t districtTable::insert_tuple(const districtTuple& tuple) {
 }
 
 districtTuple districtTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void districtTable::update_tuple(const uint64_t tid, const districtTuple& tuple) {
+return;
 }
 
 void districtTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -92,12 +98,15 @@ uint64_t customerTable::insert_tuple(const customerTuple& tuple) {
 }
 
 customerTuple customerTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void customerTable::update_tuple(const uint64_t tid, const customerTuple& tuple) {
+return;
 }
 
 void customerTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -117,12 +126,15 @@ uint64_t historyTable::insert_tuple(const historyTuple& tuple) {
 }
 
 historyTuple historyTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void historyTable::update_tuple(const uint64_t tid, const historyTuple& tuple) {
+return;
 }
 
 void historyTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -139,12 +151,15 @@ uint64_t neworderTable::insert_tuple(const neworderTuple& tuple) {
 }
 
 neworderTuple neworderTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void neworderTable::update_tuple(const uint64_t tid, const neworderTuple& tuple) {
+return;
 }
 
 void neworderTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -166,12 +181,15 @@ uint64_t orderTable::insert_tuple(const orderTuple& tuple) {
 }
 
 orderTuple orderTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void orderTable::update_tuple(const uint64_t tid, const orderTuple& tuple) {
+return;
 }
 
 void orderTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -195,12 +213,15 @@ uint64_t orderlineTable::insert_tuple(const orderlineTuple& tuple) {
 }
 
 orderlineTuple orderlineTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void orderlineTable::update_tuple(const uint64_t tid, const orderlineTuple& tuple) {
+return;
 }
 
 void orderlineTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -219,12 +240,15 @@ uint64_t itemTable::insert_tuple(const itemTuple& tuple) {
 }
 
 itemTuple itemTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void itemTable::update_tuple(const uint64_t tid, const itemTuple& tuple) {
+return;
 }
 
 void itemTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 
@@ -255,12 +279,15 @@ uint64_t stockTable::insert_tuple(const stockTuple& tuple) {
 }
 
 stockTuple stockTable::read_tuple(const uint64_t tid) {
+    return {};
 }
 
 void stockTable::update_tuple(const uint64_t tid, const stockTuple& tuple) {
+return;
 }
 
 void stockTable::delete_tuple(const uint64_t tid) {
+return;
 }
 
 

@@ -301,7 +301,7 @@ void Database::NewOrder(
     auto o_id = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_next_o_id;
     auto d_tax = districtTable.read_tuple(districtTable.primary_key.at(Key(w_id, d_id))).d_tax;
 
-    districtTable.update_tuple(districtTable.primary_key.at(Key(w_id, d_id)), {.d_next_o_id = o_id + Integer(1)});
+    districtTable.update_tuple(districtTable.primary_key.at(Key(w_id, d_id)), tpcc::districtTuple {.d_next_o_id = o_id + Integer(1)});
 
     int all_local = 1;
     for (int index = 0; index < items.value; index++) {
@@ -335,15 +335,15 @@ void Database::NewOrder(
         }(d_id);
 
         if (s_quantity > Numeric<4, 0>(qty[index])) {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), {.s_quantity = s_quantity - Numeric<4, 0>(qty[index])});
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), tpcc::stockTuple {.s_quantity = s_quantity - Numeric<4, 0>(qty[index])});
         } else {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), {.s_quantity = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index])});
+            stockTable.update_tuple(stockTable.primary_key.at(Key(supware[index], itemid[index])), tpcc::stockTuple {.s_quantity = s_quantity + Numeric<4, 0>(91) - Numeric<4, 0>(qty[index])});
         }
 
         if (supware[index] != w_id) {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), {.s_remote_cnt = s_remote_cnt + Numeric<4, 0>(1)});
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), tpcc::stockTuple {.s_remote_cnt = s_remote_cnt + Numeric<4, 0>(1)});
         } else {
-            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), {.s_remote_cnt = s_order_cnt + Numeric<4, 0>(1)});
+            stockTable.update_tuple(stockTable.primary_key.at(Key(w_id, itemid[index])), tpcc::stockTuple {.s_remote_cnt = s_order_cnt + Numeric<4, 0>(1)});
         }
 
         Numeric<6, 2> ol_amount = (Numeric<5, 2>(qty[index]) * i_price * (Numeric<4, 4>(1) + w_tax + d_tax).castS<5>() * (Numeric<4, 4>(1) - c_discount)

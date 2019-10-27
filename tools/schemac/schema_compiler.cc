@@ -136,25 +136,24 @@ void SchemaCompiler::generateTableClassSource(Table &table) {
     }
     impl_ << "    size++;" << std::endl;
     impl_ << "    return insert_pos;" << std::endl;
-
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: read
     impl_ << table.id << "Tuple " << table.id << "Table" << "::" << "read_tuple(const uint64_t tid) {" << std::endl;
-
+    impl_ << "    return {};" << std::endl;
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: update
     impl_ << "void " << table.id << "Table" << "::" << "update_tuple(const uint64_t tid, const " << table.id << "Tuple" << "& tuple) {" << std::endl;
-
+    impl_ << "return;" << std::endl;
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 
     // functions: delete
     impl_ << "void " << table.id << "Table" << "::" << "delete_tuple(const uint64_t tid) {" << std::endl;
-
+    impl_ << "return;" << std::endl;
     impl_ << "}" << std::endl;
     impl_ << std::endl;
 }
