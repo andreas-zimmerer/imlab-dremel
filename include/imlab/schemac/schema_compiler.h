@@ -23,6 +23,12 @@ class SchemaCompiler {
     std::ostream &header_;
     // Output stream for the implementation
     std::ostream &impl_;
+
+    void createHeader(Schema &schema);
+
+    void generateTableStruct(Table &table);
+
+    std::string generateTypeName(Type &type);
 };
 // ---------------------------------------------------------------------------------------------------
 }  // namespace schemac
