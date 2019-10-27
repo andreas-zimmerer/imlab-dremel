@@ -35,8 +35,8 @@ void Database::LoadWarehouse(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto w_ytd = Numeric<12, 2>::castString(tmp.c_str(), tmp.size());
 
-        warehouseTable.append_row(w_id, w_name, w_street_1, w_street_2, w_city,
-                                  w_state, w_zip, w_tax, w_ytd);
+        warehouseTable.insert_tuple({w_id, w_name, w_street_1, w_street_2, w_city,
+                                  w_state, w_zip, w_tax, w_ytd});
     }
 }
 
@@ -67,8 +67,8 @@ void Database::LoadDistrict(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto d_next_o_id = Integer::castString(tmp.c_str(), tmp.size());
 
-        districtTable.append_row(d_id, d_w_id, d_name, d_street_1, d_street_2, d_city,
-                                 d_state, d_zip, d_tax, d_ytd, d_next_o_id);
+        districtTable.insert_tuple({d_id, d_w_id, d_name, d_street_1, d_street_2, d_city,
+                                 d_state, d_zip, d_tax, d_ytd, d_next_o_id});
     }
 }
 
@@ -119,10 +119,10 @@ void Database::LoadCustomer(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto c_data = Varchar<500>::castString(tmp.c_str(), tmp.size());
 
-        customerTable.append_row(c_id, c_d_id, c_w_id, c_first, c_middle, c_last,
+        customerTable.insert_tuple({c_id, c_d_id, c_w_id, c_first, c_middle, c_last,
                 c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since,
                 c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr,
-                c_payment_cnt, c_delivery_cnt, c_data);
+                c_payment_cnt, c_delivery_cnt, c_data});
     }
 }
 
@@ -147,8 +147,8 @@ void Database::LoadHistory(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto h_data = Varchar<24>::castString(tmp.c_str(), tmp.size());
 
-        historyTable.append_row(h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date,
-                h_amount, h_data);
+        historyTable.insert_tuple({h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date,
+                h_amount, h_data});
     }
 }
 
@@ -163,7 +163,7 @@ void Database::LoadNewOrder(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto no_w_id = Integer::castString(tmp.c_str(), tmp.size());
 
-        neworderTable.append_row(no_o_id, no_d_id, no_w_id);
+        neworderTable.insert_tuple({no_o_id, no_d_id, no_w_id});
     }
 }
 
@@ -188,8 +188,8 @@ void Database::LoadOrder(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto o_all_local = Numeric<1, 0>::castString(tmp.c_str(), tmp.size());
 
-        orderTable.append_row(o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id,
-                o_ol_cnt, o_all_local);
+        orderTable.insert_tuple({o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id,
+                o_ol_cnt, o_all_local});
     }
 }
 
@@ -218,8 +218,8 @@ void Database::LoadOrderLine(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto ol_dist_info = Char<24>::castString(tmp.c_str(), tmp.size());
 
-        orderlineTable.append_row(ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id,
-                ol_supply_w_id, ol_delivery_d, ol_quantity, ol_amount, ol_dist_info);
+        orderlineTable.insert_tuple({ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id,
+                ol_supply_w_id, ol_delivery_d, ol_quantity, ol_amount, ol_dist_info});
     }
 }
 
@@ -238,7 +238,7 @@ void Database::LoadItem(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto i_data = Varchar<50>::castString(tmp.c_str(), tmp.size());
 
-        itemTable.append_row(i_id, i_im_id, i_name, i_price, i_data);
+        itemTable.insert_tuple({i_id, i_im_id, i_name, i_price, i_data});
     }
 }
 
@@ -281,9 +281,9 @@ void Database::LoadStock(std::istream &in) {
         std::getline(in, tmp, '\n');
         auto s_data = Varchar<50>::castString(tmp.c_str(), tmp.size());
 
-        stockTable.append_row(s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02,
+        stockTable.insert_tuple({s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02,
                               s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08,
-                              s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data);
+                              s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data});
     }
 }
 
@@ -309,8 +309,8 @@ void Database::NewOrder(
             all_local = 0;
     }
 
-    orderTable.append_row(o_id, d_id, w_id, c_id, datetime, Integer(0), Numeric<2, 0>(items), Numeric<1, 0>(all_local));
-    neworderTable.append_row(o_id, d_id, w_id);
+    orderTable.insert_tuple({o_id, d_id, w_id, c_id, datetime, Integer(0), Numeric<2, 0>(items), Numeric<1, 0>(all_local)});
+    neworderTable.insert_tuple({o_id, d_id, w_id});
 
     for (int index = 0; index < items.value; index++) {
         auto i_price = itemTable.i_price[itemTable.index_prim_key.at(Key(itemid[index]))];
@@ -347,19 +347,19 @@ void Database::NewOrder(
         Numeric<6, 2> ol_amount = (Numeric<5, 2>(qty[index]) * i_price * (Numeric<4, 4>(1) + w_tax + d_tax).castS<5>() * (Numeric<4, 4>(1) - c_discount)
                 .castP2().castP2().castS<5>()).castS<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>().castM2<6>();
 
-        orderlineTable.append_row(o_id, d_id, w_id, Integer(index + 1), itemid[index], supware[index], Timestamp(0), Numeric<2, 0>(qty[index]), ol_amount, s_dist);
+        orderlineTable.insert_tuple({o_id, d_id, w_id, Integer(index + 1), itemid[index], supware[index], Timestamp(0), Numeric<2, 0>(qty[index]), ol_amount, s_dist});
     }
 }
 
-template <> size_t Database::Size<tpcc::kCustomer>()    { return customerTable.c_id.size(); }
-template <> size_t Database::Size<tpcc::kDistrict>()    { return districtTable.d_id.size(); }
-template <> size_t Database::Size<tpcc::kHistory>()     { return historyTable.h_c_id.size(); }
-template <> size_t Database::Size<tpcc::kItem>()        { return itemTable.i_id.size(); }
-template <> size_t Database::Size<tpcc::kNewOrder>()    { return neworderTable.no_o_id.size(); }
-template <> size_t Database::Size<tpcc::kOrder>()       { return orderTable.o_id.size(); }
-template <> size_t Database::Size<tpcc::kOrderLine>()   { return orderlineTable.ol_o_id.size(); }
-template <> size_t Database::Size<tpcc::kStock>()       { return stockTable.s_i_id.size(); }
-template <> size_t Database::Size<tpcc::kWarehouse>()   { return warehouseTable.w_id.size(); }
+template <> size_t Database::Size<tpcc::kCustomer>()    { return customerTable.get_size(); }
+template <> size_t Database::Size<tpcc::kDistrict>()    { return districtTable.get_size(); }
+template <> size_t Database::Size<tpcc::kHistory>()     { return historyTable.get_size(); }
+template <> size_t Database::Size<tpcc::kItem>()        { return itemTable.get_size(); }
+template <> size_t Database::Size<tpcc::kNewOrder>()    { return neworderTable.get_size(); }
+template <> size_t Database::Size<tpcc::kOrder>()       { return orderTable.get_size(); }
+template <> size_t Database::Size<tpcc::kOrderLine>()   { return orderlineTable.get_size(); }
+template <> size_t Database::Size<tpcc::kStock>()       { return stockTable.get_size(); }
+template <> size_t Database::Size<tpcc::kWarehouse>()   { return warehouseTable.get_size(); }
 
 void Database::Print() {
     std::cout << "-------------\n"
