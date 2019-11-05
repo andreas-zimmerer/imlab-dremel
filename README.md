@@ -88,6 +88,15 @@ Then use the parsed schema to generate C++ code with a schema compiler:
 * Implement your own lazy hash table using [this interface](include/imlab/infra/hash_table.h).
 * Measure the runtimes of the analytical query with the STL datastructure and your hash table.
 
+## Task 4
+
+* Implement query compilation of relational algebra trees to C++ code. Use the produce/consume (push) model.
+* You need to support the following operators: [table scan](include/imlab/algebra/table_scan.h), [selection](include/imlab/algebra/selection.h), [print](include/imlab/algebra/print.h) and [inner join](include/imlab/algebra/inner_join.h).
+* Test your code to make sure, that the [IUs](include/imlab/algebra/iu.h) are correctly propagated through the operators.
+* Manually build an algebra tree for [this SQL query](data/queryc_1.sql).
+* Write a [query compiler](tools/queryc/queryc.cc) that generates C++ code for the static algebra tree.
+* Add the generated C++ code to your repository and execute it in [imlabdb.cc](tools/imlabdb.cc) using the print operator.
+
 How many transactions per second can your implementation execute?
 
 Make sure your builds are not failing! <br/>

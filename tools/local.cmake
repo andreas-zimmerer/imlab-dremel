@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------------
 
 include("${CMAKE_SOURCE_DIR}/tools/schemac/local.cmake")
+include("${CMAKE_SOURCE_DIR}/tools/queryc/local.cmake")
 
 # ---------------------------------------------------------------------------
 # Sources
@@ -18,7 +19,6 @@ set(TOOLS_SRC
 
 add_executable(imlabdb tools/imlabdb.cc)
 target_link_libraries(imlabdb imlab gflags Threads::Threads)
-
 
 # ---------------------------------------------------------------------------
 # Linting
