@@ -428,6 +428,70 @@ void Database::Delivery(
 }
 
 
+Numeric<12, 2> Database::AnalyticalQuerySTL() {
+    // select sum(ol_quantity*ol_amount-c_balance*o_ol_cnt)
+    //   from customer, "order", orderline
+    // where o_w_id = c_w_id
+    //   and o_d_id = c_d_id
+    //   and o_c_id = c_id
+    //   and o_w_id = ol_w_id
+    //   and o_d_id = ol_d_id
+    //   and o_id = ol_o_id
+    //   and c_last like 'B%'
+
+    Numeric<12, 4> sum = Numeric<12, 4>(0);
+
+    std::unordered_multimap<Key<Integer /*c_w_id*/, Integer /*c_d_id*/, Integer /*c_id*/>, Numeric<12, 2> /*c_balance*/> join_customer_order;
+    std::unordered_multimap<Key<Integer /*o_w_id*/, Integer /*o_d_id*/, Integer /*o_id*/>, std::tuple<Numeric<12, 2> /*c_balance*/, Numeric<2, 0> /*o_ol_cnt*/>> join_order_orderline;
+
+    for (auto& [_, c_tid] : customerTable.primary_key) {
+        auto c_last = customerTable.get_c_last(c_tid).value();
+        if (*c_last.begin() == 'B') {
+            auto c_w_id = customerTable.get_c_w_id(c_tid).value();
+            auto c_d_id = customerTable.get_c_d_id(c_tid).value();
+            auto c_id = customerTable.get_c_id(c_tid).value();
+            auto c_balance = customerTable.get_c_balance(c_tid).value();
+            join_customer_order.insert({Key(c_w_id, c_d_id, c_id), c_balance});
+        }
+    }
+
+    for (auto& [_, o_tid] : orderTable.primary_key) {
+        auto o_w_id = orderTable.get_o_w_id(o_tid).value();
+        auto o_d_id = orderTable.get_o_d_id(o_tid).value();
+        auto o_c_id = orderTable.get_o_c_id(o_tid).value();
+
+        auto o_ol_cnt = orderTable.get_o_ol_cnt(o_tid).value();
+        auto o_id = orderTable.get_o_id(o_tid).value();
+
+        auto matches = join_customer_order.equal_range(Key(o_w_id, o_d_id, o_c_id));
+        for (auto it = matches.first; it != matches.second; ++it) {
+            auto c_balance = it->second;
+
+            join_order_orderline.insert({Key(o_w_id, o_d_id, o_id), std::make_tuple(c_balance, o_ol_cnt)});
+        }
+    }
+
+    for (auto& [_, ol_tid] : orderlineTable.primary_key) {
+        auto ol_w_id = orderlineTable.get_ol_w_id(ol_tid).value();
+        auto ol_d_id = orderlineTable.get_ol_d_id(ol_tid).value();
+        auto ol_o_id = orderlineTable.get_ol_o_id(ol_tid).value();
+
+        auto ol_quantity = orderlineTable.get_ol_quantity(ol_tid).value();
+        auto ol_amount = orderlineTable.get_ol_amount(ol_tid).value();
+
+        auto matches = join_order_orderline.equal_range(Key(ol_w_id, ol_d_id, ol_o_id));
+        for (auto it = matches.first; it != matches.second; ++it) {
+            auto c_balance = std::get<0>(it->second);
+            auto o_ol_cnt = std::get<1>(it->second);
+
+            sum = sum + ((ol_quantity.castP2().castS<6>() * ol_amount).castS<12>() - (c_balance * o_ol_cnt.castP2().castS<12>()));
+        }
+    }
+
+    return sum.castM2<12>();
+}
+
+
 template <> size_t Database::Size<tpcc::kcustomer>()    { return customerTable.get_size(); }
 template <> size_t Database::Size<tpcc::kdistrict>()    { return districtTable.get_size(); }
 template <> size_t Database::Size<tpcc::khistory>()     { return historyTable.get_size(); }

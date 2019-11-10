@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 #include <sstream>
+#include <fstream>
 #include "imlab/test/data.h"
 #include "imlab/database.h"
 #include "gtest/gtest.h"
@@ -58,6 +59,21 @@ TEST(DISABLED_DatabaseQueryTest, Delivery) {
     db.Delivery(w_id, o_carrier_id, datetime);
 
     ASSERT_EQ(db.Size<imlab::tpcc::kneworder>(), 3);
+}
+
+TEST(DatabaseQueryTest, OLAP) {
+    imlab::Database db;
+    std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
+    db.LoadCustomer(customer_file);
+    std::fstream order_file ("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
+    db.LoadOrder(order_file);
+    std::fstream orderline_file ("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
+    db.LoadOrderLine(orderline_file);
+
+    auto sum = db.AnalyticalQuerySTL();
+
+    auto result = Numeric<12, 2>(136787200125);
+    ASSERT_EQ(sum, result);
 }
 
 }  // namespace
