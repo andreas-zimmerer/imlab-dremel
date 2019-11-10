@@ -55,6 +55,7 @@ class warehouseTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: w_id, 
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
@@ -102,6 +103,7 @@ class districtTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: d_w_id, d_id, 
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:
@@ -171,6 +173,7 @@ class customerTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: c_w_id, c_d_id, c_id, 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
@@ -252,6 +255,7 @@ class neworderTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: no_w_id, no_d_id, no_o_id, 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
@@ -287,6 +291,7 @@ class orderTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: o_w_id, o_d_id, o_id, 
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
@@ -331,6 +336,7 @@ class orderlineTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: ol_w_id, ol_d_id, ol_o_id, ol_number, 
     std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> primary_key;
 
  private:
@@ -367,6 +373,7 @@ class itemTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: i_id, 
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
  private:
@@ -422,6 +429,7 @@ class stockTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    // Primary Key for: s_w_id, s_i_id, 
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
  private:

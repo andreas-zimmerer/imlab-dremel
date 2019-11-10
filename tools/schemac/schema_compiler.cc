@@ -66,6 +66,11 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
 
     // Primary key
     if (table.primary_key.size() > 0) {
+        header_ << "    // Primary Key for: ";
+        for (auto& column : table.primary_key) {
+            header_ << column.id << ", ";
+        }
+        header_ << std::endl;
         header_ << "    std::unordered_map<Key<";
         for (auto& column : table.primary_key) {
             header_ << generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
