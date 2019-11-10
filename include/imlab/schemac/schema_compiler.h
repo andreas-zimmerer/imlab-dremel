@@ -28,12 +28,6 @@ class SchemaCompiler {
     void createHeader(Schema &schema);
 
     void createSource(Schema &schema);
-
-    void generateTableClassHeader(Table &table);
-
-    void generateTableClassSource(Table &table);
-
-    std::string generateTypeName(Type &type);
 };
 // ---------------------------------------------------------------------------------------------------
 }  // namespace schemac
