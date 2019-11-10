@@ -56,8 +56,11 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 %token NOTNULL          "not_null"
 %token CREATE           "create"
 %token TABLE            "table"
+%token INDEX            "index"
+%token ON               "on"
 %token WITH             "with"
 %token KEY_INDEX_TYPE   "key_index_type"
+%token INDEX_TYPE       "index_type"
 %token INDEX_TYPE_UNORDERED_MAP         "index_type_unordered_map"
 %token INDEX_TYPE_STL_MAP               "index_type_stl_map"
 %token INDEX_TYPE_STX_MAP               "index_type_stx_map"
@@ -66,40 +69,43 @@ imlab::schemac::SchemaParser::symbol_type yylex(imlab::schemac::SchemaParseConte
 %token <std::string>    IDENTIFIER       "identifier"
 %token EOF 0            "eof"
 // ---------------------------------------------------------------------------------------------------
-%type <imlab::schemac::Schema> schema;
-%type <imlab::schemac::Table> table;
-%type <std::vector<imlab::schemac::Table>> table_list;
 %type <imlab::schemac::Column> column;
 %type <std::vector<imlab::schemac::Column>> column_list;
 %type <std::vector<std::string>> primary_key;
-%type <imlab::schemac::IndexType> with_key_index_type;
-%type <imlab::schemac::IndexType> key_index_type;
-%type <imlab::schemac::Index> index;
-%type <std::vector<imlab::schemac::Index>> index_list;
+%type <imlab::schemac::IndexType> with_index_type;
+%type <imlab::schemac::IndexType> index_type;
 %type <imlab::schemac::Type> type;
 %type <std::vector<std::string>> identifier_list;
 %type <std::string> identifier;
 // ---------------------------------------------------------------------------------------------------
 %%
 
-%start create_schema;
-
-create_schema:
-    schema                                              { sc.createSchema($1); }
+%start schema;
 
 schema:
-    table_list                                          { $$ = imlab::schemac::Schema {$1}; }
- |  %empty                                              {}
+    sql_schema_statement_list                               {}
     ;
 
-table_list:
-    table_list table                                    { $1.push_back($2); std::swap($$, $1); }
- |  table                                               { $$ = std::vector<imlab::schemac::Table> { $1 }; }
- |  %empty                                              {}
+sql_schema_statement_list:
+    sql_schema_statement_list sql_schema_statement          {}
+ |  sql_schema_statement                                    {}
+ |  %empty                                                  {}
     ;
 
-table:
-    CREATE TABLE identifier LPAR column_list primary_key RPAR with_key_index_type SEMICOLON         { $$ = sc.createTable($3, $5, $6, $8); }
+sql_schema_statement:
+    create_table_statement                                  {}
+ |  create_index_statement                                  {}
+    ;
+
+create_table_statement:
+    CREATE TABLE identifier LPAR column_list primary_key RPAR SEMICOLON                             { sc.createTable($3, $5, $6); }
+ |  CREATE TABLE identifier LPAR column_list primary_key RPAR with_index_type SEMICOLON             { sc.createTable($3, $5, $6, $8); }
+    ;
+
+create_index_statement:
+    CREATE INDEX identifier ON identifier LPAR identifier_list RPAR SEMICOLON                       { sc.createIndex($3, $5, $7); }
+ |  CREATE INDEX identifier ON identifier LPAR identifier_list RPAR with_index_type SEMICOLON       { sc.createIndex($3, $5, $7, $9); }
+    ;
 
 column_list:
     column_list COMMA column                            { $1.push_back($3); std::swap($$, $1); }
@@ -109,29 +115,23 @@ column_list:
 
 column:
     identifier type NOTNULL                             { $$ = imlab::schemac::Column {$1, $2}; }
+    ;
 
 primary_key:
     COMMA PRIMARY_KEY LPAR identifier_list RPAR         { $$ = $4; }
  |  %empty                                              {}
-
-with_key_index_type:
-    WITH LPAR KEY_INDEX_TYPE EQUAL key_index_type RPAR  { $$ = $5; }
- |  %empty                                              {}
     ;
 
-key_index_type:
+with_index_type:
+    WITH LPAR KEY_INDEX_TYPE EQUAL index_type RPAR  { $$ = $5; }
+ |  WITH LPAR INDEX_TYPE EQUAL index_type RPAR  { $$ = $5; }
+    ;
+
+index_type:
     INDEX_TYPE_UNORDERED_MAP                            { $$ = imlab::schemac::IndexType::kSTLUnorderedMap; }
  |  INDEX_TYPE_STL_MAP                                  { $$ = imlab::schemac::IndexType::kSTLMap; }
  |  INDEX_TYPE_STX_MAP                                  { $$ = imlab::schemac::IndexType::kSTXMap; }
-
-index_list:
-    index_list index                                    { $1.push_back($2); std::swap($$, $1); }
- |  index                                               { $$ = std::vector<imlab::schemac::Index> { $1 }; }
- |  %empty                                              {}
     ;
-
-index:
-    %empty                                              { $$ = imlab::schemac::Index {}; }
 
 type:
     INTEGER                                             { $$ = Type::Integer(); }
@@ -139,9 +139,10 @@ type:
  |  NUMERIC LPAR INTEGER_VALUE COMMA INTEGER_VALUE RPAR { $$ = Type::Numeric($3, $5); }
  |  CHAR LPAR INTEGER_VALUE RPAR                        { $$ = Type::Char($3); }
  |  VARCHAR LPAR INTEGER_VALUE RPAR                     { $$ = Type::Varchar($3); }
+    ;
 
 identifier_list:
-        identifier_list COMMA identifier                { $1.push_back($3); std::swap($$, $1); }
+    identifier_list COMMA identifier                    { $1.push_back($3); std::swap($$, $1); }
  |  identifier                                          { $$ = std::vector<std::string> { $1 }; }
  |  %empty                                              {}
     ;
@@ -149,6 +150,7 @@ identifier_list:
 identifier:
     QUOTE IDENTIFIER QUOTE                              { $$ = $2; }
  |  IDENTIFIER                                          { $$ = $1; }
+    ;
 
 %%
 // ---------------------------------------------------------------------------------------------------
