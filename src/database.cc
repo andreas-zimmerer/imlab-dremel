@@ -380,12 +380,55 @@ void Database::NewOrder(
     }
 }
 
+
 void Database::Delivery(
         Integer w_id,
         Integer o_carrier_id,
         Timestamp datetime) {
-    // TODO
+
+    // forsequence (d_id between 1 and 10) {
+    for (Integer d_id = Integer(1); d_id < Integer(10); d_id = d_id + Integer(1)) {
+
+        // select min(no_o_id) as o_id from neworder where no_w_id=w_id and no_d_id=d_id order by no_o_id else { continue; } -- ignore this district if no row found
+        std::vector<Integer> select_from_neworder {};
+        for (auto& [_, tid] : neworderTable.primary_key) {
+            if (neworderTable.get_no_w_id(tid) == w_id && neworderTable.get_no_d_id(tid) == Integer(d_id)) {
+                select_from_neworder.push_back(neworderTable.get_no_o_id(tid).value());
+            }
+        }
+        if (select_from_neworder.size() == 0) {
+            continue;
+        }
+        auto o_id = *std::min_element(select_from_neworder.begin(), select_from_neworder.end());
+
+        // delete from neworder where no_w_id=w_id and no_d_id=d_id and no_o_id=o_id;
+        neworderTable.remove(neworderTable.primary_key.at(Key(w_id, d_id, o_id)));
+
+        // select o_ol_cnt,o_c_id from "order" o where o_w_id=w_id and o_d_id=d_id and o.o_id=o_id;
+        auto o_ol_cnt = orderTable.get_o_ol_cnt(orderTable.primary_key.at(Key(w_id, d_id, o_id))).value();
+        auto o_c_id = orderTable.get_o_c_id(orderTable.primary_key.at(Key(w_id, d_id, o_id))).value();
+
+        // update "order" set o_carrier_id=o_carrier_id where o_w_id=w_id and o_d_id=d_id and "order".o_id=o_id;
+        orderTable.update_o_carrier_id(orderTable.primary_key.at(Key(w_id, d_id, o_id)), o_carrier_id);
+
+        // var numeric(6,2) ol_total=0;
+        auto ol_total = Numeric<6, 2>(0);
+        // forsequence (ol_number between 1 and o_ol_cnt) {
+        for (Integer ol_number = Integer(1); Numeric<2, 0>(ol_number) < o_ol_cnt; ol_number = ol_number + Integer(1)) {
+            // select ol_amount from orderline where ol_w_id=w_id and ol_d_id=d_id and ol_o_id=o_id and orderline.ol_number=ol_number;
+            auto ol_amount = orderlineTable.get_ol_amount(orderlineTable.primary_key.at(Key(w_id, d_id, o_id, ol_number))).value();
+            // ol_total=ol_total+ol_amount;
+            ol_total = ol_total + ol_amount;
+            // update orderline set ol_delivery_d=datetime where ol_w_id=w_id and ol_d_id=d_id and ol_o_id=o_id and orderline.ol_number=ol_number;
+            orderlineTable.update_ol_delivery_d(orderlineTable.primary_key.at(Key(w_id, d_id, o_id, ol_number)), datetime);
+        }
+
+        // update customer set c_balance=c_balance+ol_total where c_w_id=w_id and c_d_id=d_id and c_id=o_c_id;
+        customerTable.update_c_balance(customerTable.primary_key.at(Key(w_id, d_id, o_c_id)),
+                customerTable.get_c_balance(customerTable.primary_key.at(Key(w_id, d_id, o_c_id))).value() + ol_total.castS<12>());
+    }
 }
+
 
 template <> size_t Database::Size<tpcc::kcustomer>()    { return customerTable.get_size(); }
 template <> size_t Database::Size<tpcc::kdistrict>()    { return districtTable.get_size(); }
