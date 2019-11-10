@@ -12,7 +12,6 @@
 #include "imlab/infra/types.h"
 
 namespace {
-
 const int32_t kWarehouses = 5;
 
 // Uniform random number
@@ -53,7 +52,13 @@ void RandomNewOrder(imlab::Database &db) {
     db.NewOrder(w_id, d_id, c_id, ol_cnt, supware, itemid, qty, now);
 }
 
-void RandomNeworderBenchmark(benchmark::State &state) {
+// Place a random delivery
+void RandomDelivery(imlab::Database &db) {
+    Timestamp now(0);
+    db.Delivery(Integer(URand(1, kWarehouses)), Integer(URand(1, 10)), now);
+}
+
+void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
     imlab::Database database;
 
     std::fstream warehouse_file ("../data/tpcc_5w/tpcc_warehouse.tbl", std::fstream::in);
@@ -76,20 +81,36 @@ void RandomNeworderBenchmark(benchmark::State &state) {
     database.LoadStock(stock_file);
 
     database.Print();
+    std::cout.flush();
+
+    unsigned number_of_delivery = 0;
+    unsigned number_of_neworder = 0;
 
     for (auto _ : state) {
-        RandomNewOrder(database);
+        if (URand(1, 100) <= 10) {
+            RandomDelivery(database);
+            number_of_delivery++;
+        } else {
+            RandomNewOrder(database);
+            number_of_neworder++;
+        }
     }
 
     state.SetItemsProcessed(state.iterations());
 
     database.Print();
+    std::cout.flush();
+
+    std::cout << std::endl;
+    std::cout << "Number of Delivery Queries: " << number_of_delivery << std::endl;
+    std::cout << "Number of Neworder Queries: " << number_of_neworder << std::endl;
+    std::cout.flush();
 }
 
 }  // namespace
 
-BENCHMARK(RandomNeworderBenchmark)
-    ->Iterations(1000000);
+BENCHMARK(RandomMixNeworderDeliveryBenchmark)
+->Iterations(10000);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
