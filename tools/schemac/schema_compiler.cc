@@ -43,7 +43,8 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << " public:" << std::endl;
     header_ << "    uint64_t insert(";
     for (auto& column : table.columns) {
-        header_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? ", " : "");
+        header_ << std::endl << "        ";
+        header_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
     }
     header_ << ");" << std::endl;
     header_ << std::endl;
