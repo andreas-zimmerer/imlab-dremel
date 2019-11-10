@@ -138,12 +138,12 @@ class TableBase {
 void generateInsertMethod(Table &table, std::ostream &impl_) {
     impl_ << "uint64_t " << table.id << "Table" << "::" << "insert(";
     for (auto& column : table.columns) {
+        impl_ << std::endl << "        ";
         impl_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? ", " : "");
     }
     impl_ << ") {" << std::endl;
 
-    impl_ << R"IMPL(
-    // search for free insert position
+    impl_ << R"IMPL(    // search for free insert position
     size_t insert_pos = this->first_free_pos;
     for (; insert_pos < this->deleted_tuples.size(); insert_pos++) {
         if (this->deleted_tuples[insert_pos]) {

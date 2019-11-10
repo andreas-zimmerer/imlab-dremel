@@ -296,7 +296,6 @@ void Database::NewOrder(
         std::array<Integer, 15> &itemid,
         std::array<Integer, 15> &qty,
         Timestamp datetime) {
-
     // select w_tax from warehouse w where w.w_id=w_id;
     // select c_discount from customer c where c_w_id=w_id and c_d_id=d_id and c.c_id=c_id;
     // select d_next_o_id as o_id,d_tax from district d where d_w_id=w_id and d.d_id=d_id;
@@ -326,11 +325,12 @@ void Database::NewOrder(
 
     // forsequence (index between 0 and items-1) {
     for (int index = 0; index < items.value; index++) {
-
         // select i_price from item where i_id=itemid[index];
         auto i_price = itemTable.get_i_price(itemTable.primary_key.at(Key(itemid[index]))).value();
 
-        // select s_quantity,s_remote_cnt,s_order_cnt,case d_id when 1 then s_dist_01 when 2 then s_dist_02 when 3 then s_dist_03 when 4 then s_dist_04 when 5 then s_dist_05 when 6 then s_dist_06 when 7 then s_dist_07 when 8 then s_dist_08 when 9 then s_dist_09 when 10 then s_dist_10 end as s_dist from stock where s_w_id=supware[index] and s_i_id=itemid[index];
+        // select s_quantity,s_remote_cnt,s_order_cnt,case d_id when 1 then s_dist_01 when 2 then s_dist_02 when 3 then s_dist_03
+        // when 4 then s_dist_04 when 5 then s_dist_05 when 6 then s_dist_06 when 7 then s_dist_07 when 8 then s_dist_08
+        // when 9 then s_dist_09 when 10 then s_dist_10 end as s_dist from stock where s_w_id=supware[index] and s_i_id=itemid[index];
         auto s_quantity = stockTable.get_s_quantity(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
         auto s_remote_cnt = stockTable.get_s_remote_cnt(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
         auto s_order_cnt = stockTable.get_s_order_cnt(stockTable.primary_key.at(Key(supware[index], itemid[index]))).value();
@@ -385,10 +385,8 @@ void Database::Delivery(
         Integer w_id,
         Integer o_carrier_id,
         Timestamp datetime) {
-
     // forsequence (d_id between 1 and 10) {
     for (Integer d_id = Integer(1); d_id < Integer(10); d_id = d_id + Integer(1)) {
-
         // select min(no_o_id) as o_id from neworder where no_w_id=w_id and no_d_id=d_id order by no_o_id else { continue; } -- ignore this district if no row found
         std::vector<Integer> select_from_neworder {};
         for (auto& [_, tid] : neworderTable.primary_key) {
