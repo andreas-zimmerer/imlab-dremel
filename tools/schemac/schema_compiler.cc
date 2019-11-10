@@ -139,7 +139,7 @@ void generateInsertMethod(Table &table, std::ostream &impl_) {
     impl_ << "uint64_t " << table.id << "Table" << "::" << "insert(";
     for (auto& column : table.columns) {
         impl_ << std::endl << "        ";
-        impl_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? ", " : "");
+        impl_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
     }
     impl_ << ") {" << std::endl;
 

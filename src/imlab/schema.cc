@@ -8,14 +8,14 @@ namespace tpcc {
 // Generated sources for table warehouse
 // ------------------------------------------------
 uint64_t warehouseTable::insert(
-        const Integer w_id, 
-        const Varchar<10> w_name, 
-        const Varchar<20> w_street_1, 
-        const Varchar<20> w_street_2, 
-        const Varchar<20> w_city, 
-        const Char<2> w_state, 
-        const Char<9> w_zip, 
-        const Numeric<4, 4> w_tax, 
+        const Integer w_id,
+        const Varchar<10> w_name,
+        const Varchar<20> w_street_1,
+        const Varchar<20> w_street_2,
+        const Varchar<20> w_city,
+        const Char<2> w_state,
+        const Char<9> w_zip,
+        const Numeric<4, 4> w_tax,
         const Numeric<12, 2> w_ytd) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -198,16 +198,16 @@ void warehouseTable::update_w_ytd(const uint64_t tid, const Numeric<12, 2> w_ytd
 // Generated sources for table district
 // ------------------------------------------------
 uint64_t districtTable::insert(
-        const Integer d_id, 
-        const Integer d_w_id, 
-        const Varchar<10> d_name, 
-        const Varchar<20> d_street_1, 
-        const Varchar<20> d_street_2, 
-        const Varchar<20> d_city, 
-        const Char<2> d_state, 
-        const Char<9> d_zip, 
-        const Numeric<4, 4> d_tax, 
-        const Numeric<12, 2> d_ytd, 
+        const Integer d_id,
+        const Integer d_w_id,
+        const Varchar<10> d_name,
+        const Varchar<20> d_street_1,
+        const Varchar<20> d_street_2,
+        const Varchar<20> d_city,
+        const Char<2> d_state,
+        const Char<9> d_zip,
+        const Numeric<4, 4> d_tax,
+        const Numeric<12, 2> d_ytd,
         const Integer d_next_o_id) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -430,26 +430,26 @@ void districtTable::update_d_next_o_id(const uint64_t tid, const Integer d_next_
 // Generated sources for table customer
 // ------------------------------------------------
 uint64_t customerTable::insert(
-        const Integer c_id, 
-        const Integer c_d_id, 
-        const Integer c_w_id, 
-        const Varchar<16> c_first, 
-        const Char<2> c_middle, 
-        const Varchar<16> c_last, 
-        const Varchar<20> c_street_1, 
-        const Varchar<20> c_street_2, 
-        const Varchar<20> c_city, 
-        const Char<2> c_state, 
-        const Char<9> c_zip, 
-        const Char<16> c_phone, 
-        const Timestamp c_since, 
-        const Char<2> c_credit, 
-        const Numeric<12, 2> c_credit_lim, 
-        const Numeric<4, 4> c_discount, 
-        const Numeric<12, 2> c_balance, 
-        const Numeric<12, 2> c_ytd_paymenr, 
-        const Numeric<4, 0> c_payment_cnt, 
-        const Numeric<4, 0> c_delivery_cnt, 
+        const Integer c_id,
+        const Integer c_d_id,
+        const Integer c_w_id,
+        const Varchar<16> c_first,
+        const Char<2> c_middle,
+        const Varchar<16> c_last,
+        const Varchar<20> c_street_1,
+        const Varchar<20> c_street_2,
+        const Varchar<20> c_city,
+        const Char<2> c_state,
+        const Char<9> c_zip,
+        const Char<16> c_phone,
+        const Timestamp c_since,
+        const Char<2> c_credit,
+        const Numeric<12, 2> c_credit_lim,
+        const Numeric<4, 4> c_discount,
+        const Numeric<12, 2> c_balance,
+        const Numeric<12, 2> c_ytd_paymenr,
+        const Numeric<4, 0> c_payment_cnt,
+        const Numeric<4, 0> c_delivery_cnt,
         const Varchar<500> c_data) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -826,13 +826,13 @@ void customerTable::update_c_data(const uint64_t tid, const Varchar<500> c_data)
 // Generated sources for table history
 // ------------------------------------------------
 uint64_t historyTable::insert(
-        const Integer h_c_id, 
-        const Integer h_c_d_id, 
-        const Integer h_c_w_id, 
-        const Integer h_d_id, 
-        const Integer h_w_id, 
-        const Timestamp h_date, 
-        const Numeric<6, 2> h_amount, 
+        const Integer h_c_id,
+        const Integer h_c_d_id,
+        const Integer h_c_w_id,
+        const Integer h_d_id,
+        const Integer h_w_id,
+        const Timestamp h_date,
+        const Numeric<6, 2> h_amount,
         const Varchar<24> h_data) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -986,8 +986,8 @@ void historyTable::update_h_data(const uint64_t tid, const Varchar<24> h_data) {
 // Generated sources for table neworder
 // ------------------------------------------------
 uint64_t neworderTable::insert(
-        const Integer no_o_id, 
-        const Integer no_d_id, 
+        const Integer no_o_id,
+        const Integer no_d_id,
         const Integer no_w_id) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -1112,13 +1112,13 @@ void neworderTable::update_no_w_id(const uint64_t tid, const Integer no_w_id) {
 // Generated sources for table order
 // ------------------------------------------------
 uint64_t orderTable::insert(
-        const Integer o_id, 
-        const Integer o_d_id, 
-        const Integer o_w_id, 
-        const Integer o_c_id, 
-        const Timestamp o_entry_d, 
-        const Integer o_carrier_id, 
-        const Numeric<2, 0> o_ol_cnt, 
+        const Integer o_id,
+        const Integer o_d_id,
+        const Integer o_w_id,
+        const Integer o_c_id,
+        const Timestamp o_entry_d,
+        const Integer o_carrier_id,
+        const Numeric<2, 0> o_ol_cnt,
         const Numeric<1, 0> o_all_local) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -1313,15 +1313,15 @@ void orderTable::update_o_all_local(const uint64_t tid, const Numeric<1, 0> o_al
 // Generated sources for table orderline
 // ------------------------------------------------
 uint64_t orderlineTable::insert(
-        const Integer ol_o_id, 
-        const Integer ol_d_id, 
-        const Integer ol_w_id, 
-        const Integer ol_number, 
-        const Integer ol_i_id, 
-        const Integer ol_supply_w_id, 
-        const Timestamp ol_delivery_d, 
-        const Numeric<2, 0> ol_quantity, 
-        const Numeric<6, 2> ol_amount, 
+        const Integer ol_o_id,
+        const Integer ol_d_id,
+        const Integer ol_w_id,
+        const Integer ol_number,
+        const Integer ol_i_id,
+        const Integer ol_supply_w_id,
+        const Timestamp ol_delivery_d,
+        const Numeric<2, 0> ol_quantity,
+        const Numeric<6, 2> ol_amount,
         const Char<24> ol_dist_info) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -1560,10 +1560,10 @@ void orderlineTable::update_ol_dist_info(const uint64_t tid, const Char<24> ol_d
 // Generated sources for table item
 // ------------------------------------------------
 uint64_t itemTable::insert(
-        const Integer i_id, 
-        const Integer i_im_id, 
-        const Varchar<24> i_name, 
-        const Numeric<5, 2> i_price, 
+        const Integer i_id,
+        const Integer i_im_id,
+        const Varchar<24> i_name,
+        const Numeric<5, 2> i_price,
         const Varchar<50> i_data) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
@@ -1690,22 +1690,22 @@ void itemTable::update_i_data(const uint64_t tid, const Varchar<50> i_data) {
 // Generated sources for table stock
 // ------------------------------------------------
 uint64_t stockTable::insert(
-        const Integer s_i_id, 
-        const Integer s_w_id, 
-        const Numeric<4, 0> s_quantity, 
-        const Char<24> s_dist_01, 
-        const Char<24> s_dist_02, 
-        const Char<24> s_dist_03, 
-        const Char<24> s_dist_04, 
-        const Char<24> s_dist_05, 
-        const Char<24> s_dist_06, 
-        const Char<24> s_dist_07, 
-        const Char<24> s_dist_08, 
-        const Char<24> s_dist_09, 
-        const Char<24> s_dist_10, 
-        const Numeric<8, 0> s_ytd, 
-        const Numeric<4, 0> s_order_cnt, 
-        const Numeric<4, 0> s_remote_cnt, 
+        const Integer s_i_id,
+        const Integer s_w_id,
+        const Numeric<4, 0> s_quantity,
+        const Char<24> s_dist_01,
+        const Char<24> s_dist_02,
+        const Char<24> s_dist_03,
+        const Char<24> s_dist_04,
+        const Char<24> s_dist_05,
+        const Char<24> s_dist_06,
+        const Char<24> s_dist_07,
+        const Char<24> s_dist_08,
+        const Char<24> s_dist_09,
+        const Char<24> s_dist_10,
+        const Numeric<8, 0> s_ytd,
+        const Numeric<4, 0> s_order_cnt,
+        const Numeric<4, 0> s_remote_cnt,
         const Varchar<50> s_data) {
     // search for free insert position
     size_t insert_pos = this->first_free_pos;
