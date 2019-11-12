@@ -97,6 +97,31 @@ Then use the parsed schema to generate C++ code with a schema compiler:
 * Write a [query compiler](tools/queryc/queryc.cc) that generates C++ code for the static algebra tree.
 * Add the generated C++ code to your repository and execute it in [imlabdb.cc](tools/imlabdb.cc) using the print operator.
 
+## Task 5
+
+* Implement a simple parser for the following subset of SQL:
+    * The select clause contains one or more attribute names.
+    * The from clause contains one or more relation names.
+    * The where clause is optional and can contain one or more selections (connected by "and").
+    * You only need to support selections of the form "attribute = attribute" and "attribute = constant".
+    * You can assume that each relation is referenced only once, and that all attribute names are unique.
+
+* Implement a semantic analysis, which takes the parsed SQL statement and the schema as input and computes an algebra tree that can be used as input to your code generator.
+    * Report errors when non-existing attributes or tables are referenced.
+    * You should report an error if a table has no join condition (i.e., a cross product would be necessary).
+    * Build left-deep join trees based on the order of the relations in the from clause.
+
+* Implement a REPL ("read-eval-print-loop") for your database system:
+    * Read one line from standard input.
+    * Analyze it (report any errors and abort if necessary).
+    * Generate C++ code and store it in a temporary file.
+    * Call a C++ compiler and generate a temporary shared library (.so file).
+    * Using `dlopen`, `dlsym`, and `dlclose` you can now load the shared library and execute the query in it (have a look at [this example](data/dlopen)), you man need to compile with `-fPIC` and `-rdynamic`.
+    * Measure and report the compilation and the execution times separately.
+
+* Test your database with [these queries](data/queryc_2.sql).
+
+
 How many transactions per second can your implementation execute?
 
 Make sure your builds are not failing! <br/>
