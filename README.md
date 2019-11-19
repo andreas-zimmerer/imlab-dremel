@@ -121,6 +121,12 @@ Then use the parsed schema to generate C++ code with a schema compiler:
 
 * Test your database with [these queries](data/queryc_2.sql).
 
+## Task 6
+
+* Implement morsel-driven parallelism in your query engine.
+    * Use `parallel_for` in your table scans. [TBB](https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/parallel_for.html)
+    * Make your hash table of task 3 thread-safe and build it multi-threaded with `enumerable_thread_specific`. [TBB](https://www.threadingbuildingblocks.org/docs/help/reference/thread_local_storage/enumerable_thread_specific_cls.html)
+* Skim through [this paper list](https://gitlab.db.in.tum.de/imlab19/project-topics) and find a project topic that you want to work on for the rest of this course.
 
 How many transactions per second can your implementation execute?
 
