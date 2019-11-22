@@ -59,4 +59,14 @@ TEST(LazyHashTableTest, InsertSameKey) {
     ASSERT_EQ(values, values_to_insert);
 }
 
+TEST(LazyHashTableTest, EmptyGet) {
+    LazyMultiMap<Key<Integer>, int> hash_map;
+    hash_map.insert({Key(Integer(1)), 42});
+
+    hash_map.finalize();
+
+    auto [it_begin, it_end] = hash_map.equal_range(Key(Integer(3)));
+    ASSERT_EQ(it_begin, it_end);
+}
+
 }  // namespace

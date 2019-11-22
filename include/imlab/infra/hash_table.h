@@ -94,6 +94,7 @@ class LazyMultiMap {
     //  * For each entry in entries_, calculate the hash and prepend it to the collision list in the hash table.
     void finalize() {
         auto hash_table_size = imlab::NextPow2_64(entries_.size());
+        assert(hash_table_size > 0);
         hash_table_.resize(hash_table_size);
 
         hash_table_mask_ = hash_table_size - 1;
@@ -114,7 +115,7 @@ class LazyMultiMap {
 
         // Multiple keys might hash to the same bucket; so get the first element with the key we want
         auto start_entry = hash_table_[hash];
-        while (start_entry->key != key) {
+        while (start_entry != nullptr && start_entry->key != key) {
             start_entry = start_entry->next;
         }
 
