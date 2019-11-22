@@ -52,14 +52,14 @@ class LazyMultiMap {
         EqualRangeIterator operator++(int) {
             do {
                 ptr_ = ptr_->next;
-            } while (ptr_->key != key_);
+            } while (ptr_ != nullptr && ptr_->key != key_);
             return *this;
         }
         // Prefix increment
         EqualRangeIterator &operator++() {
             do {
                 ptr_ = ptr_->next;
-            } while (ptr_->key != key_);
+            } while (ptr_ != nullptr && ptr_->key != key_);
             return *this;
         }
         // Reference
@@ -94,14 +94,13 @@ class LazyMultiMap {
     //  * For each entry in entries_, calculate the hash and prepend it to the collision list in the hash table.
     void finalize() {
         auto hash_table_size = imlab::NextPow2_64(entries_.size());
-        hash_table_.reserve(hash_table_size);
+        hash_table_.resize(hash_table_size);
 
-        hash_table_mask_ = 0;
-        for (size_t i = 1; i < hash_table_size; i++)
-            hash_table_mask_ = (hash_table_mask_ << 1) | 1;
+        hash_table_mask_ = hash_table_size - 1;
 
         for (auto& entry : entries_) {
             auto hash = entry.key.Hash() & hash_table_mask_;
+            assert(hash < hash_table_.size());
 
             auto next_ = hash_table_[hash];
             entry.next = next_;
@@ -112,23 +111,14 @@ class LazyMultiMap {
     // To find an element, calculate the hash (Key::Hash), and search this list until you reach a nullptr;
     std::pair<EqualRangeIterator, EqualRangeIterator> equal_range(KeyT key) {
         auto hash = key.Hash() & hash_table_mask_;
+
+        // Multiple keys might hash to the same bucket; so get the first element with the key we want
         auto start_entry = hash_table_[hash];
-
-        auto end_entry = start_entry;
-        while (true) {
-            auto tmp_next = end_entry;
-            do {
-                tmp_next = tmp_next->next;
-            } while (tmp_next->key != key && tmp_next->next != nullptr);
-
-            if (tmp_next->key == key) {
-                end_entry = tmp_next;
-            } else {
-                break;
-            }
+        while (start_entry->key != key) {
+            start_entry = start_entry->next;
         }
 
-        return std::make_pair(EqualRangeIterator(start_entry, key), EqualRangeIterator(end_entry, key));
+        return std::make_pair(EqualRangeIterator(start_entry, key), EqualRangeIterator(nullptr, key));
     }
 
  protected:

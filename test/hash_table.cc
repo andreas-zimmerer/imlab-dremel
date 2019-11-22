@@ -8,7 +8,14 @@
 
 namespace {
 
-TEST(LazyHashTableTest, InsertOneEntry) {
+TEST(LazyHashTableTest, InsertOneEntryAndFinalize) {
+    LazyMultiMap<Key<Integer>, int> hash_map;
+    hash_map.insert({Key(Integer(1)), 42});
+
+    hash_map.finalize();
+}
+
+TEST(LazyHashTableTest, InsertOneEntryAndGet) {
     LazyMultiMap<Key<Integer>, int> hash_map;
     hash_map.insert({Key(Integer(1)), 42});
 
@@ -16,10 +23,10 @@ TEST(LazyHashTableTest, InsertOneEntry) {
 
     auto [it_begin, it_end] = hash_map.equal_range(Key(Integer(1)));
     ASSERT_EQ(it_begin->value, 42);
-    ASSERT_EQ(it_begin, it_end);
+    ASSERT_EQ(++it_begin, it_end);
 }
 
-TEST(LazyHashTableTest, InsertTwoEntries) {
+TEST(LazyHashTableTest, InsertTwoEntriesAndGet) {
     LazyMultiMap<Key<Integer>, int> hash_map;
     hash_map.insert({Key(Integer(1)), 42});
     hash_map.insert({Key(Integer(2)), 24});
@@ -28,11 +35,11 @@ TEST(LazyHashTableTest, InsertTwoEntries) {
 
     auto [it_begin_1, it_end_1] = hash_map.equal_range(Key(Integer(1)));
     ASSERT_EQ(it_begin_1->value, 42);
-    ASSERT_EQ(it_begin_1, it_end_1);
+    ASSERT_EQ(++it_begin_1, it_end_1);
 
     auto [it_begin_2, it_end_2] = hash_map.equal_range(Key(Integer(2)));
     ASSERT_EQ(it_begin_2->value, 24);
-    ASSERT_EQ(it_begin_2, it_end_2);
+    ASSERT_EQ(++it_begin_2, it_end_2);
 }
 
 TEST(LazyHashTableTest, InsertSameKey) {
