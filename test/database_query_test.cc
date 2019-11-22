@@ -11,7 +11,7 @@
 
 namespace {
 
-TEST(DatabaseQueryTest, NewOrder) {
+TEST(DatabaseQueryTest, NewOrderQuery) {
     imlab::Database db;
     std::stringstream in_warehouse(imlab_test::kTestWarehouse);
     db.LoadWarehouse(in_warehouse);
@@ -61,7 +61,7 @@ TEST(DISABLED_DatabaseQueryTest, Delivery) {
     ASSERT_EQ(db.Size<imlab::tpcc::kneworder>(), 3);
 }
 
-TEST(DatabaseQueryTest, OLAP) {
+TEST(DatabaseQueryTest, AnalyticalQuerySTL) {
     imlab::Database db;
     std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
     db.LoadCustomer(customer_file);
@@ -71,6 +71,21 @@ TEST(DatabaseQueryTest, OLAP) {
     db.LoadOrderLine(orderline_file);
 
     auto sum = db.AnalyticalQuerySTL();
+
+    auto result = Numeric<12, 2>(136787200125);
+    ASSERT_EQ(sum, result);
+}
+
+TEST(DatabaseQueryTest, AnalyticalQueryLHT) {
+    imlab::Database db;
+    std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
+    db.LoadCustomer(customer_file);
+    std::fstream order_file ("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
+    db.LoadOrder(order_file);
+    std::fstream orderline_file ("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
+    db.LoadOrderLine(orderline_file);
+
+    auto sum = db.AnalyticalQueryLHT();
 
     auto result = Numeric<12, 2>(136787200125);
     ASSERT_EQ(sum, result);

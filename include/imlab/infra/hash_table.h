@@ -50,16 +50,22 @@ class LazyMultiMap {
 
         // Postfix increment
         EqualRangeIterator operator++(int) {
-            // TODO
+            do {
+                ptr_ = ptr_->next;
+            } while (ptr_->key != key_);
+            return *this;
         }
         // Prefix increment
         EqualRangeIterator &operator++() {
-            // TODO
+            do {
+                ptr_ = ptr_->next;
+            } while (ptr_->key != key_);
+            return *this;
         }
         // Reference
-        Entry &operator*() { /* TODO */ }
+        Entry &operator*() { return ptr_; }
         // Pointer
-        Entry *operator->() { /* TODO */ }
+        Entry *operator->() { return ptr_; }
         // Equality
         bool operator==(const EqualRangeIterator &other) const { return ptr_ == other.ptr_; }
         // Inequality
@@ -79,7 +85,7 @@ class LazyMultiMap {
     // Insert an element into the hash table
     //  * Gather all entries with insert and build the hash table with finalize.
     void insert(const std::pair<KeyT, ValueT> &val) {
-        // TODO
+        entries_.emplace_back(val.first, val.second);
     }
 
     // Finalize the hash table
@@ -87,13 +93,42 @@ class LazyMultiMap {
     //  * Resize the hash table to that size.
     //  * For each entry in entries_, calculate the hash and prepend it to the collision list in the hash table.
     void finalize() {
-        // TODO
+        auto hash_table_size = imlab::NextPow2_64(entries_.size());
+        hash_table_.reserve(hash_table_size);
+
+        hash_table_mask_ = 0;
+        for (size_t i = 1; i < hash_table_size; i++)
+            hash_table_mask_ = (hash_table_mask_ << 1) | 1;
+
+        for (auto& entry : entries_) {
+            auto hash = entry.key.Hash() & hash_table_mask_;
+
+            auto next_ = hash_table_[hash];
+            entry.next = next_;
+            hash_table_[hash] = &entry;
+        }
     }
 
     // To find an element, calculate the hash (Key::Hash), and search this list until you reach a nullptr;
     std::pair<EqualRangeIterator, EqualRangeIterator> equal_range(KeyT key) {
-        // TODO
-        return std::make_pair(EqualRangeIterator(), EqualRangeIterator());
+        auto hash = key.Hash() & hash_table_mask_;
+        auto start_entry = hash_table_[hash];
+
+        auto end_entry = start_entry;
+        while (true) {
+            auto tmp_next = end_entry;
+            do {
+                tmp_next = tmp_next->next;
+            } while (tmp_next->key != key && tmp_next->next != nullptr);
+
+            if (tmp_next->key == key) {
+                end_entry = tmp_next;
+            } else {
+                break;
+            }
+        }
+
+        return std::make_pair(EqualRangeIterator(start_entry, key), EqualRangeIterator(end_entry, key));
     }
 
  protected:

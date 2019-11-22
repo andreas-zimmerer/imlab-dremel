@@ -37,6 +37,11 @@ class Key {
         return PairwiseCompare(components, other.components);
     }
 
+    // Compare two keys
+    bool operator!=(const Key &other) const {
+        return !(PairwiseCompare(components, other.components));
+    }
+
     // Hash the key
     uint64_t Hash() const {
         return HashTuple(components);
