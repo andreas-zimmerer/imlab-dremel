@@ -20,7 +20,8 @@ BASE_FLAGS = [
     '-std=c++17',
     '-xclang++',
     '-I/usr/lib/',
-    '-I/usr/include/'
+    '-I/usr/include/',
+    '-march=native'
 ]
 
 SOURCE_EXTENSIONS = [
@@ -63,7 +64,7 @@ BUILD_DIRECTORIES = [
 def IsHeaderFile(filename):
     extension = os.path.splitext(filename)[1]
     return extension in HEADER_EXTENSIONS
-
+-march=native
 def GetCompilationInfoForFile(database, filename):
     if IsHeaderFile(filename):
         basename = os.path.splitext(filename)[0]
