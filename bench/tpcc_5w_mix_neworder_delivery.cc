@@ -130,14 +130,12 @@ static void SIGCHLD_handler(int /*sig*/) {
     olapRunning = false;
 }
 
-void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
+void RandomMixNeworderDeliveryBenchmarkWithOlap(benchmark::State &state) {
     auto database = LoadDatabase();
-
-    database.Print();
-    std::cout.flush();
 
     unsigned number_of_delivery = 0;
     unsigned number_of_neworder = 0;
+    unsigned number_of_olap = 0;
 
     for (auto _ : state) {
         if (URand(1, 100) <= 10) {
@@ -166,13 +164,13 @@ void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
         // we create a new one until all of our OLTP-Mix queries are done as well.
         if (!olapRunning) {
             olapRunning = true;
+            number_of_olap++;
             pid_t pid = fork();
             if (pid) { // parent
                 // parent just continues
             } else { // forked child
                 // The child runs the analytical query.
                 // There should always only be one child with one analytical query.
-                std::cout << "Starting OLAP query..." << std::endl;
                 auto result = database.AnalyticalQuerySTL();
                 std::cout << "Result of OLAP query: " << result << std::endl;
                 return; // child is finished
@@ -192,12 +190,10 @@ void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
     // Statistics
     state.SetItemsProcessed(state.iterations());
 
-    database.Print();
-    std::cout.flush();
-
     std::cout << std::endl;
     std::cout << "Number of Delivery Queries: " << number_of_delivery << std::endl;
     std::cout << "Number of Neworder Queries: " << number_of_neworder << std::endl;
+    std::cout << "Number of OLAP Queries:     " << number_of_olap << std::endl;
     std::cout.flush();
 }
 //---------------------------------------------------------------------------
@@ -205,7 +201,7 @@ void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
 
 BENCHMARK(RandomMixNeworderDeliveryBenchmark)
 ->Iterations(10000);
-BENCHMARK(RandomMixNeworderDeliveryBenchmarkWithFork)
+BENCHMARK(RandomMixNeworderDeliveryBenchmarkWithOlap)
 ->Iterations(10000);
 
 int main(int argc, char** argv) {
