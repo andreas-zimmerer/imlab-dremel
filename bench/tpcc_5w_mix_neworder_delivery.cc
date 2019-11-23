@@ -62,7 +62,6 @@ void RandomDelivery(imlab::Database &db) {
     db.Delivery(Integer(URand(1, kWarehouses)), Integer(URand(1, 10)), now);
 }
 
-
 imlab::Database LoadDatabase() {
     imlab::Database database;
 
@@ -88,6 +87,7 @@ imlab::Database LoadDatabase() {
     return database;
 }
 
+//---------------------------------------------------------------------------
 void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
     auto database = LoadDatabase();
 
@@ -119,6 +119,7 @@ void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
     std::cout.flush();
 }
 
+//---------------------------------------------------------------------------
 
 std::atomic<bool> olapRunning;
 
@@ -199,7 +200,7 @@ void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
     std::cout << "Number of Neworder Queries: " << number_of_neworder << std::endl;
     std::cout.flush();
 }
-
+//---------------------------------------------------------------------------
 }  // namespace
 
 BENCHMARK(RandomMixNeworderDeliveryBenchmark)

@@ -13,42 +13,27 @@
 namespace imlab {
 
     void Database::LoadWarehouse(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
             auto[w_id, w_name, w_street_1, w_street_2, w_city, w_state, w_zip, w_tax, w_ytd]
-            = parseLine<Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>>(
-                    line.c_str(), line.c_str() + line.size());
+            = parseLine<Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>>(in);
             warehouseTable.insert(w_id, w_name, w_street_1, w_street_2, w_city,
                                   w_state, w_zip, w_tax, w_ytd);
         }
     }
 
     void Database::LoadDistrict(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
             auto[d_id, d_w_id, d_name, d_street_1, d_street_2, d_city, d_state, d_zip, d_tax, d_ytd, d_next_o_id]
-            = parseLine<Integer, Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>, Integer>(
-                    line.c_str(), line.c_str() + line.size());
+            = parseLine<Integer, Integer, Varchar<10>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Numeric<4, 4>, Numeric<12, 2>, Integer>(in);
             districtTable.insert(d_id, d_w_id, d_name, d_street_1, d_street_2, d_city,
                                  d_state, d_zip, d_tax, d_ytd, d_next_o_id);
         }
     }
 
     void Database::LoadCustomer(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
             auto[c_id, c_d_id, c_w_id, c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr, c_payment_cnt, c_delivery_cnt, c_data]
-            = parseLine<Integer, Integer, Integer, Varchar<16>, Char<2>, Varchar<16>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Char<16>, Timestamp, Char<2>, Numeric<12, 2>, Numeric<4, 4>, Numeric<12, 2>, Numeric<12, 2>, Numeric<4, 0>, Numeric<4, 0>, Varchar<500>>(
-                    line.c_str(), line.c_str() + line.size());
+            = parseLine<Integer, Integer, Integer, Varchar<16>, Char<2>, Varchar<16>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Char<16>, Timestamp, Char<2>, Numeric<12, 2>, Numeric<4, 4>, Numeric<12, 2>, Numeric<12, 2>, Numeric<4, 0>, Numeric<4, 0>, Varchar<500>>(in);
             customerTable.insert(c_id, c_d_id, c_w_id, c_first, c_middle, c_last,
                                  c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since,
                                  c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr,
@@ -57,78 +42,48 @@ namespace imlab {
     }
 
     void Database::LoadHistory(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
-            auto[h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date, h_amount, h_data] = parseLine<Integer, Integer, Integer, Integer, Integer, Timestamp, Numeric<6, 2>, Varchar<24>>(
-                    line.c_str(), line.c_str() + line.size());
+            auto[h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date, h_amount, h_data] = parseLine<Integer, Integer, Integer, Integer, Integer, Timestamp, Numeric<6, 2>, Varchar<24>>(in);
             historyTable.insert(h_c_id, h_c_d_id, h_c_w_id, h_d_id, h_w_id, h_date,
                                 h_amount, h_data);
         }
     }
 
     void Database::LoadNewOrder(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
-            auto[no_o_id, no_d_id, no_w_id] = parseLine<Integer, Integer, Integer>(
-                    line.c_str(),line.c_str() + line.size());
+            auto[no_o_id, no_d_id, no_w_id] = parseLine<Integer, Integer, Integer>(in);
             neworderTable.insert(no_o_id, no_d_id, no_w_id);
         }
     }
 
     void Database::LoadOrder(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
-            auto[o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local] = parseLine<Integer, Integer, Integer, Integer, Timestamp, Integer, Numeric<2, 0>, Numeric<1, 0>>(
-                    line.c_str(), line.c_str() + line.size());
+            auto[o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id, o_ol_cnt, o_all_local] = parseLine<Integer, Integer, Integer, Integer, Timestamp, Integer, Numeric<2, 0>, Numeric<1, 0>>(in);
             orderTable.insert(o_id, o_d_id, o_w_id, o_c_id, o_entry_d, o_carrier_id,
                               o_ol_cnt, o_all_local);
         }
     }
 
     void Database::LoadOrderLine(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
             auto[ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id, ol_supply_w_id, ol_delivery_d, ol_quantity, ol_amount, ol_dist_info]
-            = parseLine<Integer, Integer, Integer, Integer, Integer, Integer, Timestamp, Numeric<2, 0>, Numeric<6, 2>, Char<24>>(
-                    line.c_str(), line.c_str() + line.size());
+            = parseLine<Integer, Integer, Integer, Integer, Integer, Integer, Timestamp, Numeric<2, 0>, Numeric<6, 2>, Char<24>>(in);
             orderlineTable.insert(ol_o_id, ol_d_id, ol_w_id, ol_number, ol_i_id,
                                   ol_supply_w_id, ol_delivery_d, ol_quantity, ol_amount, ol_dist_info);
         }
     }
 
     void Database::LoadItem(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
-            auto[i_id, i_im_id, i_name, i_price, i_data] = parseLine<Integer, Integer, Varchar<24>, Numeric<5, 2>, Varchar<50>>(
-                    line.c_str(), line.c_str() + line.size());
+            auto[i_id, i_im_id, i_name, i_price, i_data] = parseLine<Integer, Integer, Varchar<24>, Numeric<5, 2>, Varchar<50>>(in);
             itemTable.insert(i_id, i_im_id, i_name, i_price, i_data);
         }
     }
 
     void Database::LoadStock(std::istream &in) {
-        std::string line = "";
-
         while (in.peek() != EOF) {
-            std::getline(in, line, '\n');
-
             auto[s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02, s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08, s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data]
-            = parseLine<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>(
-                    line.c_str(), line.c_str() + line.size());
+            = parseLine<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>(in);
             stockTable.insert(s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02,
                               s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08,
                               s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data);

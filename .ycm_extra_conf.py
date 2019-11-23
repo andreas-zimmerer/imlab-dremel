@@ -20,8 +20,7 @@ BASE_FLAGS = [
     '-std=c++17',
     '-xclang++',
     '-I/usr/lib/',
-    '-I/usr/include/',
-    '-march=native'
+    '-I/usr/include/'
 ]
 
 SOURCE_EXTENSIONS = [

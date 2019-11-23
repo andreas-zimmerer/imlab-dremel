@@ -33,32 +33,37 @@ static inline const char *findChar(const char *iter, const char *limit) {
 // Case for line ending
 template<std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp) - 1, void>::type
-parseFields(std::tuple<Tp...>& t, const char *begin, const char *end)
+parseFields(std::tuple<Tp...>& t, std::istream &in)
 {
-    auto delim_pos = findChar<'\n'>(begin, end);
+    std::string line = "";
+    std::getline(in, line, '\n');
+
     using type = typename std::tuple_element<I, std::tuple<Tp...>>::type;
-    std::get<I>(t) = type::castString(begin, delim_pos - begin);
+    std::get<I>(t) = type::castString(line.c_str(), line.size());
 }
 // Case for regular fields
 template<std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I < sizeof...(Tp) - 1, void>::type
-parseFields(std::tuple<Tp...>& t, const char *begin, const char *end)
+parseFields(std::tuple<Tp...>& t, std::istream &in)
 {
-    auto delim_pos = findChar<'|'>(begin, end);
+    std::string line = "";
+    std::getline(in, line, '|');
+
     using type = typename std::tuple_element<I, std::tuple<Tp...>>::type;
-    std::get<I>(t) = type::castString(begin, delim_pos - begin);
-    parseFields<I + 1, Tp...>(t, delim_pos + 1, end); // compile time loop
+    std::get<I>(t) = type::castString(line.c_str(), line.size());
+
+    parseFields<I + 1, Tp...>(t, in); // compile time loop
 }
 
 /**
  * Yeah, this is some really cool stuff.
- * What's behind this: a cool compile time loop and every field of the line is determined with SIMD instructions.
+ * What's behind this: a cool compile time loop that assigns the proper type conversions to one line of the input file.
  * Gosh, no idea why I am doing this but this is cool.
  */
 template<typename... Types>
-std::tuple<Types...> parseLine(const char *begin, const char *end) {
+std::tuple<Types...> parseLine(std::istream &in) {
     std::tuple<Types...> line;
-    parseFields(line, begin, end);
+    parseFields(line, in);
     return line;
 }
 //---------------------------------------------------------------------------
