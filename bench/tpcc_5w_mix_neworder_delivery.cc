@@ -2,6 +2,8 @@
 // IMLAB
 // ---------------------------------------------------------------------------------------------------
 
+#include <signal.h>
+#include <atomic>
 #include <cstdint>
 #include <chrono>  // NOLINT
 #include <iostream>
@@ -10,6 +12,8 @@
 #include "imlab/database.h"
 #include "imlab/schema.h"
 #include "imlab/infra/types.h"
+#include <unistd.h>
+#include <sys/wait.h>
 
 namespace {
 const int32_t kWarehouses = 5;
@@ -58,7 +62,8 @@ void RandomDelivery(imlab::Database &db) {
     db.Delivery(Integer(URand(1, kWarehouses)), Integer(URand(1, 10)), now);
 }
 
-void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
+
+imlab::Database LoadDatabase() {
     imlab::Database database;
 
     std::fstream warehouse_file ("../data/tpcc_5w/tpcc_warehouse.tbl", std::fstream::in);
@@ -80,6 +85,12 @@ void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
     std::fstream stock_file ("../data/tpcc_5w/tpcc_stock.tbl", std::fstream::in);
     database.LoadStock(stock_file);
 
+    return database;
+}
+
+void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
+    auto database = LoadDatabase();
+
     database.Print();
     std::cout.flush();
 
@@ -96,6 +107,88 @@ void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
         }
     }
 
+    // Statistics
+    state.SetItemsProcessed(state.iterations());
+
+    database.Print();
+    std::cout.flush();
+
+    std::cout << std::endl;
+    std::cout << "Number of Delivery Queries: " << number_of_delivery << std::endl;
+    std::cout << "Number of Neworder Queries: " << number_of_neworder << std::endl;
+    std::cout.flush();
+}
+
+
+std::atomic<bool> olapRunning;
+
+static void SIGCHLD_handler(int /*sig*/) {
+    int status;
+    pid_t childPid = wait(&status);
+    // now the child with process id childPid is dead
+    olapRunning = false;
+}
+
+void RandomMixNeworderDeliveryBenchmarkWithFork(benchmark::State &state) {
+    auto database = LoadDatabase();
+
+    database.Print();
+    std::cout.flush();
+
+    unsigned number_of_delivery = 0;
+    unsigned number_of_neworder = 0;
+
+    for (auto _ : state) {
+        if (URand(1, 100) <= 10) {
+            RandomDelivery(database);
+            number_of_delivery++;
+        } else {
+            RandomNewOrder(database);
+            number_of_neworder++;
+        }
+    }
+
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sa.sa_handler = SIGCHLD_handler;
+    sigaction(SIGCHLD, &sa, NULL);
+
+    // This loop contains all the magic:
+    // The loop itself is executed n times (where is is supposed to be 1.000.000)
+    // Each iteration corresponds to the execution of one OLTP query.
+    // Meanwhile, if no OLAP query is running, a new snapshot is created with "fork()"
+    // and the OLAP query runs in the child process.
+    // Execution of the OLTP queries just continues in the parent.
+    for (auto _ : state) {
+        // Whenever we notice that the OLAP query is done,
+        // we create a new one until all of our OLTP-Mix queries are done as well.
+        if (!olapRunning) {
+            olapRunning = true;
+            pid_t pid = fork();
+            if (pid) { // parent
+                // parent just continues
+            } else { // forked child
+                // The child runs the analytical query.
+                // There should always only be one child with one analytical query.
+                std::cout << "Starting OLAP query..." << std::endl;
+                auto result = database.AnalyticalQuerySTL();
+                std::cout << "Result of OLAP query: " << result << std::endl;
+                return; // child is finished
+            }
+        }
+
+        // Run one OLTP query from the mix in the parent
+        if (URand(1, 100) <= 10) {
+            RandomDelivery(database);
+            number_of_delivery++;
+        } else {
+            RandomNewOrder(database);
+            number_of_neworder++;
+        }
+    }
+
+    // Statistics
     state.SetItemsProcessed(state.iterations());
 
     database.Print();
@@ -110,6 +203,8 @@ void RandomMixNeworderDeliveryBenchmark(benchmark::State &state) {
 }  // namespace
 
 BENCHMARK(RandomMixNeworderDeliveryBenchmark)
+->Iterations(10000);
+BENCHMARK(RandomMixNeworderDeliveryBenchmarkWithFork)
 ->Iterations(10000);
 
 int main(int argc, char** argv) {
