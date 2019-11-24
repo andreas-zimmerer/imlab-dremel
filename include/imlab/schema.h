@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include "imlab/infra/hash.h"
 #include "imlab/infra/types.h"
+#include "imlab/algebra/iu.h"
+#include "imlab/schemac/schema_parse_context.h"
 
 namespace imlab {
 namespace tpcc {
@@ -64,6 +66,8 @@ class warehouseTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: w_id
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
@@ -80,6 +84,8 @@ class warehouseTable : public TableBase {
     std::vector<Char<9>> w_zip;
     std::vector<Numeric<4, 4>> w_tax;
     std::vector<Numeric<12, 2>> w_ytd;
+
+    static const std::vector<IU> ius;
 };
 
 class districtTable : public TableBase {
@@ -123,6 +129,8 @@ class districtTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: d_w_id, d_id
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
@@ -141,6 +149,8 @@ class districtTable : public TableBase {
     std::vector<Numeric<4, 4>> d_tax;
     std::vector<Numeric<12, 2>> d_ytd;
     std::vector<Integer> d_next_o_id;
+
+    static const std::vector<IU> ius;
 };
 
 class customerTable : public TableBase {
@@ -214,6 +224,8 @@ class customerTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: c_w_id, c_d_id, c_id
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
@@ -242,6 +254,8 @@ class customerTable : public TableBase {
     std::vector<Numeric<4, 0>> c_payment_cnt;
     std::vector<Numeric<4, 0>> c_delivery_cnt;
     std::vector<Varchar<500>> c_data;
+
+    static const std::vector<IU> ius;
 };
 
 class historyTable : public TableBase {
@@ -276,6 +290,8 @@ class historyTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
  private:
     std::vector<bool> deleted_tuples;
     size_t first_free_pos = 0;
@@ -288,6 +304,8 @@ class historyTable : public TableBase {
     std::vector<Timestamp> h_date;
     std::vector<Numeric<6, 2>> h_amount;
     std::vector<Varchar<24>> h_data;
+
+    static const std::vector<IU> ius;
 };
 
 class neworderTable : public TableBase {
@@ -307,6 +325,8 @@ class neworderTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: no_w_id, no_d_id, no_o_id
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
@@ -317,6 +337,8 @@ class neworderTable : public TableBase {
     std::vector<Integer> no_o_id;
     std::vector<Integer> no_d_id;
     std::vector<Integer> no_w_id;
+
+    static const std::vector<IU> ius;
 };
 
 class orderTable : public TableBase {
@@ -351,6 +373,8 @@ class orderTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: o_w_id, o_d_id, o_id
     std::unordered_map<Key<Integer, Integer, Integer>, uint64_t> primary_key;
 
@@ -366,6 +390,8 @@ class orderTable : public TableBase {
     std::vector<Integer> o_carrier_id;
     std::vector<Numeric<2, 0>> o_ol_cnt;
     std::vector<Numeric<1, 0>> o_all_local;
+
+    static const std::vector<IU> ius;
 };
 
 class orderlineTable : public TableBase {
@@ -406,6 +432,8 @@ class orderlineTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: ol_w_id, ol_d_id, ol_o_id, ol_number
     std::unordered_map<Key<Integer, Integer, Integer, Integer>, uint64_t> primary_key;
 
@@ -423,6 +451,8 @@ class orderlineTable : public TableBase {
     std::vector<Numeric<2, 0>> ol_quantity;
     std::vector<Numeric<6, 2>> ol_amount;
     std::vector<Char<24>> ol_dist_info;
+
+    static const std::vector<IU> ius;
 };
 
 class itemTable : public TableBase {
@@ -448,6 +478,8 @@ class itemTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: i_id
     std::unordered_map<Key<Integer>, uint64_t> primary_key;
 
@@ -460,6 +492,8 @@ class itemTable : public TableBase {
     std::vector<Varchar<24>> i_name;
     std::vector<Numeric<5, 2>> i_price;
     std::vector<Varchar<50>> i_data;
+
+    static const std::vector<IU> ius;
 };
 
 class stockTable : public TableBase {
@@ -521,6 +555,8 @@ class stockTable : public TableBase {
 
     void remove(const uint64_t tid);
 
+    static std::vector<const IU*> CollectIUs();
+
     // Primary Key for: s_w_id, s_i_id
     std::unordered_map<Key<Integer, Integer>, uint64_t> primary_key;
 
@@ -545,6 +581,8 @@ class stockTable : public TableBase {
     std::vector<Numeric<4, 0>> s_order_cnt;
     std::vector<Numeric<4, 0>> s_remote_cnt;
     std::vector<Varchar<50>> s_data;
+
+    static const std::vector<IU> ius;
 };
 
 

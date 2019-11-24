@@ -31,9 +31,9 @@ class TableScan: public Operator {
     // Prepare the operator
     void Prepare(const std::vector<const IU*> &required, Operator* consumer) override;
     // Produce all tuples
-    void Produce() override;
+    void Produce(std::ostream& _o) override;
     // Consume tuple
-    void Consume(const Operator* child) override {}
+    void Consume(std::ostream& _o, const Operator* child) override {}
 };
 // ---------------------------------------------------------------------------
 }  // namespace imlab

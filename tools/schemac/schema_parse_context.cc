@@ -12,28 +12,6 @@ using Table = imlab::schemac::Table;
 using Schema = imlab::schemac::Schema;
 using Type = imlab::schemac::Type;
 // ---------------------------------------------------------------------------------------------------
-Type Type::Integer()    { Type t; t.tclass = kInteger; return t; }
-Type Type::Timestamp()  { Type t; t.tclass = kTimestamp; return t; }
-Type Type::Numeric(unsigned length, unsigned precision) {
-    Type t;
-    t.tclass = kNumeric;
-    t.length = length;
-    t.precision = precision;
-    return t;
-}
-Type Type::Char(unsigned length) {
-    Type t;
-    t.tclass = kChar;
-    t.length = length;
-    return t;
-}
-Type Type::Varchar(unsigned length) {
-    Type t;
-    t.tclass = kVarchar;
-    t.length = length;
-    return t;
-}
-// ---------------------------------------------------------------------------------------------------
 const char *Type::Name() const {
     switch (tclass) {
         case kInteger:      return "Integer";

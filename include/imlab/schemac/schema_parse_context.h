@@ -44,11 +44,27 @@ struct Type {
     const char *Name() const;
 
     // Static methods to construct a column
-    static Type Integer();
-    static Type Timestamp();
-    static Type Numeric(unsigned length, unsigned precision);
-    static Type Char(unsigned length);
-    static Type Varchar(unsigned length);
+    static Type Integer()    { Type t; t.tclass = kInteger; return t; }
+    static Type Timestamp()  { Type t; t.tclass = kTimestamp; return t; }
+    static Type Numeric(unsigned length, unsigned precision) {
+        Type t;
+        t.tclass = kNumeric;
+        t.length = length;
+        t.precision = precision;
+        return t;
+    }
+    static Type Char(unsigned length) {
+        Type t;
+        t.tclass = kChar;
+        t.length = length;
+        return t;
+    }
+    static Type Varchar(unsigned length) {
+        Type t;
+        t.tclass = kVarchar;
+        t.length = length;
+        return t;
+    }
 };
 // ---------------------------------------------------------------------------------------------------
 // An index type

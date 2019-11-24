@@ -369,7 +369,7 @@ namespace imlab {
 
             auto matches = join_customer_order.equal_range(Key(o_w_id, o_d_id, o_c_id));
             for (auto it = matches.first; it != matches.second; ++it) {
-                auto c_balance = it->value;
+                auto& c_balance = it->value;
 
                 join_order_orderline.insert({Key(o_w_id, o_d_id, o_id), std::make_tuple(c_balance, o_ol_cnt)});
             }
@@ -387,8 +387,8 @@ namespace imlab {
 
             auto matches = join_order_orderline.equal_range(Key(ol_w_id, ol_d_id, ol_o_id));
             for (auto it = matches.first; it != matches.second; ++it) {
-                auto c_balance = std::get<0>(it->value);
-                auto o_ol_cnt = std::get<1>(it->value);
+                auto& c_balance = std::get<0>(it->value);
+                auto& o_ol_cnt = std::get<1>(it->value);
 
                 sum = sum + ((ol_quantity.castP2().castS<6>() * ol_amount).castS<12>() -
                              (c_balance * o_ol_cnt.castP2().castS<12>()));

@@ -36,6 +36,23 @@ std::string generateTypeName(Type &type) {
     return ss.str();
 }
 
+std::string generateSchemacTypeName(Type &type) {
+    std::stringstream ss;
+    switch (type.tclass) {
+        case Type::kNumeric:
+            ss << "schemac::Type::Numeric(" << type.length << ", " << type.precision << ")"; break;
+        case Type::kChar:
+            ss << "schemac::Type::Char(" << type.length << ")"; break;
+        case Type::kVarchar:
+            ss << "schemac::Type::Varchar(" << type.length << ")"; break;
+        case Type::kInteger:
+            ss << "schemac::Type::Integer()"; break;
+        case Type::kTimestamp:
+            ss << "schemac::Type::Timestamp()"; break;
+    }
+    return ss.str();
+}
+
 void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << "class " << table.id << "Table" << " : public TableBase {" << std::endl;
 
@@ -65,6 +82,10 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << "    void remove(const uint64_t tid);" << std::endl;
     header_ << std::endl;
 
+    // CollectIUs
+    header_ << "    static std::vector<const IU*> CollectIUs();" << std::endl;
+    header_ << std::endl;
+
     // Primary key
     if (table.primary_key.size() > 0) {
         header_ << "    // Primary Key for: ";
@@ -90,6 +111,9 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
         header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
     }
 
+    header_ << std::endl;
+    header_ << "    static const std::vector<IU> ius;" << std::endl;
+
     header_ << "};" << std::endl;
 }
 
@@ -102,6 +126,7 @@ void SchemaCompiler::createHeader(Schema &schema) {
 #include <unordered_map>
 #include "imlab/infra/hash.h"
 #include "imlab/infra/types.h"
+#include "imlab/algebra/iu.h"
 
 namespace imlab {
 namespace tpcc {
@@ -134,6 +159,24 @@ class TableBase {
 }  // namespace imlab
 #endif  // INCLUDE_IMLAB_SCHEMA_H_
 )HEADER";
+}
+
+void generateCollectUIsMethod(Table &table, std::ostream &impl_) {
+    impl_ << "const std::vector<IU> " << table.id << "Table" << "::" << "ius {" << std::endl;
+    for (auto& column : table.columns) {
+        impl_ << "    IU(\"" << table.id << "\", \"" << column.id << "\", " << generateSchemacTypeName(column.type) << ")," << std::endl;
+    }
+    impl_ << "};" << std::endl;
+    impl_ << std::endl;
+
+    impl_ << "std::vector<const IU*> " << table.id << "Table" << "::" << "CollectIUs() {" << std::endl;
+    impl_ << "    std::vector<const IU*> iu_ptrs {};" << std::endl;
+    impl_ << "    iu_ptrs.reserve(ius.size());" << std::endl;
+    impl_ << "    for (auto& iu : ius) {" << std::endl;
+    impl_ << "        iu_ptrs.push_back(&iu);" << std::endl;
+    impl_ << "    }" << std::endl;
+    impl_ << "    return iu_ptrs;" << std::endl;
+    impl_ << "}" << std::endl;
 }
 
 void generateInsertMethod(Table &table, std::ostream &impl_) {
@@ -273,6 +316,9 @@ void generateTableSource(Table &table, std::ostream& impl_) {
     impl_ << "// Generated sources for table " << table.id << std::endl;
     impl_ << "// ------------------------------------------------" << std::endl;
 
+    generateCollectUIsMethod(table, impl_);
+    impl_ << std::endl;
+
     generateInsertMethod(table, impl_);
     impl_ << std::endl;
 
@@ -289,6 +335,7 @@ void generateTableSource(Table &table, std::ostream& impl_) {
 void SchemaCompiler::createSource(Schema &schema) {
     impl_ << R"IMPL(
 #include "imlab/schema.h"
+#include "imlab/schemac/schema_parse_context.h"
 
 namespace imlab {
 namespace tpcc {
