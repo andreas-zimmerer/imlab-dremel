@@ -22,6 +22,8 @@ class Operator {
     virtual void Produce(std::ostream& _o) = 0;
     // Consume tuple
     virtual void Consume(std::ostream&_o, const Operator* child) = 0;
+
+    virtual ~Operator() = default;
 };
 // ---------------------------------------------------------------------------
 }  // namespace imlab
