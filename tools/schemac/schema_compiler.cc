@@ -19,40 +19,6 @@ void SchemaCompiler::Compile(Schema &schema) {
     createSource(schema);
 }
 
-std::string generateTypeName(Type &type) {
-    std::stringstream ss;
-    switch (type.tclass) {
-        case Type::kNumeric:
-            ss << "Numeric<" << type.length << ", " << type.precision << ">"; break;
-        case Type::kChar:
-            ss << "Char<" << type.length << ">"; break;
-        case Type::kVarchar:
-            ss << "Varchar<" << type.length << ">"; break;
-        case Type::kInteger:
-            ss << "Integer"; break;
-        case Type::kTimestamp:
-            ss << "Timestamp"; break;
-    }
-    return ss.str();
-}
-
-std::string generateSchemacTypeName(Type &type) {
-    std::stringstream ss;
-    switch (type.tclass) {
-        case Type::kNumeric:
-            ss << "schemac::Type::Numeric(" << type.length << ", " << type.precision << ")"; break;
-        case Type::kChar:
-            ss << "schemac::Type::Char(" << type.length << ")"; break;
-        case Type::kVarchar:
-            ss << "schemac::Type::Varchar(" << type.length << ")"; break;
-        case Type::kInteger:
-            ss << "schemac::Type::Integer()"; break;
-        case Type::kTimestamp:
-            ss << "schemac::Type::Timestamp()"; break;
-    }
-    return ss.str();
-}
-
 void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << "class " << table.id << "Table" << " : public TableBase {" << std::endl;
 
@@ -61,20 +27,20 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << "    uint64_t insert(";
     for (auto& column : table.columns) {
         header_ << std::endl << "        ";
-        header_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
+        header_ << "const " << SchemaCompiler::generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
     }
     header_ << ");" << std::endl;
     header_ << std::endl;
 
     // Get
     for (auto& column : table.columns) {
-        header_ << "    std::optional<" << generateTypeName(column.type) << "> get_" << column.id << "(const uint64_t tid);" << std::endl;
+        header_ << "    std::optional<" << SchemaCompiler::generateTypeName(column.type) << "> get_" << column.id << "(const uint64_t tid);" << std::endl;
     }
     header_ << std::endl;
 
     // Update
     for (auto& column : table.columns) {
-        header_ << "    void update_" << column.id << "(const uint64_t tid, const " << generateTypeName(column.type) << " " << column.id <<");" << std::endl;
+        header_ << "    void update_" << column.id << "(const uint64_t tid, const " << SchemaCompiler::generateTypeName(column.type) << " " << column.id <<");" << std::endl;
     }
     header_ << std::endl;
 
@@ -83,7 +49,7 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
     header_ << std::endl;
 
     // CollectIUs
-    header_ << "    static std::vector<const IU*> CollectIUs();" << std::endl;
+    header_ << "    static const std::vector<IU> IUs;" << std::endl;
     header_ << std::endl;
 
     // Primary key
@@ -95,7 +61,7 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
         header_ << std::endl;
         header_ << "    std::unordered_map<Key<";
         for (auto& column : table.primary_key) {
-            header_ << generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
+            header_ << SchemaCompiler::generateTypeName(column.type) << ((&column != &*table.primary_key.end() - 1)? ", " : "");
         }
         header_ << ">, uint64_t> primary_key;" << std::endl;
         header_ << std::endl;
@@ -108,11 +74,8 @@ void generateTableHeader(Table &table,  std::ostream& header_) {
 
     // Vectors for columns
     for (auto& column : table.columns) {
-        header_ << "    std::vector<" << generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
+        header_ << "    std::vector<" << SchemaCompiler::generateTypeName(column.type) << "> " << column.id << ";" << std::endl;
     }
-
-    header_ << std::endl;
-    header_ << "    static const std::vector<IU> ius;" << std::endl;
 
     header_ << "};" << std::endl;
 }
@@ -162,28 +125,18 @@ class TableBase {
 }
 
 void generateCollectUIsMethod(Table &table, std::ostream &impl_) {
-    impl_ << "const std::vector<IU> " << table.id << "Table" << "::" << "ius {" << std::endl;
+    impl_ << "const std::vector<IU> " << table.id << "Table" << "::" << "IUs {" << std::endl;
     for (auto& column : table.columns) {
-        impl_ << "    IU(\"" << table.id << "\", \"" << column.id << "\", " << generateSchemacTypeName(column.type) << ")," << std::endl;
+        impl_ << "    IU(\"" << table.id << "\", \"" << column.id << "\", " << SchemaCompiler::generateSchemacTypeName(column.type) << ")," << std::endl;
     }
     impl_ << "};" << std::endl;
-    impl_ << std::endl;
-
-    impl_ << "std::vector<const IU*> " << table.id << "Table" << "::" << "CollectIUs() {" << std::endl;
-    impl_ << "    std::vector<const IU*> iu_ptrs {};" << std::endl;
-    impl_ << "    iu_ptrs.reserve(ius.size());" << std::endl;
-    impl_ << "    for (auto& iu : ius) {" << std::endl;
-    impl_ << "        iu_ptrs.push_back(&iu);" << std::endl;
-    impl_ << "    }" << std::endl;
-    impl_ << "    return iu_ptrs;" << std::endl;
-    impl_ << "}" << std::endl;
 }
 
 void generateInsertMethod(Table &table, std::ostream &impl_) {
     impl_ << "uint64_t " << table.id << "Table" << "::" << "insert(";
     for (auto& column : table.columns) {
         impl_ << std::endl << "        ";
-        impl_ << "const " << generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
+        impl_ << "const " << SchemaCompiler::generateTypeName(column.type) << " " << column.id << ((&column != &*table.columns.end() - 1)? "," : "");
     }
     impl_ << ") {" << std::endl;
 
@@ -262,7 +215,7 @@ void generateRemoveMethod(Table &table, std::ostream& impl_) {
 
 void generateGetMethods(Table &table, std::ostream& impl_) {
     for (auto& column : table.columns) {
-        impl_ << "std::optional<" << generateTypeName(column.type) << "> " << table.id << "Table" << "::" << "get_" << column.id << "(const uint64_t tid) {" << std::endl;
+        impl_ << "std::optional<" << SchemaCompiler::generateTypeName(column.type) << "> " << table.id << "Table" << "::" << "get_" << column.id << "(const uint64_t tid) {" << std::endl;
         impl_ << "    if (this->deleted_tuples[tid] == true) {" << std::endl;
         impl_ << "        return std::nullopt;" << std::endl;
         impl_ << "    }" << std::endl;
@@ -276,7 +229,7 @@ void generateUpdateMethods(Table &table, std::ostream& impl_) {
     for (auto& column : table.columns) {
         // Method header
         impl_ << "void " << table.id << "Table" << "::" << "update_" << column.id << "(const uint64_t tid, const "
-              << generateTypeName(column.type) << " " << column.id << ") {" << std::endl;
+              << SchemaCompiler::generateTypeName(column.type) << " " << column.id << ") {" << std::endl;
 
         // If the field is not part of any indexes, it's super easy for us. Otherwise, we need to update the index as well.
         // For simplicity, we will only care about primary keys for now.

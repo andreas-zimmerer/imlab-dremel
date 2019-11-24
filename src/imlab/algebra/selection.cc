@@ -18,7 +18,7 @@ namespace imlab {
         required_ius_ = required;
         consumer_ = consumer;
 
-        std::vector<const IU*> required_from_child = required_ius_;
+        std::vector<const IU*>& required_from_child = required_ius_;
         for (auto& p : predicates_) {
             if (std::find(required_from_child.begin(), required_from_child.end(), p.first) == required_from_child.end()) {
                 required_from_child.push_back(p.first);

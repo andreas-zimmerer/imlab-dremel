@@ -7,6 +7,7 @@
 #include "imlab/algebra/print.h"
 #include "imlab/algebra/selection.h"
 #include "imlab/algebra/table_scan.h"
+#include "imlab/schema.h"
 #include "imlab/schemac/schema_parse_context.h"
 
 using namespace imlab;
@@ -47,20 +48,20 @@ int main(int argc, char *argv[]) {
     // and c_w_id = 1
     // and c_d_id = 1
 
-    IU iu_customer_c_id{"customer", "c_id", schemac::Type::Integer()};
-    IU iu_customer_c_w_id{"customer", "c_w_id", schemac::Type::Integer()};
-    IU iu_customer_c_d_id{"customer", "c_d_id", schemac::Type::Integer()};
-    IU iu_customer_c_first{"customer", "c_first", schemac::Type::Varchar(16)};
-    IU iu_customer_c_last{"customer", "c_last", schemac::Type::Varchar(16)};
-    IU iu_order_o_w_id{"order", "o_w_id", schemac::Type::Integer()};
-    IU iu_order_o_d_id{"order", "o_d_id", schemac::Type::Integer()};
-    IU iu_order_o_c_id{"order", "o_c_id", schemac::Type::Integer()};
-    IU iu_order_o_id{"order", "o_id", schemac::Type::Integer()};
-    IU iu_order_o_all_local{"order", "o_all_local", schemac::Type::Numeric(1, 0)};
-    IU iu_orderline_ol_w_id{"orderline", "ol_w_id", schemac::Type::Integer()};
-    IU iu_orderline_ol_d_id{"orderline", "ol_d_id", schemac::Type::Integer()};
-    IU iu_orderline_ol_o_id{"orderline", "ol_o_id", schemac::Type::Integer()};
-    IU iu_orderline_ol_amount{"orderline", "ol_amount", schemac::Type::Numeric(6, 2)};
+    const IU& iu_customer_c_id = tpcc::customerTable::IUs[0];
+    const IU& iu_customer_c_w_id = tpcc::customerTable::IUs[2];
+    const IU& iu_customer_c_d_id = tpcc::customerTable::IUs[1];
+    const IU& iu_customer_c_first = tpcc::customerTable::IUs[3];
+    const IU& iu_customer_c_last = tpcc::customerTable::IUs[5];
+    const IU& iu_order_o_w_id = tpcc::orderTable::IUs[2];
+    const IU& iu_order_o_d_id = tpcc::orderTable::IUs[1];
+    const IU& iu_order_o_c_id = tpcc::orderTable::IUs[3];
+    const IU& iu_order_o_id = tpcc::orderTable::IUs[0];
+    const IU& iu_order_o_all_local = tpcc::orderTable::IUs[7];
+    const IU& iu_orderline_ol_w_id = tpcc::orderlineTable::IUs[2];
+    const IU& iu_orderline_ol_d_id = tpcc::orderlineTable::IUs[1];
+    const IU& iu_orderline_ol_o_id = tpcc::orderlineTable::IUs[0];
+    const IU& iu_orderline_ol_amount = tpcc::orderlineTable::IUs[8];
 
     TableScan customer_table_scan("customer");
     TableScan order_table_scan("order");
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
     InnerJoin customer_order_join(std::make_unique<Selection>(std::move(customer_select)),
                                   std::make_unique<TableScan>(order_table_scan), {
         {&iu_customer_c_w_id, &iu_order_o_w_id},
-        {&iu_customer_c_d_id, &iu_order_o_w_id},
+        {&iu_customer_c_d_id, &iu_order_o_d_id},
         {&iu_customer_c_id,   &iu_order_o_c_id}});
     InnerJoin order_orderline_join(std::make_unique<InnerJoin>(std::move(customer_order_join)),
                                    std::make_unique<TableScan>(orderline_table_scan), {
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
 
 namespace imlab {
 
-    void RunCompiledQuery();
+    void RunCompiledQuery(imlab::Database& db);
 
 }  // namespace imlab
 #endif  // INCLUDE_IMLAB_COMPILED_QUERY_H_
@@ -97,11 +98,14 @@ namespace imlab {
 
     out_cc << R"IMPL(
 #include "imlab/schema.h"
+#include "imlab/database.h"
 #include "imlab/schemac/schema_parse_context.h"
+#include <iostream>
+#include <iomanip>
 
 namespace imlab {
 
-    void RunCompiledQuery() {
+    void RunCompiledQuery(imlab::Database& db) {
 )IMPL";
     query.Produce(out_cc);
     out_cc << R"IMPL(

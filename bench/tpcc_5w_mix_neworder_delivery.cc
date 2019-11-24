@@ -63,7 +63,7 @@ void RandomDelivery(imlab::Database &db) {
 }
 
 imlab::Database LoadDatabase() {
-    imlab::Database database;
+    imlab::Database database {};
 
     std::fstream warehouse_file ("../data/tpcc_5w/tpcc_warehouse.tbl", std::fstream::in);
     database.LoadWarehouse(warehouse_file);

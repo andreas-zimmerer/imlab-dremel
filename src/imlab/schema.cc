@@ -8,26 +8,17 @@ namespace tpcc {
 // ------------------------------------------------
 // Generated sources for table warehouse
 // ------------------------------------------------
-const std::vector<IU> warehouseTable::ius {
-    IU("warehouse", "w_id", imlab::schemac::Type::Integer()),
-    IU("warehouse", "w_name", imlab::schemac::Type::Varchar(10)),
-    IU("warehouse", "w_street_1", imlab::schemac::Type::Varchar(20)),
-    IU("warehouse", "w_street_2", imlab::schemac::Type::Varchar(20)),
-    IU("warehouse", "w_city", imlab::schemac::Type::Varchar(20)),
-    IU("warehouse", "w_state", imlab::schemac::Type::Char(2)),
-    IU("warehouse", "w_zip", imlab::schemac::Type::Char(9)),
-    IU("warehouse", "w_tax", imlab::schemac::Type::Numeric(4, 4)),
-    IU("warehouse", "w_ytd", imlab::schemac::Type::Numeric(12, 2)),
+const std::vector<IU> warehouseTable::IUs {
+    IU("warehouse", "w_id", schemac::Type::Integer()),
+    IU("warehouse", "w_name", schemac::Type::Varchar(10)),
+    IU("warehouse", "w_street_1", schemac::Type::Varchar(20)),
+    IU("warehouse", "w_street_2", schemac::Type::Varchar(20)),
+    IU("warehouse", "w_city", schemac::Type::Varchar(20)),
+    IU("warehouse", "w_state", schemac::Type::Char(2)),
+    IU("warehouse", "w_zip", schemac::Type::Char(9)),
+    IU("warehouse", "w_tax", schemac::Type::Numeric(4, 4)),
+    IU("warehouse", "w_ytd", schemac::Type::Numeric(12, 2)),
 };
-
-std::vector<const IU*> warehouseTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t warehouseTable::insert(
         const Integer w_id,
@@ -219,28 +210,19 @@ void warehouseTable::update_w_ytd(const uint64_t tid, const Numeric<12, 2> w_ytd
 // ------------------------------------------------
 // Generated sources for table district
 // ------------------------------------------------
-const std::vector<IU> districtTable::ius {
-    IU("district", "d_id", imlab::schemac::Type::Integer()),
-    IU("district", "d_w_id", imlab::schemac::Type::Integer()),
-    IU("district", "d_name", imlab::schemac::Type::Varchar(10)),
-    IU("district", "d_street_1", imlab::schemac::Type::Varchar(20)),
-    IU("district", "d_street_2", imlab::schemac::Type::Varchar(20)),
-    IU("district", "d_city", imlab::schemac::Type::Varchar(20)),
-    IU("district", "d_state", imlab::schemac::Type::Char(2)),
-    IU("district", "d_zip", imlab::schemac::Type::Char(9)),
-    IU("district", "d_tax", imlab::schemac::Type::Numeric(4, 4)),
-    IU("district", "d_ytd", imlab::schemac::Type::Numeric(12, 2)),
-    IU("district", "d_next_o_id", imlab::schemac::Type::Integer()),
+const std::vector<IU> districtTable::IUs {
+    IU("district", "d_id", schemac::Type::Integer()),
+    IU("district", "d_w_id", schemac::Type::Integer()),
+    IU("district", "d_name", schemac::Type::Varchar(10)),
+    IU("district", "d_street_1", schemac::Type::Varchar(20)),
+    IU("district", "d_street_2", schemac::Type::Varchar(20)),
+    IU("district", "d_city", schemac::Type::Varchar(20)),
+    IU("district", "d_state", schemac::Type::Char(2)),
+    IU("district", "d_zip", schemac::Type::Char(9)),
+    IU("district", "d_tax", schemac::Type::Numeric(4, 4)),
+    IU("district", "d_ytd", schemac::Type::Numeric(12, 2)),
+    IU("district", "d_next_o_id", schemac::Type::Integer()),
 };
-
-std::vector<const IU*> districtTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t districtTable::insert(
         const Integer d_id,
@@ -474,38 +456,29 @@ void districtTable::update_d_next_o_id(const uint64_t tid, const Integer d_next_
 // ------------------------------------------------
 // Generated sources for table customer
 // ------------------------------------------------
-const std::vector<IU> customerTable::ius {
-    IU("customer", "c_id", imlab::schemac::Type::Integer()),
-    IU("customer", "c_d_id", imlab::schemac::Type::Integer()),
-    IU("customer", "c_w_id", imlab::schemac::Type::Integer()),
-    IU("customer", "c_first", imlab::schemac::Type::Varchar(16)),
-    IU("customer", "c_middle", imlab::schemac::Type::Char(2)),
-    IU("customer", "c_last", imlab::schemac::Type::Varchar(16)),
-    IU("customer", "c_street_1", imlab::schemac::Type::Varchar(20)),
-    IU("customer", "c_street_2", imlab::schemac::Type::Varchar(20)),
-    IU("customer", "c_city", imlab::schemac::Type::Varchar(20)),
-    IU("customer", "c_state", imlab::schemac::Type::Char(2)),
-    IU("customer", "c_zip", imlab::schemac::Type::Char(9)),
-    IU("customer", "c_phone", imlab::schemac::Type::Char(16)),
-    IU("customer", "c_since", imlab::schemac::Type::Timestamp()),
-    IU("customer", "c_credit", imlab::schemac::Type::Char(2)),
-    IU("customer", "c_credit_lim", imlab::schemac::Type::Numeric(12, 2)),
-    IU("customer", "c_discount", imlab::schemac::Type::Numeric(4, 4)),
-    IU("customer", "c_balance", imlab::schemac::Type::Numeric(12, 2)),
-    IU("customer", "c_ytd_paymenr", imlab::schemac::Type::Numeric(12, 2)),
-    IU("customer", "c_payment_cnt", imlab::schemac::Type::Numeric(4, 0)),
-    IU("customer", "c_delivery_cnt", imlab::schemac::Type::Numeric(4, 0)),
-    IU("customer", "c_data", imlab::schemac::Type::Varchar(500)),
+const std::vector<IU> customerTable::IUs {
+    IU("customer", "c_id", schemac::Type::Integer()),
+    IU("customer", "c_d_id", schemac::Type::Integer()),
+    IU("customer", "c_w_id", schemac::Type::Integer()),
+    IU("customer", "c_first", schemac::Type::Varchar(16)),
+    IU("customer", "c_middle", schemac::Type::Char(2)),
+    IU("customer", "c_last", schemac::Type::Varchar(16)),
+    IU("customer", "c_street_1", schemac::Type::Varchar(20)),
+    IU("customer", "c_street_2", schemac::Type::Varchar(20)),
+    IU("customer", "c_city", schemac::Type::Varchar(20)),
+    IU("customer", "c_state", schemac::Type::Char(2)),
+    IU("customer", "c_zip", schemac::Type::Char(9)),
+    IU("customer", "c_phone", schemac::Type::Char(16)),
+    IU("customer", "c_since", schemac::Type::Timestamp()),
+    IU("customer", "c_credit", schemac::Type::Char(2)),
+    IU("customer", "c_credit_lim", schemac::Type::Numeric(12, 2)),
+    IU("customer", "c_discount", schemac::Type::Numeric(4, 4)),
+    IU("customer", "c_balance", schemac::Type::Numeric(12, 2)),
+    IU("customer", "c_ytd_paymenr", schemac::Type::Numeric(12, 2)),
+    IU("customer", "c_payment_cnt", schemac::Type::Numeric(4, 0)),
+    IU("customer", "c_delivery_cnt", schemac::Type::Numeric(4, 0)),
+    IU("customer", "c_data", schemac::Type::Varchar(500)),
 };
-
-std::vector<const IU*> customerTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t customerTable::insert(
         const Integer c_id,
@@ -903,25 +876,16 @@ void customerTable::update_c_data(const uint64_t tid, const Varchar<500> c_data)
 // ------------------------------------------------
 // Generated sources for table history
 // ------------------------------------------------
-const std::vector<IU> historyTable::ius {
-    IU("history", "h_c_id", imlab::schemac::Type::Integer()),
-    IU("history", "h_c_d_id", imlab::schemac::Type::Integer()),
-    IU("history", "h_c_w_id", imlab::schemac::Type::Integer()),
-    IU("history", "h_d_id", imlab::schemac::Type::Integer()),
-    IU("history", "h_w_id", imlab::schemac::Type::Integer()),
-    IU("history", "h_date", imlab::schemac::Type::Timestamp()),
-    IU("history", "h_amount", imlab::schemac::Type::Numeric(6, 2)),
-    IU("history", "h_data", imlab::schemac::Type::Varchar(24)),
+const std::vector<IU> historyTable::IUs {
+    IU("history", "h_c_id", schemac::Type::Integer()),
+    IU("history", "h_c_d_id", schemac::Type::Integer()),
+    IU("history", "h_c_w_id", schemac::Type::Integer()),
+    IU("history", "h_d_id", schemac::Type::Integer()),
+    IU("history", "h_w_id", schemac::Type::Integer()),
+    IU("history", "h_date", schemac::Type::Timestamp()),
+    IU("history", "h_amount", schemac::Type::Numeric(6, 2)),
+    IU("history", "h_data", schemac::Type::Varchar(24)),
 };
-
-std::vector<const IU*> historyTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t historyTable::insert(
         const Integer h_c_id,
@@ -1083,20 +1047,11 @@ void historyTable::update_h_data(const uint64_t tid, const Varchar<24> h_data) {
 // ------------------------------------------------
 // Generated sources for table neworder
 // ------------------------------------------------
-const std::vector<IU> neworderTable::ius {
-    IU("neworder", "no_o_id", imlab::schemac::Type::Integer()),
-    IU("neworder", "no_d_id", imlab::schemac::Type::Integer()),
-    IU("neworder", "no_w_id", imlab::schemac::Type::Integer()),
+const std::vector<IU> neworderTable::IUs {
+    IU("neworder", "no_o_id", schemac::Type::Integer()),
+    IU("neworder", "no_d_id", schemac::Type::Integer()),
+    IU("neworder", "no_w_id", schemac::Type::Integer()),
 };
-
-std::vector<const IU*> neworderTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t neworderTable::insert(
         const Integer no_o_id,
@@ -1224,25 +1179,16 @@ void neworderTable::update_no_w_id(const uint64_t tid, const Integer no_w_id) {
 // ------------------------------------------------
 // Generated sources for table order
 // ------------------------------------------------
-const std::vector<IU> orderTable::ius {
-    IU("order", "o_id", imlab::schemac::Type::Integer()),
-    IU("order", "o_d_id", imlab::schemac::Type::Integer()),
-    IU("order", "o_w_id", imlab::schemac::Type::Integer()),
-    IU("order", "o_c_id", imlab::schemac::Type::Integer()),
-    IU("order", "o_entry_d", imlab::schemac::Type::Timestamp()),
-    IU("order", "o_carrier_id", imlab::schemac::Type::Integer()),
-    IU("order", "o_ol_cnt", imlab::schemac::Type::Numeric(2, 0)),
-    IU("order", "o_all_local", imlab::schemac::Type::Numeric(1, 0)),
+const std::vector<IU> orderTable::IUs {
+    IU("order", "o_id", schemac::Type::Integer()),
+    IU("order", "o_d_id", schemac::Type::Integer()),
+    IU("order", "o_w_id", schemac::Type::Integer()),
+    IU("order", "o_c_id", schemac::Type::Integer()),
+    IU("order", "o_entry_d", schemac::Type::Timestamp()),
+    IU("order", "o_carrier_id", schemac::Type::Integer()),
+    IU("order", "o_ol_cnt", schemac::Type::Numeric(2, 0)),
+    IU("order", "o_all_local", schemac::Type::Numeric(1, 0)),
 };
-
-std::vector<const IU*> orderTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t orderTable::insert(
         const Integer o_id,
@@ -1445,27 +1391,18 @@ void orderTable::update_o_all_local(const uint64_t tid, const Numeric<1, 0> o_al
 // ------------------------------------------------
 // Generated sources for table orderline
 // ------------------------------------------------
-const std::vector<IU> orderlineTable::ius {
-    IU("orderline", "ol_o_id", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_d_id", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_w_id", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_number", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_i_id", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_supply_w_id", imlab::schemac::Type::Integer()),
-    IU("orderline", "ol_delivery_d", imlab::schemac::Type::Timestamp()),
-    IU("orderline", "ol_quantity", imlab::schemac::Type::Numeric(2, 0)),
-    IU("orderline", "ol_amount", imlab::schemac::Type::Numeric(6, 2)),
-    IU("orderline", "ol_dist_info", imlab::schemac::Type::Char(24)),
+const std::vector<IU> orderlineTable::IUs {
+    IU("orderline", "ol_o_id", schemac::Type::Integer()),
+    IU("orderline", "ol_d_id", schemac::Type::Integer()),
+    IU("orderline", "ol_w_id", schemac::Type::Integer()),
+    IU("orderline", "ol_number", schemac::Type::Integer()),
+    IU("orderline", "ol_i_id", schemac::Type::Integer()),
+    IU("orderline", "ol_supply_w_id", schemac::Type::Integer()),
+    IU("orderline", "ol_delivery_d", schemac::Type::Timestamp()),
+    IU("orderline", "ol_quantity", schemac::Type::Numeric(2, 0)),
+    IU("orderline", "ol_amount", schemac::Type::Numeric(6, 2)),
+    IU("orderline", "ol_dist_info", schemac::Type::Char(24)),
 };
-
-std::vector<const IU*> orderlineTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t orderlineTable::insert(
         const Integer ol_o_id,
@@ -1714,22 +1651,13 @@ void orderlineTable::update_ol_dist_info(const uint64_t tid, const Char<24> ol_d
 // ------------------------------------------------
 // Generated sources for table item
 // ------------------------------------------------
-const std::vector<IU> itemTable::ius {
-    IU("item", "i_id", imlab::schemac::Type::Integer()),
-    IU("item", "i_im_id", imlab::schemac::Type::Integer()),
-    IU("item", "i_name", imlab::schemac::Type::Varchar(24)),
-    IU("item", "i_price", imlab::schemac::Type::Numeric(5, 2)),
-    IU("item", "i_data", imlab::schemac::Type::Varchar(50)),
+const std::vector<IU> itemTable::IUs {
+    IU("item", "i_id", schemac::Type::Integer()),
+    IU("item", "i_im_id", schemac::Type::Integer()),
+    IU("item", "i_name", schemac::Type::Varchar(24)),
+    IU("item", "i_price", schemac::Type::Numeric(5, 2)),
+    IU("item", "i_data", schemac::Type::Varchar(50)),
 };
-
-std::vector<const IU*> itemTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t itemTable::insert(
         const Integer i_id,
@@ -1861,34 +1789,25 @@ void itemTable::update_i_data(const uint64_t tid, const Varchar<50> i_data) {
 // ------------------------------------------------
 // Generated sources for table stock
 // ------------------------------------------------
-const std::vector<IU> stockTable::ius {
-    IU("stock", "s_i_id", imlab::schemac::Type::Integer()),
-    IU("stock", "s_w_id", imlab::schemac::Type::Integer()),
-    IU("stock", "s_quantity", imlab::schemac::Type::Numeric(4, 0)),
-    IU("stock", "s_dist_01", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_02", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_03", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_04", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_05", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_06", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_07", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_08", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_09", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_dist_10", imlab::schemac::Type::Char(24)),
-    IU("stock", "s_ytd", imlab::schemac::Type::Numeric(8, 0)),
-    IU("stock", "s_order_cnt", imlab::schemac::Type::Numeric(4, 0)),
-    IU("stock", "s_remote_cnt", imlab::schemac::Type::Numeric(4, 0)),
-    IU("stock", "s_data", imlab::schemac::Type::Varchar(50)),
+const std::vector<IU> stockTable::IUs {
+    IU("stock", "s_i_id", schemac::Type::Integer()),
+    IU("stock", "s_w_id", schemac::Type::Integer()),
+    IU("stock", "s_quantity", schemac::Type::Numeric(4, 0)),
+    IU("stock", "s_dist_01", schemac::Type::Char(24)),
+    IU("stock", "s_dist_02", schemac::Type::Char(24)),
+    IU("stock", "s_dist_03", schemac::Type::Char(24)),
+    IU("stock", "s_dist_04", schemac::Type::Char(24)),
+    IU("stock", "s_dist_05", schemac::Type::Char(24)),
+    IU("stock", "s_dist_06", schemac::Type::Char(24)),
+    IU("stock", "s_dist_07", schemac::Type::Char(24)),
+    IU("stock", "s_dist_08", schemac::Type::Char(24)),
+    IU("stock", "s_dist_09", schemac::Type::Char(24)),
+    IU("stock", "s_dist_10", schemac::Type::Char(24)),
+    IU("stock", "s_ytd", schemac::Type::Numeric(8, 0)),
+    IU("stock", "s_order_cnt", schemac::Type::Numeric(4, 0)),
+    IU("stock", "s_remote_cnt", schemac::Type::Numeric(4, 0)),
+    IU("stock", "s_data", schemac::Type::Varchar(50)),
 };
-
-std::vector<const IU*> stockTable::CollectIUs() {
-    std::vector<const IU*> iu_ptrs {};
-    iu_ptrs.reserve(ius.size());
-    for (auto& iu : ius) {
-        iu_ptrs.push_back(&iu);
-    }
-    return iu_ptrs;
-}
 
 uint64_t stockTable::insert(
         const Integer s_i_id,

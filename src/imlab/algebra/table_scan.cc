@@ -3,23 +3,32 @@
 // ---------------------------------------------------------------------------
 
 #include "imlab/algebra/table_scan.h"
-#include "imlab/database.h"
 #include "imlab/infra/types.h"
+#include "imlab/schema.h"
 
 namespace imlab {
 
     std::vector<const IU *> TableScan::CollectIUs() {
         const std::string table_name = table_;
-        if (table_name == "warehouse") return tpcc::warehouseTable::CollectIUs();
-        if (table_name == "district") return tpcc::districtTable::CollectIUs();
-        if (table_name == "customer") return tpcc::customerTable::CollectIUs();
-        if (table_name == "history") return tpcc::historyTable::CollectIUs();
-        if (table_name == "neworder") return tpcc::neworderTable::CollectIUs();
-        if (table_name == "order") return tpcc::orderTable::CollectIUs();
-        if (table_name == "orderline") return tpcc::orderlineTable::CollectIUs();
-        if (table_name == "item") return tpcc::itemTable::CollectIUs();
-        if (table_name == "stock") return tpcc::stockTable::CollectIUs();
-        return {};
+
+        const std::vector<IU>& IUs = [&]() -> const std::vector<IU>& {
+            if (table_name == "warehouse") return tpcc::warehouseTable::IUs;
+            if (table_name == "district") return tpcc::districtTable::IUs;
+            if (table_name == "customer") return tpcc::customerTable::IUs;
+            if (table_name == "history") return tpcc::historyTable::IUs;
+            if (table_name == "neworder") return tpcc::neworderTable::IUs;
+            if (table_name == "order") return tpcc::orderTable::IUs;
+            if (table_name == "orderline") return tpcc::orderlineTable::IUs;
+            if (table_name == "item") return tpcc::itemTable::IUs;
+            if (table_name == "stock") return tpcc::stockTable::IUs;
+        }();
+
+        std::vector<const IU*> refs;
+        refs.reserve(IUs.size());
+        for (auto& iu : IUs) {
+            refs.push_back(&iu);
+        }
+        return refs;
     }
 
     void TableScan::Prepare(const std::vector<const IU *> &required, Operator *consumer) {
@@ -39,9 +48,9 @@ namespace imlab {
         // }
 
         _o << std::endl;
-        _o << "for (auto&[_, tid] : " << table_ << ".primary_key) {" << std::endl;
+        _o << "for (auto&[_, tid] : db." << table_ << "Table.primary_key) {" << std::endl;
         for (auto &iu : required_ius_) {
-            _o << "    auto " << iu->table << "_" << iu->column << " = " << iu->column << ".get_" << iu->column
+            _o << "    auto " << iu->table << "_" << iu->column << " = db." << iu->table << "Table.get_" << iu->column
                << "(tid).value();" << std::endl;
         }
 

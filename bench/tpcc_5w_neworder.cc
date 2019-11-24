@@ -54,7 +54,7 @@ void RandomNewOrder(imlab::Database &db) {
 }
 
 void RandomNeworderBenchmark(benchmark::State &state) {
-    imlab::Database database;
+    imlab::Database database {};
 
     std::fstream warehouse_file ("../data/tpcc_5w/tpcc_warehouse.tbl", std::fstream::in);
     database.LoadWarehouse(warehouse_file);

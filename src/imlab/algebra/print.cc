@@ -22,8 +22,9 @@ namespace imlab {
     void Print::Produce(std::ostream& _o) {
         // Print column names
         for (auto& iu : required_ius_) {
-            _o << "out_ << \"" << iu->column << "\" << \"  |  \";" << std::endl;
+            _o << "std::cout << \"| \" << std::left << std::setw(16) << \"" << iu->column << "\";" << std::endl;
         }
+        _o << "std::cout << std::endl;";
         child_->Produce(_o);
     }
 
@@ -34,9 +35,9 @@ namespace imlab {
         // out_ << std::endl;
 
         for (auto& iu : required_ius_) {
-            _o << "out_ << " << iu->table << "_" << iu->column << ";" << std::endl;
+            _o << "std::cout << \"| \" << " << iu->table << "_" << iu->column << ";" << std::endl;
         }
-        _o << "out_ << std::endl;";
+        _o << "std::cout << std::endl;";
     }
 
 }  // namespace imlab
