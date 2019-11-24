@@ -90,10 +90,11 @@ namespace imlab {
                << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
         }
         _o << ">, std::tuple<";
-        for (auto &r : required_ius_) { // if the value comes from the left side, it should be added to the hash table
+        bool first_value = true;
+        for (auto r : required_ius_) { // if the value comes from the left side, it should be added to the hash table
             if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                _o << schemac::SchemaCompiler::generateTypeName(r->type) << "/*" << r->column << "*/"
-                   << ((&r != &*required_ius_.end() - 1) ? ", " : "");
+                _o << (first_value ? "" : ", ") << schemac::SchemaCompiler::generateTypeName(r->type) << "/*" << r->column << "*/";
+                first_value = false;
             }
         }
         _o << ">> " << GenerateHashmapName() << ";" << std::endl;
@@ -113,9 +114,11 @@ namespace imlab {
                 _o << p.first->table << "_" << p.first->column << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
             }
             _o << "), std::make_tuple(";
+            bool first_value = true;
             for (auto& r : required_ius_) { // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                    _o << r->table << "_" << r->column << ((&r != &*required_ius_.end() - 1) ? ", " : "");
+                    _o << (first_value ? "" : ", ") << r->table << "_" << r->column;
+                    first_value = false;
                 }
             }
             _o << ")});" << std::endl;

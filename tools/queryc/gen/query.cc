@@ -15,7 +15,7 @@ namespace imlab {
         std::cout << std::endl;
         std::unordered_multimap < Key < Integer/*o_w_id*/, Integer/*o_d_id*/, Integer/*o_id*/>, std::tuple < Varchar <
                                                                                                 16 >/*c_first*/,
-                Varchar < 16 >/*c_last*/, Numeric < 1, 0 >/*o_all_local*/ >> order_orderline_hashmap;
+                Varchar < 16 >/*c_last*/, Numeric < 1, 0 >/*o_all_local*/>> order_orderline_hashmap;
         std::unordered_multimap < Key < Integer/*c_w_id*/, Integer/*c_d_id*/, Integer/*c_id*/>, std::tuple < Varchar <
                                                                                                 16 >/*c_first*/,
                 Varchar < 16 >/*c_last*/>> customer_order_hashmap;
