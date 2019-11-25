@@ -41,18 +41,40 @@ int main(int argc, char *argv[]) {
     std::cout << "Loading database..." << std::flush;
     auto load_db_begin = std::chrono::steady_clock::now();
     auto db = loadDatabase();
-    auto load_db_end = std::chrono::steady_clock::now();
-    auto load_db_duration = std::chrono::duration_cast<std::chrono::milliseconds>(load_db_end - load_db_begin).count();
+    auto load_db_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - load_db_begin).count();
     std::cout << " [done in " << load_db_duration << " ms]" << std::endl;
 
     // Starting REPL
     std::cout << "Starting SQL interpreter - close with Ctrl+D" << std::endl;
+    std::cout << "To enable statistics, enter \"enable_stats\"" << std::endl;
     std::cout << ">>> " << std::flush;
+    bool enable_stats = false;
     std::string line {};
     while (std::getline(std::cin, line))
     {
-        // TODO Interpret line
-        // TODO Execute SQL statemnt
+        if (line == "enable_stats") {
+            enable_stats = true;
+        } else {
+            auto parse_query_begin = std::chrono::steady_clock::now();
+            auto parse_query_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - parse_query_begin).count();
+
+            auto code_generation_begin = std::chrono::steady_clock::now();
+            auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - code_generation_begin).count();
+
+            auto code_compilation_begin = std::chrono::steady_clock::now();
+            auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - code_compilation_begin).count();
+
+            auto query_execution_begin = std::chrono::steady_clock::now();
+            auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - query_execution_begin).count();
+
+            if (enable_stats) {
+                std::cout << "-----" << std::endl;
+                std::cout << "Parsing SQL:     " << parse_query_duration << " ms" << std::endl;
+                std::cout << "Generating code: " << code_generation_duration << " ms" << std::endl;
+                std::cout << "Compiling query: " << code_compilation_duration << " ms" << std::endl;
+                std::cout << "Query execution: " << query_execution_duration << " ms" << std::endl;
+            }
+        }
 
         // Print prompt for next input
         std::cout << ">>> " << std::flush;
