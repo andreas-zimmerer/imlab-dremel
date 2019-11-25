@@ -13,8 +13,6 @@ namespace imlab {
     }
 
     void Selection::Prepare(const std::vector<const IU*> &required, Operator* consumer) {
-        std::cout << "Preparing Selection" << std::endl;
-
         required_ius_ = required;
         consumer_ = consumer;
 

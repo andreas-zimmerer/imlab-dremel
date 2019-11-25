@@ -23,7 +23,7 @@ namespace imlab {
             if (table_name == "stock") return tpcc::stockTable::IUs;
         }();
 
-        std::vector<const IU*> refs;
+        std::vector<const IU*> refs {};
         refs.reserve(IUs.size());
         for (auto& iu : IUs) {
             refs.push_back(&iu);
@@ -32,8 +32,6 @@ namespace imlab {
     }
 
     void TableScan::Prepare(const std::vector<const IU *> &required, Operator *consumer) {
-        std::cout << "Preparing Table Scan" << std::endl;
-
         required_ius_ = required;
         consumer_ = consumer;
     }

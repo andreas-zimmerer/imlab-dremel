@@ -63,21 +63,26 @@ void ExecuteQuery(imlab::Database &db, const std::string &dylib_path) {
 
 int main(int argc, char *argv[]) {
     // Load schema and database content
-    auto load_db_begin = std::chrono::steady_clock::now();
-    std::cout << "Loading database..." << std::flush;
 
+    auto load_schema_begin = std::chrono::steady_clock::now();
+    std::cout << "Loading schema information..." << std::flush;
     std::ifstream schema_file("../data/schema.sql");
     SchemaParseContext schema_parse_context;
     auto schema = schema_parse_context.Parse(schema_file);
-    auto db = loadDatabase();
+    auto load_schema_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - load_schema_begin).count();
+    std::cout << " [done in " << load_schema_duration << " ms]" << std::endl;
 
+    auto load_db_begin = std::chrono::steady_clock::now();
+    std::cout << "Loading database..." << std::flush;
+    auto db = loadDatabase();
     auto load_db_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - load_db_begin).count();
     std::cout << " [done in " << load_db_duration << " ms]" << std::endl;
 
     // Prepare sql query parser and compiler
-    std::ofstream query_out_h("/tmp/query.h", std::ofstream::trunc);
-    std::ofstream query_out_cc("/tmp/query.cc", std::ofstream::trunc);
+    std::ofstream query_out_h("../tools/queryc/gen/query.h", std::ofstream::trunc);
+    std::ofstream query_out_cc("../tools/queryc/gen/query.cc", std::ofstream::trunc);
     QueryParseContext query_parse_context {schema};
     QueryCompiler compiler {query_out_h, query_out_cc};
 
@@ -91,38 +96,40 @@ int main(int argc, char *argv[]) {
         if (line == "enable_stats") {
             enable_stats = true;
         } else {
-            auto parse_query_begin = std::chrono::steady_clock::now();
-            std::istringstream in_stream(line);
-            auto& query = query_parse_context.Parse(in_stream);
-            auto parse_query_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - parse_query_begin).count();
+            try {
+                auto parse_query_begin = std::chrono::steady_clock::now();
+                std::istringstream in_stream(line);
+                auto &query = query_parse_context.Parse(in_stream);
+                auto parse_query_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - parse_query_begin).count();
 
-            auto code_generation_begin = std::chrono::steady_clock::now();
-            compiler.Compile(query);
-            auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - code_generation_begin).count();
+                auto code_generation_begin = std::chrono::steady_clock::now();
+                compiler.Compile(query);
+                auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - code_generation_begin).count();
 
-            auto code_compilation_begin = std::chrono::steady_clock::now();
-            auto err = system("c++ ../tools/queryc/gen/query.cc -o ../tools/queryc/gen/query.so -std=c++17 -shared -fPIC -rdynamic");
-            if (err) {
-                std::cerr << "Unable to compile query." << std::endl;
-                std::cout << ">>> " << std::flush;
-                continue;
-            }
-            auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - code_compilation_begin).count();
+                auto code_compilation_begin = std::chrono::steady_clock::now();
+                auto err = system("c++ ../tools/queryc/gen/query.cc -o ../tools/queryc/gen/query.so -std=c++17 -shared -fPIC -rdynamic");
+                if (err) {
+                    throw std::runtime_error("Unable to compile query.");
+                }
+                auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - code_compilation_begin).count();
 
-            auto query_execution_begin = std::chrono::steady_clock::now();
-            ExecuteQuery(db, "../tools/queryc/gen/query.so");
-            auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - query_execution_begin).count();
+                auto query_execution_begin = std::chrono::steady_clock::now();
+                ExecuteQuery(db, "../tools/queryc/gen/query.so");
+                auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - query_execution_begin).count();
 
-            if (enable_stats) {
-                std::cout << "-----" << std::endl;
-                std::cout << "Parsing SQL:     " << parse_query_duration << " ms" << std::endl;
-                std::cout << "Generating code: " << code_generation_duration << " ms" << std::endl;
-                std::cout << "Compiling query: " << code_compilation_duration << " ms" << std::endl;
-                std::cout << "Query execution: " << query_execution_duration << " ms" << std::endl;
+                if (enable_stats) {
+                    std::cout << "-----" << std::endl;
+                    std::cout << "Parsing SQL:     " << parse_query_duration << " ms" << std::endl;
+                    std::cout << "Generating code: " << code_generation_duration << " ms" << std::endl;
+                    std::cout << "Compiling query: " << code_compilation_duration << " ms" << std::endl;
+                    std::cout << "Query execution: " << query_execution_duration << " ms" << std::endl;
+                }
+            } catch (std::exception& e) {
+                std::cerr << e.what() << std::endl;
             }
         }
 

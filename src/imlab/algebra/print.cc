@@ -11,8 +11,6 @@ namespace imlab {
     }
 
     void Print::Prepare(const std::vector<const IU*> &required, Operator* consumer) {
-        std::cout << "Preparing Print" << std::endl;
-
         required_ius_ = required;
         consumer_ = consumer;
 

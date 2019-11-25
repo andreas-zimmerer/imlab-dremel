@@ -112,7 +112,7 @@ loc.step ();
                         }
                         return QueryParser::make_INTEGER_VALUE(value, loc);
                     }
-(\\.|[^"\\])*       { return QueryParser::make_STRING_VALUE(yytext, loc); }
+'(\\.|[^"\\])*'     { return QueryParser::make_STRING_VALUE(yytext, loc); }
 "/*"([^*]|(\*+[^*/]))*\*+\/ { /* ignore comments */ }
 <<EOF>>             { return QueryParser::make_EOF(loc); }
 .                   { sc.Error(loc.begin.line, loc.begin.column, "invalid character"); }

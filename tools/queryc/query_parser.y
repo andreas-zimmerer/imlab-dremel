@@ -100,7 +100,7 @@ condition:
     ;
 
 constant:
-    SQUOTE STRING_VALUE SQUOTE                          { $$ = $2; }
+    STRING_VALUE                                        { $$ = $1; }
  |  INTEGER_VALUE                                       { $$ = $1; }
     ;
 

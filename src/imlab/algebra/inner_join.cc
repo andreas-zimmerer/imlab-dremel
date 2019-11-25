@@ -22,8 +22,6 @@ namespace imlab {
     }
 
     void InnerJoin::Prepare(const std::vector<const IU *> &required, Operator *consumer) {
-        std::cout << "Preparing Join" << std::endl;
-
         required_ius_ = required;
         consumer_ = consumer;
 
