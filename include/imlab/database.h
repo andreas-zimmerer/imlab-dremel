@@ -9,8 +9,8 @@
 #include <array>
 #include <unordered_map>
 #include <vector>
-#include "imlab/infra/hash.h"
-#include "imlab/schema.h"
+#include "./infra/hash.h"
+#include "./schema.h"
 
 namespace imlab {
 

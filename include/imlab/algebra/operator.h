@@ -7,7 +7,7 @@
 #include <vector>
 #include <ostream>
 #include <iostream>
-#include "imlab/algebra/iu.h"
+#include "./iu.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 // ---------------------------------------------------------------------------

@@ -9,8 +9,8 @@
 #include <vector>
 #include <iterator>
 #include <limits>
-#include "imlab/infra/hash.h"
-#include "imlab/infra/bits.h"
+#include "./hash.h"
+#include "./bits.h"
 //---------------------------------------------------------------------------
 template<typename ... T> struct IsKey : std::false_type { };
 template<typename ... T> struct IsKey<Key<T...>> : std::true_type { };

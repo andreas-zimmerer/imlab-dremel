@@ -97,15 +97,15 @@ namespace imlab {
 )HEADER";
 
     out_cc << R"IMPL(
-#include "imlab/schema.h"
-#include "imlab/database.h"
-#include "imlab/schemac/schema_parse_context.h"
+#include "../../../include/imlab/schema.h"
+#include "../../../include/imlab/database.h"
+#include "../../../include/imlab/schemac/schema_parse_context.h"
 #include <iostream>
 #include <iomanip>
 
 namespace imlab {
 
-    void RunCompiledQuery(imlab::Database& db) {
+    extern "C" void Run(imlab::Database& db) {
 )IMPL";
     query.Produce(out_cc);
     out_cc << R"IMPL(

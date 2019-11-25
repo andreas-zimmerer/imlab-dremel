@@ -43,15 +43,13 @@ void ExecuteQuery(imlab::Database &db, const std::string &dylib_path) {
         std::cerr << "error: " << dlerror() << std::endl;
         exit(1);
     }
-    //auto run_query = reinterpret_cast<void (*)(imlab::Database &)>(dlsym(handle, "Run"));
-    auto run_query = reinterpret_cast<int (*)(int)>(dlsym(handle, "foo"));
+    auto run_query = reinterpret_cast<void (*)(imlab::Database &)>(dlsym(handle, "Run"));
     if (!run_query) {
         std::cerr << "error: " << dlerror() << std::endl;
         exit(1);
     }
 
-    std::cout << run_query(3) << std::endl;
-    //run_query(db);
+    run_query(db);
 
     if (dlclose(handle)) {
         std::cerr << "error: " << dlerror() << std::endl;
@@ -100,12 +98,17 @@ int main(int argc, char *argv[]) {
                     std::chrono::steady_clock::now() - code_generation_begin).count();
 
             auto code_compilation_begin = std::chrono::steady_clock::now();
-            system("c++ ../data/dlopen/lib.cc -o ./query.so -shared -fPIC -rdynamic");
+            auto err = system("c++ ../tools/queryc/gen/query.cc -o ../tools/queryc/gen/query.so -std=c++17 -shared -fPIC -rdynamic");
+            if (err) {
+                std::cerr << "Unable to compile query." << std::endl;
+                std::cout << ">>> " << std::flush;
+                continue;
+            }
             auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - code_compilation_begin).count();
 
             auto query_execution_begin = std::chrono::steady_clock::now();
-            ExecuteQuery(db, "./query.so");
+            ExecuteQuery(db, "../tools/queryc/gen/query.so");
             auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - query_execution_begin).count();
 

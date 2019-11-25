@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "imlab/algebra/operator.h"
+#include "./operator.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 // ---------------------------------------------------------------------------

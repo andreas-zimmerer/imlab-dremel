@@ -8,8 +8,7 @@
 #include <utility>
 #include <vector>
 #include <string>
-#include "imlab/infra/types.h"
-#include "imlab/algebra/operator.h"
+#include "./operator.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 // ---------------------------------------------------------------------------

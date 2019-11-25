@@ -5,7 +5,7 @@
 #define INCLUDE_IMLAB_INFRA_HASH_H_
 //---------------------------------------------------------------------------
 #include <tuple>
-#include "imlab/infra/template.h"
+#include "./template.h"
 //---------------------------------------------------------------------------
 // Hash a tuple with an index sequence
 template<typename... Types, std::size_t... Indexes>

@@ -4,7 +4,7 @@
 #ifndef INCLUDE_IMLAB_ALGEBRA_IU_H_
 #define INCLUDE_IMLAB_ALGEBRA_IU_H_
 // ---------------------------------------------------------------------------
-#include "imlab/schemac/schema_parse_context.h"
+#include "../schemac/schema_parse_context.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 // ---------------------------------------------------------------------------

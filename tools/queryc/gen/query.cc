@@ -1,13 +1,13 @@
 
-#include "imlab/schema.h"
-#include "imlab/database.h"
-#include "imlab/schemac/schema_parse_context.h"
+#include "../../../include/imlab/schema.h"
+#include "../../../include/imlab/database.h"
+#include "../../../include/imlab/schemac/schema_parse_context.h"
 #include <iostream>
 #include <iomanip>
 
 namespace imlab {
 
-    void RunCompiledQuery(imlab::Database &db) {
+    extern "C" void Run(imlab::Database &db) {
         std::cout << "| " << std::left << std::setw(16) << "c_first";
         std::cout << "| " << std::left << std::setw(16) << "c_last";
         std::cout << "| " << std::left << std::setw(16) << "o_all_local";

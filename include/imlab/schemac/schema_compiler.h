@@ -4,7 +4,7 @@
 #ifndef INCLUDE_IMLAB_SCHEMAC_SCHEMA_COMPILER_H_
 #define INCLUDE_IMLAB_SCHEMAC_SCHEMA_COMPILER_H_
 // ---------------------------------------------------------------------------------------------------
-#include "imlab/schemac/schema_parse_context.h"
+#include "./schema_parse_context.h"
 #include <ostream>
 #include <string>
 #include <sstream>
