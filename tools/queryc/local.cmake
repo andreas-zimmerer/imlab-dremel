@@ -3,20 +3,54 @@
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# Files
+# Bison & Flex
 # ---------------------------------------------------------------------------
 
-file(GLOB_RECURSE INCLUDE_H "tools/queryc/gen/*.h")
-file(GLOB_RECURSE SRC_CC_GEN "tools/queryc/gen/*.cc")
+# Register flex and bison output
+set(QUERYC_SCANNER_OUT     "${CMAKE_SOURCE_DIR}/tools/queryc/gen/query_scanner.cc")
+set(QUERYC_PARSER_OUT      "${CMAKE_SOURCE_DIR}/tools/queryc/gen/query_parser.cc")
+set(QUERYC_COMPILER        "${CMAKE_SOURCE_DIR}/tools/queryc/query_compiler.cc")
+set(QUERYC_PARSE_CONTEXT   "${CMAKE_SOURCE_DIR}/tools/queryc/query_parse_context.cc")
+set(QUERYC_CC ${QUERYC_SCANNER_OUT} ${QUERYC_PARSER_OUT} ${QUERYC_COMPILER} ${QUERYC_PARSE_CONTEXT})
+set(QUERYC_CC_LINTING ${QUERYC_COMPILER} ${QUERYC_PARSE_CONTEXT})
+
+# Clear the output files
+file(WRITE ${QUERYC_SCANNER_OUT} "")
+file(WRITE ${QUERYC_PARSER_OUT} "")
+
+# Generate parser & scanner
+add_custom_target(queryc_parser
+        COMMAND ${BISON_EXECUTABLE}
+        --defines="${CMAKE_SOURCE_DIR}/tools/queryc/gen/query_parser.h"
+        --output=${QUERYC_PARSER_OUT}
+        --report=state
+        --report-file="${CMAKE_BINARY_DIR}/queryc_bison.log"
+        "${CMAKE_SOURCE_DIR}/tools/queryc/query_parser.y"
+        COMMAND ${FLEX_EXECUTABLE}
+        --outfile=${QUERYC_SCANNER_OUT}
+        "${CMAKE_SOURCE_DIR}/tools/queryc/query_scanner.l"
+        DEPENDS "${CMAKE_SOURCE_DIR}/tools/queryc/query_parser.y"
+        "${CMAKE_SOURCE_DIR}/tools/queryc/query_scanner.l")
+
+add_library(query ${QUERYC_CC})
+add_dependencies(query queryc_parser)
+
+# ---------------------------------------------------------------------------
+# Files: Library with compiled query
+# ---------------------------------------------------------------------------
+
+file(GLOB_RECURSE INCLUDE_H "tools/queryc/gen/query.h")
+file(GLOB_RECURSE SRC_CC_GEN "tools/queryc/gen/query.cc")
 
 # ---------------------------------------------------------------------------
 # Compiler
 # ---------------------------------------------------------------------------
 
 add_executable(queryc "${CMAKE_SOURCE_DIR}/tools/queryc/queryc.cc" ${INCLUDE_H})
-add_library(imlab_queryc STATIC ${SRC_CC_GEN})
-#target_link_libraries(queryc imlab imlab_queryc gflags Threads::Threads)
 target_link_libraries(queryc imlab gflags Threads::Threads)
+
+# Library with compiled query
+add_library(imlab_queryc STATIC ${SRC_CC_GEN})
 
 # ---------------------------------------------------------------------------
 # Linting
