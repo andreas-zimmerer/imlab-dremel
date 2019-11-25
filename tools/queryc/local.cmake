@@ -36,21 +36,11 @@ add_library(query ${QUERYC_CC})
 add_dependencies(query queryc_parser)
 
 # ---------------------------------------------------------------------------
-# Files: Library with compiled query
-# ---------------------------------------------------------------------------
-
-file(GLOB_RECURSE INCLUDE_H "tools/queryc/gen/query.h")
-file(GLOB_RECURSE SRC_CC_GEN "tools/queryc/gen/query.cc")
-
-# ---------------------------------------------------------------------------
 # Compiler
 # ---------------------------------------------------------------------------
 
-add_executable(queryc "${CMAKE_SOURCE_DIR}/tools/queryc/queryc.cc" ${INCLUDE_H})
-target_link_libraries(queryc imlab gflags Threads::Threads)
-
-# Library with compiled query
-add_library(imlab_queryc STATIC ${SRC_CC_GEN})
+add_executable(queryc "${CMAKE_SOURCE_DIR}/tools/queryc/queryc.cc")
+target_link_libraries(queryc query imlab gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting

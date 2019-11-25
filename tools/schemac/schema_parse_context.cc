@@ -31,7 +31,7 @@ SchemaParseContext::SchemaParseContext(bool trace_scanning, bool trace_parsing)
 SchemaParseContext::~SchemaParseContext() {}
 // ---------------------------------------------------------------------------------------------------
 // Parse a string
-Schema SchemaParseContext::Parse(std::istream &in) {
+Schema& SchemaParseContext::Parse(std::istream &in) {
     beginScan(in);
     imlab::schemac::SchemaParser parser(*this);
     parser.set_debug_level(trace_parsing_);

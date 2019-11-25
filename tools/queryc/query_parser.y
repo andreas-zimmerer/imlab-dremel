@@ -26,6 +26,8 @@
 %locations
 // Pass the compiler as parameter to yylex/yyparse.
 %param { imlab::queryc::QueryParseContext &sc }
+// In order to prevent naming conflicts, the .l files contain a prefix parameter. Prefix needs to be set here accordingly.
+%name-prefix "query"
 // ---------------------------------------------------------------------------------------------------
 // Added to the header file and parser implementation before bison definitions.
 // We include string for string tokens and forward declare the QueryParseContext.
@@ -87,8 +89,8 @@ identifier:
     ;
 
 condition_list:
-    condition AND condition                             { $1.push_back($3); std::swap($$, $1); }
- |  condition                                           { $$ = std::vector<std::string> { $1 }; }
+    condition_list AND condition                        { $1.push_back($3); std::swap($$, $1); }
+ |  condition                                           { $$ = std::vector<std::pair<std::string, std::string>> { $1 }; }
  |  %empty                                              {}
     ;
 

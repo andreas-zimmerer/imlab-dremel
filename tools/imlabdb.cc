@@ -1,7 +1,6 @@
 // ---------------------------------------------------------------------------
 // IMLAB
 // ---------------------------------------------------------------------------
-
 #include <chrono>  // NOLINT
 #include <iostream>
 #include <fstream>
@@ -9,8 +8,13 @@
 #include <dlfcn.h>
 #include "imlab/database.h"
 #include "imlab/schemac/schema_parse_context.h"
-
-//using SchemaParseContext = imlab::schemac::SchemaParseContext;
+#include "imlab/queryc/query_parse_context.h"
+#include "imlab/queryc/query_compiler.h"
+// ---------------------------------------------------------------------------
+using SchemaParseContext = imlab::schemac::SchemaParseContext;
+using QueryParseContext = imlab::queryc::QueryParseContext;
+using QueryCompiler = imlab::queryc::QueryCompiler;
+// ---------------------------------------------------------------------------
 
 imlab::Database loadDatabase() {
     imlab::Database database{};
@@ -63,8 +67,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Loading database..." << std::flush;
 
     std::ifstream schema_file("../data/schema.sql");
-    //SchemaParseContext schema_parse_context;
-    //auto schema = schema_parse_context.Parse(schema_file);
+    SchemaParseContext schema_parse_context;
+    auto schema = schema_parse_context.Parse(schema_file);
     auto db = loadDatabase();
 
     auto load_db_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -74,8 +78,8 @@ int main(int argc, char *argv[]) {
     // Prepare sql query parser and compiler
     std::ofstream query_out_h("/tmp/query.h", std::ofstream::trunc);
     std::ofstream query_out_cc("/tmp/query.cc", std::ofstream::trunc);
-    //QueryParseContext query_parse_context {schema};
-    //QueryCompiler compiler {query_out_h, query_out_cc};
+    QueryParseContext query_parse_context {schema};
+    QueryCompiler compiler {query_out_h, query_out_cc};
 
     // Starting REPL
     std::cout << "Starting SQL interpreter - close with Ctrl+D" << std::endl;
@@ -88,12 +92,13 @@ int main(int argc, char *argv[]) {
             enable_stats = true;
         } else {
             auto parse_query_begin = std::chrono::steady_clock::now();
-            //auto query = query_parse_context.Parse(line);
+            std::istringstream in_stream(line);
+            auto& query = query_parse_context.Parse(in_stream);
             auto parse_query_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - parse_query_begin).count();
 
             auto code_generation_begin = std::chrono::steady_clock::now();
-            //compiler.Compile(query);
+            compiler.Compile(query);
             auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - code_generation_begin).count();
 

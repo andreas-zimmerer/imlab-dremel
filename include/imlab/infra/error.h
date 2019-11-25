@@ -30,6 +30,21 @@ struct SchemaCompilationError: std::exception {
     std::string message_;
 };
 //---------------------------------------------------------------------------
+struct QueryCompilationError: std::exception {
+    // Constructor
+    explicit QueryCompilationError(const char *what): message_(what) {}
+    // Constructor
+    explicit QueryCompilationError(const std::string &what): message_(what) {}
+    // Destructor
+    virtual ~QueryCompilationError() throw() {}
+    // Get error message
+    virtual const char *what() const throw() { return message_.c_str(); }
+
+protected:
+    // Error message
+    std::string message_;
+};
+//---------------------------------------------------------------------------
 }  // namespace imlab
 //---------------------------------------------------------------------------
 #endif  // INCLUDE_IMLAB_INFRA_ERROR_H_

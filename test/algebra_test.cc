@@ -48,7 +48,7 @@ TEST(IUPropagation, CollectIUsTableJoin) {
 
 TEST(IUPropagation, CollectIUsPrint) {
     TableScan s ("neworder");
-    Print p (std::make_unique<TableScan>(s), std::cout);
+    Print p (std::make_unique<TableScan>(s));
 
     const auto& ius = p.CollectIUs();
 

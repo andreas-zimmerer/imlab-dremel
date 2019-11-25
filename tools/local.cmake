@@ -18,7 +18,7 @@ set(TOOLS_SRC
 # ---------------------------------------------------------------------------
 
 add_executable(imlabdb tools/imlabdb.cc)
-target_link_libraries(imlabdb imlab dl gflags Threads::Threads)
+target_link_libraries(imlabdb imlab query schema dl gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting

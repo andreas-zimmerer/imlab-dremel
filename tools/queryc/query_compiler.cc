@@ -5,9 +5,11 @@
 #include "imlab/queryc/query_parse_context.h"
 #include <sstream>
 // ---------------------------------------------------------------------------------------------------
-// Compile a query
-void QueryCompiler::Compile(Operator &query) {
-    out_h << R"HEADER(
+using QueryCompiler = imlab::queryc::QueryCompiler;
+// ---------------------------------------------------------------------------------------------------
+
+void QueryCompiler::Compile(Query &query) {
+    header_ << R"HEADER(
 #ifndef INCLUDE_IMLAB_COMPILED_QUERY_H_
 #define INCLUDE_IMLAB_COMPILED_QUERY_H_
 
@@ -19,7 +21,7 @@ namespace imlab {
 #endif  // INCLUDE_IMLAB_COMPILED_QUERY_H_
 )HEADER";
 
-    out_cc << R"IMPL(
+    impl_ << R"IMPL(
 #include "../../../include/imlab/schema.h"
 #include "../../../include/imlab/database.h"
 #include "../../../include/imlab/schemac/schema_parse_context.h"
@@ -30,8 +32,8 @@ namespace imlab {
 
     extern "C" void Run(imlab::Database& db) {
 )IMPL";
-    query.Produce(out_cc);
-    out_cc << R"IMPL(
+    query.GenerateCode(impl_);
+    impl_ << R"IMPL(
     }
 
 }  // namespace imlab

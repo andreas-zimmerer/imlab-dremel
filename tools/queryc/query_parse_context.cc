@@ -7,15 +7,19 @@
 #include <unordered_set>
 #include "imlab/infra/error.h"
 // ---------------------------------------------------------------------------------------------------
+using QueryParseContext = imlab::queryc::QueryParseContext;
+using Query = imlab::Query;
+// ---------------------------------------------------------------------------------------------------
+
 // Constructor
-QueryParseContext::QueryParseContext(bool trace_scanning, bool trace_parsing)
-    : trace_scanning_(trace_scanning), trace_parsing_(trace_parsing) {}
+QueryParseContext::QueryParseContext(const schemac::Schema& schema, bool trace_scanning, bool trace_parsing)
+    : schema(schema), trace_scanning_(trace_scanning), trace_parsing_(trace_parsing) {}
 // ---------------------------------------------------------------------------------------------------
 // Destructor
 QueryParseContext::~QueryParseContext() {}
 // ---------------------------------------------------------------------------------------------------
 // Parse a string
-Operator QueryParseContext::Parse(std::istream &in) {
+Query& QueryParseContext::Parse(std::istream &in) {
     beginScan(in);
     imlab::queryc::QueryParser parser(*this);
     parser.set_debug_level(trace_parsing_);
@@ -40,7 +44,7 @@ void QueryParseContext::Error(uint32_t line, uint32_t column, const std::string 
 // Define a table
 void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_columns,
                                        const std::vector<std::string> &relations,
-                                       const std::vector<std::pair<std::string, std::string>> &where_predicates = {}) {
+                                       const std::vector<std::pair<std::string, std::string>> &where_predicates) {
 
 }
 // ---------------------------------------------------------------------------------------------------

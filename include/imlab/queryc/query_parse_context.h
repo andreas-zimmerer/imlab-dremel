@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "imlab/schemac/schema_parse_context.h"
-#include "imlab/algebra/operator.h"
+#include "../schemac/schema_parse_context.h"
+#include "../algebra/query.h"
 // ---------------------------------------------------------------------------------------------------
 namespace imlab {
 namespace queryc {
@@ -27,12 +27,12 @@ class QueryParseContext {
 
  public:
     // Constructor
-    explicit QueryParseContext(schemac::Schema &schema, bool trace_scanning = false, bool trace_parsing = false) : schema(schema) {};
+    explicit QueryParseContext(const schemac::Schema &schema, bool trace_scanning = false, bool trace_parsing = false);
     // Destructor
     virtual ~QueryParseContext();
 
     // Parse an istream
-    Operator Parse(std::istream &in);
+    Query& Parse(std::istream &in);
 
     // Throw an error
     void Error(uint32_t line, uint32_t column, const std::string &err);
@@ -46,7 +46,7 @@ class QueryParseContext {
     void endScan();
 
     // Only need for storing the result -> is there a nicer way?
-    Operator query;
+    Query query;
 
     // The schema the query is created for
     schemac::Schema schema;

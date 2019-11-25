@@ -20,13 +20,11 @@ class Print: public Operator {
     std::vector<const IU*> required_ius_;
     // Consumer
     Operator *consumer_;
-    // The ostream;
-    std::ostream &out_;
 
  public:
     // Constructor
-    explicit Print(std::unique_ptr<Operator> child, std::ostream& out)
-        : child_(std::move(child)), out_(out) {}
+    explicit Print(std::unique_ptr<Operator> child)
+        : child_(std::move(child)) {}
 
     // Collect all IUs produced by the operator
     std::vector<const IU*> CollectIUs() override;

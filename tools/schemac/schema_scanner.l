@@ -61,6 +61,7 @@ using namespace imlab::schemac;
 // batch:       Scanner in batch-mode (vs. interactive)
 // debug:       Write debug info to stderr
 // caseless:    Case-insensitive pattern matching
+// prefix:      When using multiple .l files, the generated definition names overlap. Prefix adds a prefix to names like "yyleng"
 %}
 %option noyywrap
 %option nounput
@@ -68,6 +69,7 @@ using namespace imlab::schemac;
 %option batch 
 %option debug
 %option caseless
+%option prefix="schema"
 
 %{
 // Code run each time a token is matched.

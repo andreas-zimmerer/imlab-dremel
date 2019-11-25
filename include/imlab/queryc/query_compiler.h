@@ -8,8 +8,8 @@
 #include <string>
 #include <sstream>
 
-#include "imlab/queryc/query_parse_context.h"
-#include "imlab/algebra/operator.h"
+#include "./query_parse_context.h"
+#include "../algebra/query.h"
 // ---------------------------------------------------------------------------------------------------
 namespace imlab {
 namespace queryc {
@@ -20,7 +20,7 @@ class QueryCompiler {
     QueryCompiler(std::ostream &header, std::ostream &impl)
         : header_(header), impl_(impl) {}
     // Compile a query
-    void Compile(Operator &query);
+    void Compile(Query &query);
 
  private:
     // Output stream for the header

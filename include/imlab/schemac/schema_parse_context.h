@@ -129,7 +129,7 @@ class SchemaParseContext {
     virtual ~SchemaParseContext();
 
     // Parse an istream
-    Schema Parse(std::istream &in);
+    Schema& Parse(std::istream &in);
 
     // Throw an error
     void Error(uint32_t line, uint32_t column, const std::string &err);

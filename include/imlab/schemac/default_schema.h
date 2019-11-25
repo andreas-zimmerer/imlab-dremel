@@ -6,15 +6,17 @@
 // ---------------------------------------------------------------------------------------------------
 #include "imlab/schemac/schema_parse_context.h"
 // ---------------------------------------------------------------------------------------------------
-namespace imlab {
-    namespace schemac {
+using Type = imlab::schemac::Type;
 // ---------------------------------------------------------------------------------------------------
-const Schema defaultSchema = Schema {
+namespace imlab {
+namespace schemac {
+// ---------------------------------------------------------------------------------------------------
+const Schema defaultSchema {
     std::vector<Table> {
         Table {
             "warehouse",
             std::vector<Column> {
-                {"w_id", Type::Integer},
+                {"w_id", Type::Integer()},
                 {"w_name", Type::Varchar(10)},
                 {"w_street_1", Type::Varchar(20)},
                 {"w_street_2", Type::Varchar(20)},
@@ -25,12 +27,12 @@ const Schema defaultSchema = Schema {
                 {"w_ytd", Type::Numeric(12, 2)}
             },
             std::vector<Column> {
-                {"w_id", Type::Integer}
+                {"w_id", Type::Integer()}
             },
             IndexType::kSTLUnorderedMap
         }
     },
-    std::vector<Index> indexes {
+    std::vector<Index> {
 
     }
 };

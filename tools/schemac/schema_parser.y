@@ -26,6 +26,8 @@
 %locations
 // Pass the compiler as parameter to yylex/yyparse.
 %param { imlab::schemac::SchemaParseContext &sc }
+// In order to prevent naming conflicts, the .l files contain a prefix parameter. Prefix needs to be set here accordingly.
+%name-prefix "schema"
 // ---------------------------------------------------------------------------------------------------
 // Added to the header file and parser implementation before bison definitions.
 // We include string for string tokens and forward declare the SchemaParseContext.
