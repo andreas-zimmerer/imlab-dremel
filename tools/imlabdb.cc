@@ -6,12 +6,13 @@
 #include <chrono>  // NOLINT
 #include <iostream>
 #include <fstream>
+#include <chrono>
 #include "imlab/database.h"
 #include "imlab/schema.h"
 #include "imlab/infra/types.h"
 #include "../tools/queryc/gen/query.h"
 
-int main(int argc, char *argv[]) {
+imlab::Database loadDatabase() {
     imlab::Database database {};
 
     std::fstream warehouse_file ("../data/tpcc_5w/tpcc_warehouse.tbl", std::fstream::in);
@@ -33,6 +34,28 @@ int main(int argc, char *argv[]) {
     std::fstream stock_file ("../data/tpcc_5w/tpcc_stock.tbl", std::fstream::in);
     database.LoadStock(stock_file);
 
-    RunCompiledQuery(database);
+    return database;
+}
+
+int main(int argc, char *argv[]) {
+    std::cout << "Loading database..." << std::flush;
+    auto load_db_begin = std::chrono::steady_clock::now();
+    auto db = loadDatabase();
+    auto load_db_end = std::chrono::steady_clock::now();
+    auto load_db_duration = std::chrono::duration_cast<std::chrono::milliseconds>(load_db_end - load_db_begin).count();
+    std::cout << " [done in " << load_db_duration << " ms]" << std::endl;
+
+    // Starting REPL
+    std::cout << "Starting SQL interpreter - close with Ctrl+D" << std::endl;
+    std::cout << ">>> " << std::flush;
+    std::string line {};
+    while (std::getline(std::cin, line))
+    {
+        // TODO Interpret line
+        // TODO Execute SQL statemnt
+
+        // Print prompt for next input
+        std::cout << ">>> " << std::flush;
+    }
     return 0;
 }
