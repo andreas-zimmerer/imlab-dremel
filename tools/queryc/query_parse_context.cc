@@ -7,6 +7,7 @@
 #include <set>
 #include "imlab/infra/error.h"
 #include "imlab/schemac/schema_parse_context.h"
+#include "imlab/schemac/schema_compiler.h"
 #include "imlab/algebra/table_scan.h"
 #include "imlab/algebra/print.h"
 #include "imlab/algebra/inner_join.h"
@@ -128,8 +129,9 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
 
         // SELECTIONS
         auto& select_iu = (iu_1)? *iu_1 : *iu_2;
-        auto& select_value = (iu_1)? column2 : column1;
-        selection_attr.emplace_back(select_iu, select_value); // TODO: does this work with strings?? 'foobar' -> most likely not
+        auto& select_value_raw = (iu_1)? column2 : column1;
+        auto select_value = SchemaCompiler::generateTypeName(select_iu->type) + "::castString(\"" + select_value_raw + "\", " + std::to_string(select_value_raw.length()) + ")";
+        selection_attr.emplace_back(select_iu, select_value);
     }
 
     // Now, we have all the table scans and a number of selection attributes and a number of join attributes.

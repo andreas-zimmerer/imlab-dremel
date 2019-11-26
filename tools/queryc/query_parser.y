@@ -30,7 +30,7 @@
 %name-prefix "query"
 // ---------------------------------------------------------------------------------------------------
 // Added to the header file and parser implementation before bison definitions.
-// We include string for string tokens and forward declare the QueryParseContext.
+// We include string for fstring tokens and forward declare the QueryParseContext.
 %code requires {
 #include <string>
 #include "imlab/queryc/query_parse_context.h"
@@ -55,7 +55,7 @@ imlab::queryc::QueryParser::symbol_type yylex(imlab::queryc::QueryParseContext& 
 %token FROM             "from"
 %token WHERE            "where"
 %token AND              "and"
-%token <int>            INTEGER_VALUE    "integer_value"
+%token <std::string>    INTEGER_VALUE    "integer_value"
 %token <std::string>    IDENTIFIER       "identifier"
 %token <std::string>    STRING_VALUE     "string_value"
 %token EOF 0            "eof"
@@ -64,7 +64,6 @@ imlab::queryc::QueryParser::symbol_type yylex(imlab::queryc::QueryParseContext& 
 %type <std::string> identifier;
 %type <std::vector<std::pair<std::string, std::string>>> condition_list;
 %type <std::pair<std::string, std::string>> condition;
-%type <std::string> constant;
 // ---------------------------------------------------------------------------------------------------
 %%
 
@@ -96,12 +95,8 @@ condition_list:
 
 condition:
     identifier EQUAL identifier                         { $$ = {$1, $3}; }
- |  identifier EQUAL constant                           { $$ = {$1, $3}; }
-    ;
-
-constant:
-    STRING_VALUE                                        { $$ = $1; }
- |  INTEGER_VALUE                                       { $$ = $1; }
+ |  identifier EQUAL STRING_VALUE                       { $$ = {$1, $3}; }
+ |  identifier EQUAL INTEGER_VALUE                      { $$ = {$1, $3}; }
     ;
 
 %%

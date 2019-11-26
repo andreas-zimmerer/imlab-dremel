@@ -101,18 +101,13 @@ loc.step ();
 "where"             { return QueryParser::make_WHERE(loc); }
 "and"               { return QueryParser::make_AND(loc); }
 [a-z][a-z0-9_]*     { return QueryParser::make_IDENTIFIER(yytext, loc); }
-[0-9]+              {
-                        uint32_t value = 0;
-                        try {
-                            value = std::stoul(yytext);
-                        } catch(const std::invalid_argument &err) {
-                            sc.Error(loc.begin.line, loc.begin.column, "integer is invalid");
-                        } catch(const std::out_of_range &err) {
-                            sc.Error(loc.begin.line, loc.begin.column, "integer out of range");
-                        }
-                        return QueryParser::make_INTEGER_VALUE(value, loc);
+[0-9]+              { return QueryParser::make_INTEGER_VALUE(yytext, loc);}
+\'(\\.|[^"\\])*\'   {
+                        char* s = (char*)calloc(strlen(yytext)-1, sizeof(char));
+                        strncpy(s, &yytext[1], strlen(yytext)-2);
+                        s[strlen(yytext)-2] = '\0';
+                        return QueryParser::make_STRING_VALUE(s, loc);
                     }
-'(\\.|[^"\\])*'     { return QueryParser::make_STRING_VALUE(yytext, loc); }
 "/*"([^*]|(\*+[^*/]))*\*+\/ { /* ignore comments */ }
 <<EOF>>             { return QueryParser::make_EOF(loc); }
 .                   { sc.Error(loc.begin.line, loc.begin.column, "invalid character"); }
