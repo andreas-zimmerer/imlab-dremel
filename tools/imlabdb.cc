@@ -80,11 +80,8 @@ int main(int argc, char *argv[]) {
             std::chrono::steady_clock::now() - load_db_begin).count();
     std::cout << " [done in " << load_db_duration << " ms]" << std::endl;
 
-    // Prepare sql query parser and compiler
-    std::ofstream query_out_h("../tools/queryc/gen/query.h", std::ofstream::trunc);
-    std::ofstream query_out_cc("../tools/queryc/gen/query.cc", std::ofstream::trunc);
+    // Prepare sql query parser
     QueryParseContext query_parse_context {schema};
-    QueryCompiler compiler {query_out_h, query_out_cc};
 
     // Starting REPL
     std::cout << "Starting SQL interpreter - close with Ctrl+D" << std::endl;
@@ -97,29 +94,52 @@ int main(int argc, char *argv[]) {
             enable_stats = true;
         } else {
             try {
+                //---------------------------------------------------------------------------------------
                 auto parse_query_begin = std::chrono::steady_clock::now();
+
                 std::istringstream in_stream(line);
                 auto &query = query_parse_context.Parse(in_stream);
+
                 auto parse_query_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - parse_query_begin).count();
+                //---------------------------------------------------------------------------------------
 
+                //---------------------------------------------------------------------------------------
                 auto code_generation_begin = std::chrono::steady_clock::now();
+
+                std::ofstream query_out_h("../tools/queryc/gen/query.h", std::ofstream::trunc);
+                std::ofstream query_out_cc("../tools/queryc/gen/query.cc", std::ofstream::trunc);
+                QueryCompiler compiler {query_out_h, query_out_cc};
+
                 compiler.Compile(query);
+
+                query_out_h.close();
+                query_out_cc.close();
+
                 auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - code_generation_begin).count();
+                //---------------------------------------------------------------------------------------
 
+                //---------------------------------------------------------------------------------------
                 auto code_compilation_begin = std::chrono::steady_clock::now();
+
                 auto err = system("c++ ../tools/queryc/gen/query.cc -o ../tools/queryc/gen/query.so -std=c++17 -shared -fPIC -rdynamic");
                 if (err) {
                     throw std::runtime_error("Unable to compile query.");
                 }
+
                 auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - code_compilation_begin).count();
+                //---------------------------------------------------------------------------------------
 
+                //---------------------------------------------------------------------------------------
                 auto query_execution_begin = std::chrono::steady_clock::now();
+
                 ExecuteQuery(db, "../tools/queryc/gen/query.so");
+
                 auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - query_execution_begin).count();
+                //---------------------------------------------------------------------------------------
 
                 if (enable_stats) {
                     std::cout << "-----" << std::endl;

@@ -4,15 +4,16 @@
 #ifndef INCLUDE_IMLAB_ALGEBRA_QUERY_H_
 #define INCLUDE_IMLAB_ALGEBRA_QUERY_H_
 // ---------------------------------------------------------------------------
+#include <optional>
 #include "./print.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 // ---------------------------------------------------------------------------
 class Query {
  public:
-    Print op{nullptr};
+    std::optional<Print> op{};
 
-    void GenerateCode(std::ostream& _o) { op.Produce(_o); }
+    void GenerateCode(std::ostream& _o) { op->Produce(_o); }
 };
 // ---------------------------------------------------------------------------
 }  // namespace imlab

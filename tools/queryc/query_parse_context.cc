@@ -4,15 +4,16 @@
 #include "imlab/queryc/query_parse_context.h"
 #include "./gen/query_parser.h"
 #include <sstream>
-#include <unordered_set>
+#include <set>
 #include "imlab/infra/error.h"
-#include "imlab/schema.h"
+#include "imlab/schemac/schema_parse_context.h"
 #include "imlab/algebra/table_scan.h"
 #include "imlab/algebra/print.h"
 #include "imlab/algebra/inner_join.h"
 #include "imlab/algebra/selection.h"
 // ---------------------------------------------------------------------------------------------------
 using namespace imlab;
+using namespace imlab::schemac;
 using QueryParseContext = imlab::queryc::QueryParseContext;
 // ---------------------------------------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ void QueryParseContext::Error(const std::string& m) {
 // ---------------------------------------------------------------------------------------------------
 // Yield an error
 void QueryParseContext::Error(uint32_t line, uint32_t column, const std::string &err) {
-    std::stringstream ss;
+    std::stringstream ss {};
     ss << "[ l=" << line << " c=" << column << " ] " << err << std::endl;
     throw QueryCompilationError(ss.str());
 }
@@ -50,56 +51,116 @@ void QueryParseContext::Error(uint32_t line, uint32_t column, const std::string 
 void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_columns,
                                        const std::vector<std::string> &relations,
                                        const std::vector<std::pair<std::string, std::string>> &where_predicates) {
+    // A list of operators to apply
+    std::vector<TableScan> scans {};
+    std::vector<Selection> selections {};
+    std::vector<const IU*> columns_to_print {};
 
-    // THE QUERY
-    // select c_first, c_last, o_all_local, ol_amount
-    // from customer, "order", orderline
-    // where o_w_id = c_w_id
-    // and o_d_id = c_d_id
-    // and o_c_id = c_id
-    // and o_w_id = ol_w_id
-    // and o_d_id = ol_d_id
-    // and o_id = ol_o_id
-    // and c_id = 322
-    // and c_w_id = 1
-    // and c_d_id = 1
+    // Helper structures that collect all the info we get during the processing step
+    std::vector<Table*> involved_tables {};
+    std::set<const IU*> involved_ius {};
+    std::vector<std::pair<const IU*, std::string>> selection_attr {};
+    std::vector<std::pair<const IU*, const IU*>> join_attr {};
 
-    const IU& iu_customer_c_id = tpcc::customerTable::IUs[0];
-    const IU& iu_customer_c_w_id = tpcc::customerTable::IUs[2];
-    const IU& iu_customer_c_d_id = tpcc::customerTable::IUs[1];
-    const IU& iu_customer_c_first = tpcc::customerTable::IUs[3];
-    const IU& iu_customer_c_last = tpcc::customerTable::IUs[5];
-    const IU& iu_order_o_w_id = tpcc::orderTable::IUs[2];
-    const IU& iu_order_o_d_id = tpcc::orderTable::IUs[1];
-    const IU& iu_order_o_c_id = tpcc::orderTable::IUs[3];
-    const IU& iu_order_o_id = tpcc::orderTable::IUs[0];
-    const IU& iu_order_o_all_local = tpcc::orderTable::IUs[7];
-    const IU& iu_orderline_ol_w_id = tpcc::orderlineTable::IUs[2];
-    const IU& iu_orderline_ol_d_id = tpcc::orderlineTable::IUs[1];
-    const IU& iu_orderline_ol_o_id = tpcc::orderlineTable::IUs[0];
-    const IU& iu_orderline_ol_amount = tpcc::orderlineTable::IUs[8];
+    // Get all the involved tables, e.g. resolve all strings after the "from ..." clause in the query.
+    // A table also means that we create a table scan for it.
+    // So basically there is a 1:1 mapping between "scans" and "involved_tables".
+    involved_tables.reserve(relations.size());
+    for (auto& r : relations) {
+        auto it_r = std::find_if(schema.tables.begin(), schema.tables.end(), [&](const auto& t) { return t.id == r; });
+        if (it_r == schema.tables.end()) {
+            std::stringstream ss {};
+            ss << "Table '" << r << "' not found.";
+            throw QueryCompilationError(ss.str());
+        } else {
+            involved_tables.push_back(&*it_r);
+            scans.emplace_back(it_r->id.c_str());
+        }
+    }
 
-    TableScan customer_table_scan("customer");
-    TableScan order_table_scan("order");
-    TableScan orderline_table_scan("orderline");
-    Selection customer_select(std::make_unique<TableScan>(customer_table_scan), {
-            {&iu_customer_c_id,   "Integer(322)"},
-            {&iu_customer_c_w_id, "Integer(1)"},
-            {&iu_customer_c_d_id, "Integer(1)"}});
-    InnerJoin customer_order_join(std::make_unique<Selection>(std::move(customer_select)),
-                                  std::make_unique<TableScan>(order_table_scan), {
-                                          {&iu_customer_c_w_id, &iu_order_o_w_id},
-                                          {&iu_customer_c_d_id, &iu_order_o_d_id},
-                                          {&iu_customer_c_id,   &iu_order_o_c_id}});
-    InnerJoin order_orderline_join(std::make_unique<InnerJoin>(std::move(customer_order_join)),
-                                   std::make_unique<TableScan>(orderline_table_scan), {
-                                           {&iu_order_o_w_id, &iu_orderline_ol_w_id},
-                                           {&iu_order_o_d_id, &iu_orderline_ol_d_id},
-                                           {&iu_order_o_id,   &iu_orderline_ol_o_id}});
-    Print print(std::make_unique<InnerJoin>(std::move(order_orderline_join)));
+    // Now collect all IUs that are needed for the query.
+    // The first set of IUs (= table + column + type) is obtained from the column enumeration after the "select...".
+    // The second set of IUs are the ones that are needed for predicates (joins or selections) after the "where...".
+    // The first set is just used for the print statement; the second set actually needs some processing afterwards.
 
-    print.Prepare({&iu_customer_c_first, &iu_customer_c_last, &iu_order_o_all_local, &iu_orderline_ol_amount}, nullptr);
+    // Resolves a column name to an IU by searching all tables that are used for this query.
+    auto find_iu_by_column = [&](const std::string& column) -> std::optional<const IU*> {
+        for (auto& s : scans) {
+            const auto& ius = s.CollectIUs();
+            auto it_iu = std::find_if(ius.begin(), ius.end(), [&](const auto& iu) { return std::string(iu->column) == column; });
+            if (it_iu != ius.end()) {
+                return *it_iu;
+            }
+        }
+        return {};
+    };
+    // Gather all the IUs from the "select..." clause.
+    for (auto& column : select_columns) {
+        auto iu = find_iu_by_column(column);
+        if (!iu) {
+            std::stringstream ss {};
+            ss << "Column '" << column << "' not found.";
+            throw QueryCompilationError(ss.str());
+        } else {
+            involved_ius.insert(*iu);
+            columns_to_print.push_back(*iu);
+        }
+    }
+    // Gather all IUs from the predicates after the "where..."
+    for (auto& [column1, column2] : where_predicates) {
+        auto iu_1 = find_iu_by_column(column1);
+        if (iu_1) {
+            involved_ius.insert(*iu_1);
+        }
+        auto iu_2 = find_iu_by_column(column2);
+        if (iu_2) {
+            involved_ius.insert(*iu_2);
+        }
 
+        // Now things get interesting:
+        // - if we found IUs for both identifiers, we have a join
+        // - if we found an IU for just one of them, we have a selection -> we need to get the type
+
+        // JOIN
+        if (iu_1 && iu_2) {
+            join_attr.emplace_back(*iu_1, *iu_2);
+        }
+
+        // SELECTIONS
+        auto& select_iu = (iu_1)? *iu_1 : *iu_2;
+        auto& select_value = (iu_1)? column2 : column1;
+        selection_attr.emplace_back(select_iu, select_value); // TODO: does this work with strings?? 'foobar' -> most likely not
+    }
+
+    // Now, we have all the table scans and a number of selection attributes and a number of join attributes.
+    // We need to sort them out and actually build a query tree.
+
+    // For every table(-scan), create a selection (might be empty, however)
+    for (unsigned i = 0; i < scans.size(); i++) {
+        auto& scan = scans[i];
+        auto& table = involved_tables[i];
+
+        std::vector<std::pair<const IU*, std::string>> predicates {};
+        for (auto& selection : selection_attr) {
+            if (table->id == std::string(selection.first->table)) {
+                predicates.push_back(selection);
+            }
+        }
+        Selection s(std::make_unique<TableScan>(scan), predicates);
+        selections.push_back(std::move(s));
+    }
+
+    // The trickier part is actually generating joins:
+
+
+    // The final statement of the query is a "print()".
+    // Take the uppermost join and print the requested columns of the result.
+    Print print(std::make_unique<Selection>(std::move(selections[0])));
     this->query.op = std::move(print);
+
+    // We must call the Prepare function at the end because this internally connects
+    // the query components with raw pointers. They should be stable, so no object
+    // moving is allowed afterwards...
+    this->query.op->Prepare(columns_to_print, nullptr);
 }
 // ---------------------------------------------------------------------------------------------------
