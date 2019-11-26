@@ -99,7 +99,9 @@ std::ostream& operator<<(std::ostream &out, const Date &value) {
 
     char buffer[30];
     snprintf(buffer, sizeof(buffer), "%04u-%02u-%02u", year, month, day);
-    return out << buffer;
+    std::stringstream ss {};
+    ss << buffer;
+    return out << ss.str();
 }
 //---------------------------------------------------------------------------
 // Cast a string to a date
@@ -298,6 +300,8 @@ std::ostream& operator<<(std::ostream &out, const Timestamp &value) {
     } else {
         snprintf(buffer, sizeof(buffer), "%04u-%02u-%02u %u:%02u:%02u", year, month, day, hour, minute, second);
     }
-    return out << buffer;
+    std::stringstream ss {};
+    ss << buffer;
+    return out << ss.str();
 }
 //---------------------------------------------------------------------------

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstring>
 #include <ostream>
+#include <sstream>
 //---------------------------------------------------------------------------
 typedef uint64_t Tid;
 //---------------------------------------------------------------------------
@@ -126,8 +127,8 @@ template <unsigned kMaxLen> bool Varchar<kMaxLen>::operator<(const Varchar &othe
 //---------------------------------------------------------------------------
 // Output
 template <unsigned kMaxLen> std::ostream& operator<<(std::ostream &out, const Varchar<kMaxLen> &value) {
-    for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter)
-        out << (*iter);
+    std::string s(value.begin(), value.end());
+    out << s;
     return out;
 }
 //---------------------------------------------------------------------------
@@ -257,8 +258,8 @@ uint64_t Char<1>::hash() const {
 //---------------------------------------------------------------------------
 // Output
 template <unsigned kMaxLen> std::ostream& operator<<(std::ostream &out, const Char<kMaxLen> &value) {
-    for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter)
-        out << (*iter);
+    std::string s(value.begin(), value.end());
+    out << s;
     return out;
 }
 //---------------------------------------------------------------------------
@@ -420,31 +421,33 @@ template <unsigned len, unsigned precision> uint64_t Numeric<len, precision>::ha
 //---------------------------------------------------------------------------
 // Dump the value
 template <unsigned len, unsigned precision> std::ostream &operator<<(std::ostream &out, const Numeric<len, precision> &value) {
+    std::stringstream ss {};
     int64_t v = value.getRaw();
     if (v < 0) {
-        out << '-';
+        ss << '-';
         v = -v;
     }
     if (precision == 0) {
-        out << v;
+        ss << v;
     } else {
         int64_t sep = 10;
         for (unsigned index = 1, limit = precision; index < limit; index++)
             sep *= 10;
-        out << (v / sep);
-        out << '.';
+        ss << (v / sep);
+        ss << '.';
         v = v % sep;
         if (!v) {
             for (unsigned index = 0, limit = precision; index < limit; index++)
-                out << '0';
+                ss << '0';
         } else {
             while (sep > (10 * v)) {
-                out << '0';
+                ss << '0';
                 sep /= 10;
             }
-            out << v;
+            ss << v;
         }
     }
+    out << ss.str();
     return out;
 }
 //---------------------------------------------------------------------------
