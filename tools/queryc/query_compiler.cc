@@ -27,8 +27,10 @@ namespace imlab {
 #include "../../../include/imlab/infra/hash.h"
 #include "../../../include/imlab/infra/hash_table.h"
 #include "../../../include/imlab/schemac/schema_parse_context.h"
+#include "tbb/tbb.h"
 #include <iostream>
 #include <iomanip>
+#include <mutex>
 
 namespace imlab {
 

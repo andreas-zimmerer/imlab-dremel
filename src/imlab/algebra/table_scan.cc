@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 #include "imlab/algebra/table_scan.h"
+#include "imlab/schemac/schema_compiler.h"
 #include "imlab/infra/types.h"
 #include "imlab/schema.h"
 
@@ -37,8 +38,9 @@ namespace imlab {
     }
 
     void TableScan::Produce(std::ostream &_o) {
+#ifdef TBB_PARALLELIZATION
         // Print:
-        // for (auto&[_, tid] : [table].primary_key) {
+        // for (size_t tid = 0; tid < [table].get_size(); tid++) {
         //     auto [table]_[column] = [table].get_[column](tid).value();
         //     [... repeat for every required required_ius_]
         //
@@ -46,7 +48,7 @@ namespace imlab {
         // }
 
         _o << std::endl;
-        _o << "for (auto&[_, tid] : db." << table_ << "Table.primary_key) {" << std::endl;
+        _o << "for (size_t tid = 0; tid < db." << table_ << "Table.get_size(); tid++) {" << std::endl;
         for (auto &iu : required_ius_) {
             _o << "    auto " << iu->table << "_" << iu->column << " = db." << iu->table << "Table.get_" << iu->column
                << "(tid).value();" << std::endl;
@@ -55,6 +57,32 @@ namespace imlab {
         consumer_->Consume(_o, this);
 
         _o << "}" << std::endl;
+#else
+        // With TBB, we will actually emit:
+        //
+        // tbb::parallel_for(tbb::blocked_range<size_t>(0, [table].get_size()), [&](const tbb::blocked_range<size_t>& index_range) {
+        //     for(size_t i=r.begin(); i!=r.end(); ++i, ++tuple_it) {
+        //         auto& [_, tid] = *([table].primary_key.begin() + i);
+        //
+        //         auto [table]_[column] = [table].get_[column](tid).value();
+        //         [... repeat for every required required_ius_]
+        //
+        //         [parent.consume(_o, this)]
+        //     }
+        // });
+
+        _o << "tbb::parallel_for(tbb::blocked_range<size_t>(0, db." << table_ << "Table.get_size()), [&](const tbb::blocked_range<size_t>& index_range) {" << std::endl;
+        _o << "    for(size_t i = index_range.begin(); i != index_range.end(); ++i) {" << std::endl;
+        for (auto &iu : required_ius_) {
+            _o << "    auto " << iu->table << "_" << iu->column << " = db." << iu->table << "Table.get_" << iu->column
+               << "(i).value();" << std::endl;
+        }
+
+        consumer_->Consume(_o, this);
+
+        _o << "    }" << std::endl;
+        _o << "});" << std::endl;
+#endif
     }
 
 }  // namespace imlab
