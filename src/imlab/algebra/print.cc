@@ -19,9 +19,7 @@ namespace imlab {
 
     void Print::Produce(std::ostream& _o) {
         // Create a lock for the output (because otherwise the prints might be interleaved)
-#ifdef TBB_PARALLELIZATION
         _o << "std::mutex cout_lock;" << std::endl << std::endl;
-#endif
 
         // Print column names
         for (auto& iu : required_ius_) {
@@ -41,17 +39,13 @@ namespace imlab {
         // out_ << [table]_[column] ...;
         // cout_lock.unlock();
 
-#ifdef TBB_PARALLELIZATION
         _o << "cout_lock.lock();" << std::endl;
-#endif
         _o << "std::cout";
         for (auto& iu : required_ius_) {
             _o << " << \" | \" << std::right << std::setw(20) << " << iu->table << "_" << iu->column;
         }
         _o << " << \" |\" << std::endl;" << std::endl;
-#ifdef TBB_PARALLELIZATION
         _o << "cout_lock.unlock();" << std::endl;
-#endif
     }
 
 }  // namespace imlab
