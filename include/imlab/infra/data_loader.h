@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------
 #include <stdexcept>
 #include <string>
+#include <tuple>
 //---------------------------------------------------------------------------
 namespace imlab {
 //---------------------------------------------------------------------------
@@ -13,8 +14,7 @@ namespace imlab {
 // Case for line ending
 template<std::size_t I = 0, typename... Tp>
 inline typename std::enable_if<I == sizeof...(Tp) - 1, void>::type
-parseFields(std::tuple<Tp...>& t, std::istream &in)
-{
+parseFields(std::tuple<Tp...>& t, std::istream &in) {
     std::string line = "";
     std::getline(in, line, '\n');
 
@@ -23,16 +23,15 @@ parseFields(std::tuple<Tp...>& t, std::istream &in)
 }
 // Case for regular fields
 template<std::size_t I = 0, typename... Tp>
-inline typename std::enable_if<I < sizeof...(Tp) - 1, void>::type
-parseFields(std::tuple<Tp...>& t, std::istream &in)
-{
+inline typename std::enable_if<I < sizeof...(Tp) - 1, void>::type  //NOLINT
+parseFields(std::tuple<Tp...>& t, std::istream &in) {
     std::string line = "";
     std::getline(in, line, '|');
 
     using type = typename std::tuple_element<I, std::tuple<Tp...>>::type;
     std::get<I>(t) = type::castString(line.c_str(), line.size());
 
-    parseFields<I + 1, Tp...>(t, in); // compile time loop
+    parseFields<I + 1, Tp...>(t, in);  // compile time loop
 }
 
 /**

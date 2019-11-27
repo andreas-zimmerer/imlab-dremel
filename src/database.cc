@@ -32,8 +32,8 @@ namespace imlab {
 
     void Database::LoadCustomer(std::istream &in) {
         while (in.peek() != EOF) {
-            auto[c_id, c_d_id, c_w_id, c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr, c_payment_cnt, c_delivery_cnt, c_data]
-            = parseLine<Integer, Integer, Integer, Varchar<16>, Char<2>, Varchar<16>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Char<16>, Timestamp, Char<2>, Numeric<12, 2>, Numeric<4, 4>, Numeric<12, 2>, Numeric<12, 2>, Numeric<4, 0>, Numeric<4, 0>, Varchar<500>>(in);
+            auto[c_id, c_d_id, c_w_id, c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr, c_payment_cnt, c_delivery_cnt, c_data]  //NOLINT
+                    = parseLine<Integer, Integer, Integer, Varchar<16>, Char<2>, Varchar<16>, Varchar<20>, Varchar<20>, Varchar<20>, Char<2>, Char<9>, Char<16>, Timestamp, Char<2>, Numeric<12, 2>, Numeric<4, 4>, Numeric<12, 2>, Numeric<12, 2>, Numeric<4, 0>, Numeric<4, 0>, Varchar<500>>(in);  //NOLINT
             customerTable.insert(c_id, c_d_id, c_w_id, c_first, c_middle, c_last,
                                  c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since,
                                  c_credit, c_credit_lim, c_discount, c_balance, c_ytd_paymenr,
@@ -83,7 +83,7 @@ namespace imlab {
     void Database::LoadStock(std::istream &in) {
         while (in.peek() != EOF) {
             auto[s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02, s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08, s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data]
-            = parseLine<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>(in);
+            = parseLine<Integer, Integer, Numeric<4, 0>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Char<24>, Numeric<8, 0>, Numeric<4, 0>, Numeric<4, 0>, Varchar<50>>(in);  //NOLINT
             stockTable.insert(s_i_id, s_w_id, s_quantity, s_dist_01, s_dist_02,
                               s_dist_03, s_dist_04, s_dist_05, s_dist_06, s_dist_07, s_dist_08,
                               s_dist_09, s_dist_10, s_ytd, s_order_cnt, s_remote_cnt, s_data);
