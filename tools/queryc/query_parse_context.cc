@@ -53,7 +53,12 @@ void QueryParseContext::Error(uint32_t line, uint32_t column, const std::string 
 void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_columns,
                                        const std::vector<std::string> &relations,
                                        const std::vector<std::pair<std::string, std::string>> &where_predicates) {
-    // TODO: check for empty select_columns and empty_relations
+    if (select_columns.size() == 0) {
+        throw QueryCompilationError("You need to provide at least one column name in the SELECT clause.");
+    }
+    if (relations.size() == 0) {
+        throw QueryCompilationError("You need to provide at least one table in the FROM clause.");
+    }
 
     // A list of operators to apply
     std::vector<TableScan> scans {};
@@ -193,9 +198,7 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
             // Hmm, bad: we would need a cross product...
             // Of course, in real databases this is not necessarily the case because we can influence the join order.
             // But here we have the strong asumption that the query string already contains a meaningful join order.
-            std::stringstream ss {};
-            ss << "Cross-products are not allowed.";
-            throw QueryCompilationError(ss.str());
+            throw QueryCompilationError("Cross-products are not allowed.");
         }
 
         // Now that we have everything, we can create a Join
@@ -224,9 +227,7 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
         this->query.op = std::move(print);
     } else {
         // Strange query: multiple tables, but no joins...
-        std::stringstream ss {};
-        ss << "Cross-products are not allowed.";
-        throw QueryCompilationError(ss.str());
+        throw QueryCompilationError("Cross-products are not allowed.");
     }
 
     // We must call the Prepare function at the end because this internally connects
