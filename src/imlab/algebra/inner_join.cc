@@ -2,10 +2,10 @@
 // IMLAB
 // ---------------------------------------------------------------------------
 
-#include "imlab/algebra/inner_join.h"
-#include "imlab/schemac/schema_compiler.h"
 #include <algorithm>
 #include <sstream>
+#include "imlab/algebra/inner_join.h"
+#include "imlab/schemac/schema_compiler.h"
 
 namespace imlab {
 
@@ -83,13 +83,13 @@ namespace imlab {
         const auto &left_child_collected_ius = left_child_->CollectIUs();
 
         _o << "LazyMultiMap<Key<";
-        for (auto &p : hash_predicates_) { // all hash predicates from the left side
+        for (auto &p : hash_predicates_) {  // all hash predicates from the left side
             _o << schemac::SchemaCompiler::generateTypeName(p.first->type) << "/*" << p.first->column << "*/"
                << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
         }
         _o << ">, std::tuple<";
         bool first_value = true;
-        for (auto r : required_ius_) { // if the value comes from the left side, it should be added to the hash table
+        for (auto r : required_ius_) {  // if the value comes from the left side, it should be added to the hash table
             if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
                 _o << (first_value ? "" : ", ") << schemac::SchemaCompiler::generateTypeName(r->type) << "/*" << r->column << "*/";
                 first_value = false;
@@ -119,7 +119,7 @@ namespace imlab {
             }
             _o << "), std::make_tuple(";
             bool first_value = true;
-            for (auto& r : required_ius_) { // again, only if tuple comes from left side
+            for (auto& r : required_ius_) {  // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
                     _o << (first_value ? "" : ", ") << r->table << "_" << r->column;
                     first_value = false;
@@ -146,7 +146,7 @@ namespace imlab {
             // Now we want to get out the required values from the left side
             // The values from the right side should already be in scope
             unsigned idx = 0;
-            for (auto& r : required_ius_) { // again, only if tuple comes from left side
+            for (auto& r : required_ius_) {  // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
                     _o << "auto& " << r->table << "_" << r->column << " = std::get<" << idx << ">(it->value);";
                     idx++;

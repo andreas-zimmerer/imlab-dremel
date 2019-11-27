@@ -29,8 +29,8 @@ TEST(DatabaseQueryTest, NewOrderQuery) {
     auto c_id = Integer(1);
     auto items = Integer(1);
     auto supware = std::array<Integer, 15>{ Integer(4) };
-    auto itemid=std::array<Integer, 15>{ Integer(1) };
-    auto qty =std::array<Integer, 15>{ Integer(20) };
+    auto itemid = std::array<Integer, 15>{ Integer(1) };
+    auto qty = std::array<Integer, 15>{ Integer(20) };
     auto datetime = Timestamp(123456789);
 
     db.NewOrder(w_id, d_id, c_id, items, supware, itemid, qty, datetime);
@@ -64,11 +64,11 @@ TEST(DISABLED_DatabaseQueryTest, Delivery) {
 // Test depends on real data -> not executed in CI
 TEST(DatabaseQueryTest, AnalyticalQuerySTL) {
     imlab::Database db;
-    std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
+    std::fstream customer_file("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
     db.LoadCustomer(customer_file);
-    std::fstream order_file ("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
+    std::fstream order_file("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
     db.LoadOrder(order_file);
-    std::fstream orderline_file ("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
+    std::fstream orderline_file("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
     db.LoadOrderLine(orderline_file);
 
     auto sum = db.AnalyticalQuerySTL();
@@ -80,11 +80,11 @@ TEST(DatabaseQueryTest, AnalyticalQuerySTL) {
 // Test depends on real data -> not executed in CI
 TEST(DatabaseQueryTest, AnalyticalQueryLHT) {
     imlab::Database db;
-    std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
+    std::fstream customer_file("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
     db.LoadCustomer(customer_file);
-    std::fstream order_file ("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
+    std::fstream order_file("../data/tpcc_5w/tpcc_order.tbl", std::fstream::in);
     db.LoadOrder(order_file);
-    std::fstream orderline_file ("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
+    std::fstream orderline_file("../data/tpcc_5w/tpcc_orderline.tbl", std::fstream::in);
     db.LoadOrderLine(orderline_file);
 
     auto sum = db.AnalyticalQueryLHT();

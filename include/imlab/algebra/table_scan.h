@@ -23,7 +23,7 @@ class TableScan: public Operator {
 
  public:
     // Constructor
-    TableScan(const char *table) : table_(table) {}
+    explicit TableScan(const char *table) : table_(table) {}
 
     // Collect all IUs produced by the operator
     std::vector<const IU*> CollectIUs() override;

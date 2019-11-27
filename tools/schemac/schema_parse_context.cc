@@ -58,7 +58,6 @@ void SchemaParseContext::createTable(const std::string &id,
                                      const std::vector<Column> &columns,
                                      const std::vector<std::string> &primary_keys,
                                      const IndexType &indexType) {
-
     // map given column identifiers to real columns
     std::vector<Column> prim_keys_columns {};
     for (auto& prim_key : primary_keys) {
@@ -82,7 +81,6 @@ void SchemaParseContext::createIndex(const std::string &id,
                                      const std::string &table,
                                      const std::vector<std::string> &columns,
                                      const IndexType &indexType) {
-
     // map given table identifier to real table reference
     auto indexed_table_it = std::find_if(this->schema.tables.begin(), this->schema.tables.end(),
             [&](const Table& t) { return t.id.compare(table) == 0; });

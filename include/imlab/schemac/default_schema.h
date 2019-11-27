@@ -5,6 +5,7 @@
 #define INCLUDE_IMLAB_SCHEMAC_DEFAULT_SCHEMA_H_
 // ---------------------------------------------------------------------------------------------------
 #include "imlab/schemac/schema_parse_context.h"
+#include <vector>
 // ---------------------------------------------------------------------------------------------------
 using Type = imlab::schemac::Type;
 // ---------------------------------------------------------------------------------------------------
@@ -32,9 +33,7 @@ const Schema defaultSchema {
             IndexType::kSTLUnorderedMap
         }
     },
-    std::vector<Index> {
-
-    }
+    std::vector<Index> {}
 };
 // ---------------------------------------------------------------------------------------------------
     }  // namespace schemac

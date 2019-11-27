@@ -6,29 +6,9 @@
 //---------------------------------------------------------------------------
 #include <stdexcept>
 #include <string>
-#include <immintrin.h>
 //---------------------------------------------------------------------------
 namespace imlab {
 //---------------------------------------------------------------------------
-
-// Many thanks to Prof. Neumann
-template<char c>
-static inline const char *findChar(const char *iter, const char *limit) {
-    assert(iter < limit);
-    auto limit32 = limit - 32;
-    auto char_mask = _mm256_set1_epi8(c);
-    while (iter < limit32) {
-        auto block = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(iter));
-        uint32_t matches = _mm256_movemask_epi8(_mm256_cmpeq_epi8(block, char_mask));
-        if (matches) {
-            return iter + __builtin_ctzll(matches);
-        } else {
-            iter += 32;
-        }
-    }
-    while ((iter < limit) && ((*iter) != c)) ++iter;
-    return iter;
-}
 
 // Case for line ending
 template<std::size_t I = 0, typename... Tp>

@@ -112,7 +112,7 @@ class LazyMultiMap {
 
         for (auto& entries_local : entries_) {
             tbb::parallel_for(tbb::blocked_range<size_t>(0, entries_local.size()), [&](const tbb::blocked_range<size_t>& range) {
-                for(size_t i = range.begin(); i != range.end(); ++i) {
+                for (size_t i = range.begin(); i != range.end(); ++i) {
                     auto entry = &entries_local[i];
 
                     auto hash = entry->key.Hash() & hash_table_mask_;
@@ -120,10 +120,10 @@ class LazyMultiMap {
 
                     auto hash_position = reinterpret_cast<std::atomic<Entry*>*>(&hash_table_[hash]);
                     entry->next = hash_position->load();
-                    while(!std::atomic_compare_exchange_weak(
+                    while (!std::atomic_compare_exchange_weak(
                             hash_position,
                             &entry->next,
-                            entry));
+                            entry)) {};
                 }
             });
         }

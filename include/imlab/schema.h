@@ -2,9 +2,9 @@
 #ifndef INCLUDE_IMLAB_SCHEMA_H_
 #define INCLUDE_IMLAB_SCHEMA_H_
 
+#include <optional>
 #include <vector>
 #include <unordered_map>
-#include <optional>
 #include "./infra/hash.h"
 #include "./infra/types.h"
 #include "./algebra/iu.h"

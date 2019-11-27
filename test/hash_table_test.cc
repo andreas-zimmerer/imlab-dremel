@@ -21,7 +21,7 @@ TEST(LazyHashTableTest, InsertOneEntryAndGet) {
 
     hash_map.finalize();
 
-    auto [it_begin, it_end] = hash_map.equal_range(Key(Integer(1)));
+    auto[it_begin, it_end] = hash_map.equal_range(Key(Integer(1)));
     ASSERT_EQ(it_begin->value, 42);
     ASSERT_EQ(++it_begin, it_end);
 }
@@ -33,11 +33,11 @@ TEST(LazyHashTableTest, InsertTwoEntriesAndGet) {
 
     hash_map.finalize();
 
-    auto [it_begin_1, it_end_1] = hash_map.equal_range(Key(Integer(1)));
+    auto[it_begin_1, it_end_1] = hash_map.equal_range(Key(Integer(1)));
     ASSERT_EQ(it_begin_1->value, 42);
     ASSERT_EQ(++it_begin_1, it_end_1);
 
-    auto [it_begin_2, it_end_2] = hash_map.equal_range(Key(Integer(2)));
+    auto[it_begin_2, it_end_2] = hash_map.equal_range(Key(Integer(2)));
     ASSERT_EQ(it_begin_2->value, 24);
     ASSERT_EQ(++it_begin_2, it_end_2);
 }
@@ -52,7 +52,7 @@ TEST(LazyHashTableTest, InsertSameKey) {
     hash_map.finalize();
 
     std::set<int> values {};
-    auto [it_begin, it_end] = hash_map.equal_range(Key(Integer(1)));
+    auto[it_begin, it_end] = hash_map.equal_range(Key(Integer(1)));
     for (auto it = it_begin; it != it_end; ++it) {
         values.insert(it->value);
     }
@@ -65,7 +65,7 @@ TEST(LazyHashTableTest, EmptyGet) {
 
     hash_map.finalize();
 
-    auto [it_begin, it_end] = hash_map.equal_range(Key(Integer(3)));
+    auto[it_begin, it_end] = hash_map.equal_range(Key(Integer(3)));
     ASSERT_EQ(it_begin, it_end);
 }
 

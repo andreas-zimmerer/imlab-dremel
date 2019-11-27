@@ -85,9 +85,9 @@ void SchemaCompiler::createHeader(Schema &schema) {
 #ifndef INCLUDE_IMLAB_SCHEMA_H_
 #define INCLUDE_IMLAB_SCHEMA_H_
 
+#include <optional>
 #include <vector>
 #include <unordered_map>
-#include <optional>
 #include "imlab/infra/hash.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"

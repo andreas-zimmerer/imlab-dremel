@@ -9,12 +9,16 @@
 #include "imlab/algebra/print.h"
 #include "gtest/gtest.h"
 
-using namespace imlab;
+using IU = imlab::IU;
+using TableScan = imlab::TableScan;
+using Selection = imlab::Selection;
+using InnerJoin = imlab::InnerJoin;
+using Print = imlab::Print;
 
 namespace {
 
 TEST(IUPropagation, CollectIUsTableScan) {
-    TableScan s ("neworder");
+    TableScan s("neworder");
 
     const auto& ius = s.CollectIUs();
 
@@ -24,7 +28,7 @@ TEST(IUPropagation, CollectIUsTableScan) {
 }
 
 TEST(IUPropagation, CollectIUsSelection) {
-    TableScan s ("neworder");
+    TableScan s("neworder");
     std::vector<std::pair<const IU*, std::string>> predicates {std::make_pair(s.CollectIUs()[0], "foobar")};
     Selection sel (std::make_unique<TableScan>(s), predicates);
 
@@ -36,10 +40,10 @@ TEST(IUPropagation, CollectIUsSelection) {
 }
 
 TEST(IUPropagation, CollectIUsTableJoin) {
-    TableScan s1 ("neworder");
-    TableScan s2 ("item");
+    TableScan s1("neworder");
+    TableScan s2("item");
     std::vector<std::pair<const IU*, const IU*>> predicates {std::make_pair(s1.CollectIUs()[0], s2.CollectIUs()[0])};
-    InnerJoin j (std::make_unique<TableScan>(s1), std::make_unique<TableScan>(s2), predicates);
+    InnerJoin j(std::make_unique<TableScan>(s1), std::make_unique<TableScan>(s2), predicates);
 
     const auto& ius = j.CollectIUs();
 
@@ -47,8 +51,8 @@ TEST(IUPropagation, CollectIUsTableJoin) {
 }
 
 TEST(IUPropagation, CollectIUsPrint) {
-    TableScan s ("neworder");
-    Print p (std::make_unique<TableScan>(s));
+    TableScan s("neworder");
+    Print p(std::make_unique<TableScan>(s));
 
     const auto& ius = p.CollectIUs();
 

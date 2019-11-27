@@ -5,6 +5,7 @@
 #define INCLUDE_IMLAB_ALGEBRA_INNER_JOIN_H_
 // ---------------------------------------------------------------------------
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 #include "./operator.h"

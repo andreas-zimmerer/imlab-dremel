@@ -40,7 +40,7 @@ struct QueryCompilationError: std::exception {
     // Get error message
     virtual const char *what() const throw() { return message_.c_str(); }
 
-protected:
+ protected:
     // Error message
     std::string message_;
 };

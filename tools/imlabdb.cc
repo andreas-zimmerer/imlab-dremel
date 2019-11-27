@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
 // IMLAB
 // ---------------------------------------------------------------------------
+#include <dlfcn.h>
 #include <chrono>  // NOLINT
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <dlfcn.h>
 #include "imlab/database.h"
 #include "imlab/schemac/schema_parse_context.h"
 #include "imlab/queryc/query_parse_context.h"
