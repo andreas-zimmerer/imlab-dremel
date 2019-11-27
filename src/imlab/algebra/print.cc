@@ -18,6 +18,11 @@ namespace imlab {
     }
 
     void Print::Produce(std::ostream& _o) {
+        // Create a lock for the output (because otherwise the prints might be interleaved)
+#ifdef TBB_PARALLELIZATION
+        _o << "std::mutex cout_lock;" << std::endl << std::endl;
+#endif
+
         // Print column names
         for (auto& iu : required_ius_) {
             _o << "std::cout << \" | \" << std::right << std::setw(20) << \"" << iu->column << "\";" << std::endl;
@@ -32,14 +37,21 @@ namespace imlab {
 
     void Print::Consume(std::ostream& _o, const Operator* child) {
         // Print:
-        // out_ << [table]_[column];
-        // [repeat for every...]
-        // out_ << std::endl;
+        // cout_lock.lock();
+        // out_ << [table]_[column] ...;
+        // cout_lock.unlock();
 
+#ifdef TBB_PARALLELIZATION
+        _o << "cout_lock.lock();" << std::endl;
+#endif
+        _o << "std::cout";
         for (auto& iu : required_ius_) {
-            _o << "std::cout << \" | \" << std::right << std::setw(20) << " << iu->table << "_" << iu->column << ";" << std::endl;
+            _o << " << \" | \" << std::right << std::setw(20) << " << iu->table << "_" << iu->column;
         }
-        _o << "std::cout << \" |\" << std::endl;";
+        _o << " << \" |\" << std::endl;" << std::endl;
+#ifdef TBB_PARALLELIZATION
+        _o << "cout_lock.unlock();" << std::endl;
+#endif
     }
 
 }  // namespace imlab
