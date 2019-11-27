@@ -123,7 +123,7 @@ class LazyMultiMap {
                     while (!std::atomic_compare_exchange_weak(
                             hash_position,
                             &entry->next,
-                            entry)) {};
+                            entry)) {}
                 }
             });
         }

@@ -30,7 +30,7 @@ TEST(IUPropagation, CollectIUsTableScan) {
 TEST(IUPropagation, CollectIUsSelection) {
     TableScan s("neworder");
     std::vector<std::pair<const IU*, std::string>> predicates {std::make_pair(s.CollectIUs()[0], "foobar")};
-    Selection sel (std::make_unique<TableScan>(s), predicates);
+    Selection sel(std::make_unique<TableScan>(s), predicates);
 
     const auto& ius = sel.CollectIUs();
 
