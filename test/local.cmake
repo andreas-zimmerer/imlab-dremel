@@ -14,7 +14,7 @@ list(REMOVE_ITEM TEST_CC test/tester.cc)
 # ---------------------------------------------------------------------------
 
 add_executable(tester test/tester.cc ${TEST_CC})
-target_link_libraries(tester imlab gtest gmock Threads::Threads)
+target_link_libraries(tester imlab schema query gtest gmock Threads::Threads)
 enable_testing()
 add_test(imlab tester)
 

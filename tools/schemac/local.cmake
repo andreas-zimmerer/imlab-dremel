@@ -43,16 +43,6 @@ add_executable(schemac "${CMAKE_SOURCE_DIR}/tools/schemac/schemac.cc")
 target_link_libraries(schemac schema gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
-# Tester
-# ---------------------------------------------------------------------------
-
-add_executable(tester_schema "${CMAKE_SOURCE_DIR}/tools/schemac/tester.cc")
-target_link_libraries(tester_schema schema gflags gtest gmock Threads::Threads)
-
-enable_testing()
-add_test(schema tester_schema)
-
-# ---------------------------------------------------------------------------
 # Linting
 # ---------------------------------------------------------------------------
 

@@ -32,19 +32,7 @@ build_debug:
 tester:
     stage: test
     script:
-        - ./build/tester
-    dependencies:
-        - build_debug
-    tags:
-        - "clang-6.0"
-        - "llvm-6.0"
-        - "cmake"
-        - "python3"
-
-tester-schema:
-    stage: test
-    script:
-        - ./build/tester_schema
+        - ./build/tester --gtest_filter=-DatabaseQueryTest.AnalyticalQuery*
     dependencies:
         - build_debug
     tags:

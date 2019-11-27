@@ -61,6 +61,7 @@ TEST(DISABLED_DatabaseQueryTest, Delivery) {
     ASSERT_EQ(db.Size<imlab::tpcc::kneworder>(), 3);
 }
 
+// Test depends on real data -> not executed in CI
 TEST(DatabaseQueryTest, AnalyticalQuerySTL) {
     imlab::Database db;
     std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
@@ -76,6 +77,7 @@ TEST(DatabaseQueryTest, AnalyticalQuerySTL) {
     ASSERT_EQ(sum, result);
 }
 
+// Test depends on real data -> not executed in CI
 TEST(DatabaseQueryTest, AnalyticalQueryLHT) {
     imlab::Database db;
     std::fstream customer_file ("../data/tpcc_5w/tpcc_customer.tbl", std::fstream::in);
