@@ -27,7 +27,7 @@ RUN echo 'debugger:pwd' | chpasswd
 # Add custom packages and development environment here
 ########################################################
 
-RUN apt-get update && apt-get install -y clang-6.0 llvm-6.0 ninja-build python3 git flex bison
+RUN apt-get update && apt-get install -y clang-6.0 llvm-6.0 ninja-build python3 git flex bison libtbb-dev
 #ENV CXX /usr/bin/clang++-6.0
 
 ########################################################

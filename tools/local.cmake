@@ -14,11 +14,19 @@ set(TOOLS_SRC
 )
 
 # ---------------------------------------------------------------------------
+# TBB: Thread Building Blocks
+# ---------------------------------------------------------------------------
+
+list(APPEND CMAKE_MODULE_PATH "../FindTBB.cmake")
+
+find_package(TBB)
+
+# ---------------------------------------------------------------------------
 # Executables
 # ---------------------------------------------------------------------------
 
 add_executable(imlabdb tools/imlabdb.cc)
-target_link_libraries(imlabdb imlab query schema dl gflags Threads::Threads)
+target_link_libraries(imlabdb imlab tbb query schema dl gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting
