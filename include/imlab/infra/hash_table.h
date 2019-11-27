@@ -91,7 +91,7 @@ class LazyMultiMap {
         // Every thread gets its own local entries vector.
         // Result: nice performance, because we don't have to lock.
         // In the end we of course need to process all of them.
-        auto entries_local = entries_.local();
+        auto& entries_local = entries_.local();
         entries_local.emplace_back(val.first, val.second);
     }
 
