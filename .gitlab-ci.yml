@@ -21,7 +21,7 @@ build_debug:
     artifacts:
         paths:
             - ./build/tester
-            - ./build/tester_schema
+            - ./build/libimlab.so
         expire_in: 1 hrs
     tags:
         - "clang-6.0"
