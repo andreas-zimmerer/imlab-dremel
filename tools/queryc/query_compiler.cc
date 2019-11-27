@@ -24,6 +24,7 @@ namespace imlab {
     impl_ << R"IMPL(
 #include "../../../include/imlab/schema.h"
 #include "../../../include/imlab/database.h"
+#include "../../../include/imlab/infra/hash.h"
 #include "../../../include/imlab/schemac/schema_parse_context.h"
 #include <iostream>
 #include <iomanip>

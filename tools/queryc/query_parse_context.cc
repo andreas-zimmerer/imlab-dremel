@@ -6,6 +6,7 @@
 #include <sstream>
 #include <set>
 #include "imlab/infra/error.h"
+#include "imlab/infra/hash.h"
 #include "imlab/schemac/schema_parse_context.h"
 #include "imlab/schemac/schema_compiler.h"
 #include "imlab/algebra/table_scan.h"
@@ -52,9 +53,12 @@ void QueryParseContext::Error(uint32_t line, uint32_t column, const std::string 
 void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_columns,
                                        const std::vector<std::string> &relations,
                                        const std::vector<std::pair<std::string, std::string>> &where_predicates) {
+    // TODO: check for empty select_columns and empty_relations
+
     // A list of operators to apply
     std::vector<TableScan> scans {};
     std::vector<Selection> selections {};
+    std::vector<InnerJoin> joins {};
     std::vector<const IU*> columns_to_print {};
 
     // Helper structures that collect all the info we get during the processing step
@@ -125,13 +129,24 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
         // JOIN
         if (iu_1 && iu_2) {
             join_attr.emplace_back(*iu_1, *iu_2);
+            continue;
         }
 
         // SELECTIONS
-        auto& select_iu = (iu_1)? *iu_1 : *iu_2;
-        auto& select_value_raw = (iu_1)? column2 : column1;
-        auto select_value = SchemaCompiler::generateTypeName(select_iu->type) + "::castString(\"" + select_value_raw + "\", " + std::to_string(select_value_raw.length()) + ")";
-        selection_attr.emplace_back(select_iu, select_value);
+        if ((iu_1 && !iu_2) || (!iu_1 && iu_2)) {
+            auto &select_iu = (iu_1) ? *iu_1 : *iu_2;
+            auto &select_value_raw = (iu_1) ? column2 : column1;
+            auto select_value =
+                    SchemaCompiler::generateTypeName(select_iu->type) + "::castString(\"" + select_value_raw + "\", " +
+                    std::to_string(select_value_raw.length()) + ")";
+            selection_attr.emplace_back(select_iu, select_value);
+            continue;
+        }
+
+        // If we got here, neither iu_1 nor iu_2 reference a valid IU.
+        std::stringstream ss {};
+        ss << "Column '" << column1 << "' and '" << column2 << "' not found.";
+        throw QueryCompilationError(ss.str());
     }
 
     // Now, we have all the table scans and a number of selection attributes and a number of join attributes.
@@ -153,12 +168,66 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
     }
 
     // The trickier part is actually generating joins:
+    // The requirement is "Build left-deep join trees based on the order of the relations in the from clause."
+    // Thus, we can simply use the order from the from clause and assume a lot of things that would not work for real queries.
+    Operator* left_operator = &selections[0];
+    for (auto it = selections.begin() + 1; it != selections.end(); it++) {
+        Selection* right_operator = &*it;
 
+        const auto& left_ius = left_operator->CollectIUs();
+        const auto& right_ius = right_operator->CollectIUs();
+
+        // Now look through all join predicates and see if some of them are applicable to this join
+        std::vector<std::pair<const IU*, const IU*>> applicable_join_predicates {};
+        for (auto& attr : join_attr) {
+            if (std::find(left_ius.begin(), left_ius.end(), attr.first) != left_ius.end()
+                && std::find(right_ius.begin(), right_ius.end(), attr.second) != right_ius.end()) {
+                applicable_join_predicates.emplace_back(attr.first, attr.second);
+            } else if (std::find(left_ius.begin(), left_ius.end(), attr.second) != left_ius.end()
+                       && std::find(right_ius.begin(), right_ius.end(), attr.first) != right_ius.end()) {
+                applicable_join_predicates.emplace_back(attr.second, attr.first);
+            }
+        }
+
+        if (applicable_join_predicates.size() == 0) {
+            // Hmm, bad: we would need a cross product...
+            // Of course, in real databases this is not necessarily the case because we can influence the join order.
+            // But here we have the strong asumption that the query string already contains a meaningful join order.
+            std::stringstream ss {};
+            ss << "Cross-products are not allowed.";
+            throw QueryCompilationError(ss.str());
+        }
+
+        // Now that we have everything, we can create a Join
+        if (left_operator == &selections[0]) {
+            InnerJoin j (std::make_unique<Selection>(std::move(*static_cast<Selection*>(left_operator))),
+                         std::make_unique<Selection>(std::move(*right_operator)),
+                         applicable_join_predicates);
+            joins.push_back(std::move(j));
+        } else {
+            InnerJoin j (std::make_unique<InnerJoin>(std::move(*static_cast<InnerJoin*>(left_operator))),
+                         std::make_unique<Selection>(std::move(*right_operator)),
+                         applicable_join_predicates);
+            joins.push_back(std::move(j));
+        }
+
+        left_operator = &joins[joins.size() - 1];
+    }
 
     // The final statement of the query is a "print()".
     // Take the uppermost join and print the requested columns of the result.
-    Print print(std::make_unique<Selection>(std::move(selections[0])));
-    this->query.op = std::move(print);
+    if (joins.size() == 0 && selections.size() == 1) {
+        Print print(std::make_unique<Selection>(std::move(selections[0])));
+        this->query.op = std::move(print);
+    } else if (joins.size() > 0) {
+        Print print(std::make_unique<InnerJoin>(std::move(joins[joins.size() - 1])));
+        this->query.op = std::move(print);
+    } else {
+        // Strange query: multiple tables, but no joins...
+        std::stringstream ss {};
+        ss << "Cross-products are not allowed.";
+        throw QueryCompilationError(ss.str());
+    }
 
     // We must call the Prepare function at the end because this internally connects
     // the query components with raw pointers. They should be stable, so no object

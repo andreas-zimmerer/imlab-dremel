@@ -22,11 +22,11 @@ namespace imlab {
         for (auto& iu : required_ius_) {
             _o << "std::cout << \" | \" << std::right << std::setw(20) << \"" << iu->column << "\";" << std::endl;
         }
-        _o << "std::cout << \" |\" << std::endl;";
+        _o << "std::cout << \" |\" << std::endl;" << std::endl;
         for (auto& iu : required_ius_) {
             _o << "std::cout << \" | --------------------\";" << std::endl;
         }
-        _o << "std::cout << \" |\" << std::endl;";
+        _o << "std::cout << \" |\" << std::endl;" << std::endl << std::endl;
         child_->Produce(_o);
     }
 
