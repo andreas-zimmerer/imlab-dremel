@@ -36,11 +36,19 @@ add_library(query ${QUERYC_CC})
 add_dependencies(query queryc_parser)
 
 # ---------------------------------------------------------------------------
+# TBB: Thread Building Blocks
+# ---------------------------------------------------------------------------
+
+list(APPEND CMAKE_MODULE_PATH "../../FindTBB.cmake")
+
+find_package(TBB)
+
+# ---------------------------------------------------------------------------
 # Compiler
 # ---------------------------------------------------------------------------
 
 add_executable(queryc "${CMAKE_SOURCE_DIR}/tools/queryc/queryc.cc")
-target_link_libraries(queryc query imlab gflags Threads::Threads)
+target_link_libraries(queryc query imlab tbb gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting
