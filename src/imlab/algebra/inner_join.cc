@@ -82,7 +82,7 @@ namespace imlab {
     void InnerJoin::Produce(std::ostream &_o) {
         const auto &left_child_collected_ius = left_child_->CollectIUs();
 
-        _o << "std::unordered_multimap<Key<";
+        _o << "LazyMultiMap<Key<";
         for (auto &p : hash_predicates_) { // all hash predicates from the left side
             _o << schemac::SchemaCompiler::generateTypeName(p.first->type) << "/*" << p.first->column << "*/"
                << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
@@ -95,9 +95,14 @@ namespace imlab {
                 first_value = false;
             }
         }
-        _o << ">> " << GenerateHashmapName() << ";" << std::endl;
+        _o << ">> " << GenerateHashmapName() << ";" << std::endl << std::endl;
 
         left_child_->Produce(_o);
+
+        _o << std::endl;
+        _o << GenerateHashmapName() << ".finalize();" << std::endl;
+        _o << std::endl;
+
         right_child_->Produce(_o);
     }
 
@@ -107,6 +112,7 @@ namespace imlab {
         if (child == left_child_.get()) {
             // Print:
             // [hashmapname].insert({Key([left_predicates, ...]), [values, required_from_left_values]});
+
             _o << GenerateHashmapName() << ".insert({Key(";
             for (auto& p : hash_predicates_) {
                 _o << p.first->table << "_" << p.first->column << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
@@ -120,6 +126,7 @@ namespace imlab {
                 }
             }
             _o << ")});" << std::endl;
+
         } else {
             // Print:
             // auto matches = [hashmapname].equal_range(Key([right_predicates]));
@@ -141,10 +148,11 @@ namespace imlab {
             unsigned idx = 0;
             for (auto& r : required_ius_) { // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                    _o << "auto& " << r->table << "_" << r->column << " = std::get<" << idx << ">(it->second);";
+                    _o << "auto& " << r->table << "_" << r->column << " = std::get<" << idx << ">(it->value);";
                     idx++;
                 }
             }
+            _o << std::endl << std::endl;
 
             consumer_->Consume(_o, this);
             _o << "}" << std::endl;
