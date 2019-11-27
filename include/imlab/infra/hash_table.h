@@ -9,8 +9,11 @@
 #include <vector>
 #include <iterator>
 #include <limits>
+#include <atomic>
 #include "./hash.h"
 #include "./bits.h"
+#include "tbb/tbb.h"
+#include "tbb/enumerable_thread_specific.h"
 //---------------------------------------------------------------------------
 template<typename ... T> struct IsKey : std::false_type { };
 template<typename ... T> struct IsKey<Key<T...>> : std::true_type { };
@@ -85,7 +88,11 @@ class LazyMultiMap {
     // Insert an element into the hash table
     //  * Gather all entries with insert and build the hash table with finalize.
     void insert(const std::pair<KeyT, ValueT> &val) {
-        entries_.emplace_back(val.first, val.second);
+        // Every thread gets its own local entries vector.
+        // Result: nice performance, because we don't have to lock.
+        // In the end we of course need to process all of them.
+        auto entries_local = entries_.local();
+        entries_local.emplace_back(val.first, val.second);
     }
 
     // Finalize the hash table
@@ -93,19 +100,32 @@ class LazyMultiMap {
     //  * Resize the hash table to that size.
     //  * For each entry in entries_, calculate the hash and prepend it to the collision list in the hash table.
     void finalize() {
-        auto hash_table_size = imlab::NextPow2_64(entries_.size());
+        size_t total_entry_count = 0;
+        for (auto& local_entries : entries_) {
+            total_entry_count += local_entries.size();
+        }
+        auto hash_table_size = imlab::NextPow2_64(total_entry_count);
         assert(hash_table_size > 0);
         hash_table_.resize(hash_table_size);
 
         hash_table_mask_ = hash_table_size - 1;
 
-        for (auto& entry : entries_) {
-            auto hash = entry.key.Hash() & hash_table_mask_;
-            assert(hash < hash_table_.size());
+        for (auto& entries_local : entries_) {
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, entries_local.size()), [&](const tbb::blocked_range<size_t>& range) {
+                for(size_t i = range.begin(); i != range.end(); ++i) {
+                    auto entry = &entries_local[i];
 
-            auto next_ = hash_table_[hash];
-            entry.next = next_;
-            hash_table_[hash] = &entry;
+                    auto hash = entry->key.Hash() & hash_table_mask_;
+                    assert(hash < hash_table_.size());
+
+                    auto hash_position = reinterpret_cast<std::atomic<Entry*>*>(&hash_table_[hash]);
+                    entry->next = hash_position->load();
+                    while(!std::atomic_compare_exchange_weak(
+                            hash_position,
+                            &entry->next,
+                            entry));
+                }
+            });
         }
     }
 
@@ -124,7 +144,7 @@ class LazyMultiMap {
 
  protected:
     // Entries of the hash table.
-    std::vector<Entry> entries_;
+    tbb::enumerable_thread_specific<std::vector<Entry>> entries_;
     // The hash table.
     // Use the next_ pointers in the entries to store the collision list of the hash table.
     //
