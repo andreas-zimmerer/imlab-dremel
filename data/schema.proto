@@ -1,0 +1,21 @@
+/*
+ * This file contains the schema information used in the original Dremel paper:
+ * https://static.googleusercontent.com/media/research.google.com/de//pubs/archive/36632.pdf
+ */
+
+syntax = "proto2";
+
+message Document {
+    required int64 DocId = 1;
+    optional group Links = 2 {
+        repeated int64 Backward = 3;
+        repeated int64 Forward = 4;
+    }
+    repeated group Name = 5 {
+        repeated group Language = 6 {
+            required string Code = 7;
+            optional string Country = 8;
+        }
+        optional string Url = 9;
+    }
+}
