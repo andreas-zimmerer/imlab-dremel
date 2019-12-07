@@ -14,14 +14,15 @@ LIKELIHOOD_OPTIONAL_FIELDS = 0.5
 country_codes = ['US', 'DE', 'IT', 'GB']
 country_names = ['United States', 'Germany', 'Italy', 'Great Britain']
 
+
 def random_string(length=10):
     """Generate a random string of fixed length """
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def generate_entry(id):
-    entry = {'DocId': id}
+def generate_entry(entry_id):
+    entry = {'DocId': entry_id}
 
     # Optionally create a "Links" field
     if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
@@ -68,7 +69,8 @@ def generate_entry(id):
 
     return entry
 
+
 # Create TOTAL_NUMBER_OF_ENTRIES random entries
 random.seed(1234)
 output = [generate_entry(i) for i in range(TOTAL_NUMBER_OF_ENTRIES)]
-print(json.dumps(output, indent = 2))
+print(json.dumps(output, indent=2))

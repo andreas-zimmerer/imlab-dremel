@@ -2,6 +2,7 @@
 
 """
 This little Python script serves as a plugin for protoc.
+You need to install the "protobuf" Python package.
 
 Will be invoked with
 ```
@@ -23,10 +24,10 @@ It works quite nice with basic Protobuf stuff.
 import sys
 import io
 from google.protobuf.compiler import plugin_pb2
-from google.protobuf.descriptor_pb2 import DescriptorProto, EnumDescriptorProto, FieldDescriptorProto
+from google.protobuf.descriptor_pb2 import FieldDescriptorProto
 
 
-def map_type(type, schemac_type = False):
+def map_type(proto_type, schemac_type=False):
     """
     Maps a field type from Protobuf to an Imlab type.
     This is of course not a perfect mapping.
@@ -55,7 +56,7 @@ def map_type(type, schemac_type = False):
         FieldDescriptorProto.TYPE_SINT32: ['Integer', 'schemac::Type::Integer()'],
         FieldDescriptorProto.TYPE_SINT64: ['Integer', 'schemac::Type::Integer()'],
     }
-    m = mapping.get(type, 'invalid type')
+    m = mapping.get(proto_type, 'invalid type')
     if schemac_type:
         return m[1]
     else:
@@ -132,11 +133,11 @@ def generate_header(filedescriptorproto):
         yield ' private:\n'
         for fields in flatten_fields(message):
             yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + '_'.join([f.name for f in fields]) + ' {"' + '.'.join([f.name for f in fields]) + '"};\n'
-            yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs; //  Maps the beginning of a record to a TID in the column.\n'
+            yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs;'
+            yield ' //  Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
         yield '    static const std::vector<IU> IUs;\n'
         yield '};\n'
-
 
     yield '\n'
     yield '// ---------------------------------------------------------------------------\n'
@@ -185,7 +186,6 @@ def generate_source(filedescriptorproto):
     yield '}  // namespace schema\n'
     yield '}  // namespace imlab\n'
     yield '// ---------------------------------------------------------------------------\n'
-
 
 
 def generate_code(request, response):
