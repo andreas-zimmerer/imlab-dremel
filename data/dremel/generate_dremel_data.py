@@ -20,8 +20,8 @@ def random_string(length=10):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def generate_entry():
-    entry = {'DocId': random_string()}
+def generate_entry(id):
+    entry = {'DocId': id}
 
     # Optionally create a "Links" field
     if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
@@ -70,5 +70,5 @@ def generate_entry():
 
 # Create TOTAL_NUMBER_OF_ENTRIES random entries
 random.seed(1234)
-output = [generate_entry() for i in range(TOTAL_NUMBER_OF_ENTRIES)]
+output = [generate_entry(i) for i in range(TOTAL_NUMBER_OF_ENTRIES)]
 print(json.dumps(output, indent = 2))
