@@ -2,8 +2,6 @@
 
 import sys
 import io
-import itertools
-import json
 from google.protobuf.compiler import plugin_pb2
 from google.protobuf.descriptor_pb2 import DescriptorProto, EnumDescriptorProto, FieldDescriptorProto
 
