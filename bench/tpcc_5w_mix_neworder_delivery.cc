@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include "benchmark/benchmark.h"
-#include "imlab/database.h"
+#include "database.h"
 #include "imlab/schema.h"
 #include "imlab/infra/types.h"
 #include <unistd.h>

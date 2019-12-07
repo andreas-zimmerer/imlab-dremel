@@ -2,7 +2,7 @@
 // IMLAB
 // ---------------------------------------------------------------------------
 
-#include "imlab/database.h"
+#include "database.h"
 #include <array>
 #include <iostream>
 #include "imlab/infra/error.h"

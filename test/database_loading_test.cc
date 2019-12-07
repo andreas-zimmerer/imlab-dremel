@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include "imlab/test/data.h"
-#include "imlab/database.h"
+#include "database.h"
 #include "gtest/gtest.h"
 #include "imlab/schema.h"
 

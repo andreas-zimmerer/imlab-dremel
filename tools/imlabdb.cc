@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include "imlab/database.h"
+#include "database.h"
 #include "imlab/schemac/schema_parse_context.h"
 #include "imlab/queryc/query_parse_context.h"
 #include "imlab/queryc/query_compiler.h"
