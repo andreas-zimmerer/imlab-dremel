@@ -11,10 +11,8 @@
 namespace imlab {
 //---------------------------------------------------------------------------
 
-template<typename T>
-class TableBase<T> {
+class TableBase {
  public:
-    virtual uint64_t insert(T tuple) = 0;
     uint64_t get_size() { return size; }
  protected:
     uint64_t size = 0;
@@ -25,7 +23,7 @@ class TableBase<T> {
 ///  * a repetition level
 ///  * a definition level
 template<typename T>
-struct DremelRow<T> {
+struct DremelRow {
     std::optional<T> value;
     unsigned repetition_level;
     unsigned definition_level;
@@ -41,7 +39,7 @@ struct DremelRow<T> {
 /// are inferred. Also, r and d levels only take up as many bits as they actually
 /// need.
 template<typename T>
-class DremelColumn<T> {
+class DremelColumn {
  public:
     /// Creates a new column with a human-readable identifier.
     explicit DremelColumn(std::string identifier) : identifier(identifier) {}
