@@ -12,7 +12,7 @@ using QueryParseContext = imlab::queryc::QueryParseContext;
 namespace {
 
 TEST(QueryParseContextTest, ParseSimpleSelect) {
-    std::istringstream in("select w_id from warehouse;");
+    std::istringstream in("select DocId from Document;");
     QueryParseContext qpc {imlab::schemac::defaultSchema};
     auto& query = qpc.Parse(in);
     auto& print = *query.op;
