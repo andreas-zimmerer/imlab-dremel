@@ -1,8 +1,0 @@
-foo bar1 {
-    a integer,
-    b char{20}
-};
-
-foo bar2 {
-    c integer
-};
