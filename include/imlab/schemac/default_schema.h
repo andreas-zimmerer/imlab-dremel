@@ -15,21 +15,16 @@ namespace schemac {
 const Schema defaultSchema {
     std::vector<Table> {
         Table {
-            "warehouse",
+            "Document",
             std::vector<Column> {
-                {"w_id", Type::Integer()},
-                {"w_name", Type::Varchar(10)},
-                {"w_street_1", Type::Varchar(20)},
-                {"w_street_2", Type::Varchar(20)},
-                {"w_city", Type::Varchar(20)},
-                {"w_state", Type::Char(2)},
-                {"w_zip", Type::Char(9)},
-                {"w_tax", Type::Numeric(4, 4)},
-                {"w_ytd", Type::Numeric(12, 2)}
+                {"DocId", Type::Integer()},
+                {"Links.Backward", Type::Integer()},
+                {"Links.Forward", Type::Integer()},
+                {"Name.Url", Type::Varchar(30)},
+                {"Name.Language.Code", Type::Varchar(30)},
+                {"Name.Language.Country", Type::Varchar(30)}
             },
-            std::vector<Column> {
-                {"w_id", Type::Integer()}
-            },
+            std::vector<Column> {},
             IndexType::kSTLUnorderedMap
         }
     },

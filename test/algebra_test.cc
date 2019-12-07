@@ -18,30 +18,28 @@ using Print = imlab::Print;
 namespace {
 
 TEST(IUPropagation, CollectIUsTableScan) {
-    TableScan s("neworder");
+    TableScan s("Document");
 
     const auto& ius = s.CollectIUs();
 
-    ASSERT_EQ(std::string(ius[0]->column), "no_o_id");
-    ASSERT_EQ(std::string(ius[1]->column), "no_d_id");
-    ASSERT_EQ(std::string(ius[2]->column), "no_w_id");
+    ASSERT_EQ(std::string(ius[0]->column), "DocId");
+    ASSERT_EQ(std::string(ius[1]->column), "Links.Backward");
+    ASSERT_EQ(std::string(ius[2]->column), "Links.Forward");
 }
 
 TEST(IUPropagation, CollectIUsSelection) {
-    TableScan s("neworder");
+    TableScan s("Document");
     std::vector<std::pair<const IU*, std::string>> predicates {std::make_pair(s.CollectIUs()[0], "foobar")};
     Selection sel(std::make_unique<TableScan>(s), predicates);
 
     const auto& ius = sel.CollectIUs();
 
-    ASSERT_EQ(std::string(ius[0]->column), "no_o_id");
-    ASSERT_EQ(std::string(ius[1]->column), "no_d_id");
-    ASSERT_EQ(std::string(ius[2]->column), "no_w_id");
+    ASSERT_EQ(std::string(ius[0]->column), "DocId");
 }
 
 TEST(IUPropagation, CollectIUsTableJoin) {
-    TableScan s1("neworder");
-    TableScan s2("item");
+    TableScan s1("Document");
+    TableScan s2("Document");
     std::vector<std::pair<const IU*, const IU*>> predicates {std::make_pair(s1.CollectIUs()[0], s2.CollectIUs()[0])};
     InnerJoin j(std::make_unique<TableScan>(s1), std::make_unique<TableScan>(s2), predicates);
 
@@ -51,7 +49,7 @@ TEST(IUPropagation, CollectIUsTableJoin) {
 }
 
 TEST(IUPropagation, CollectIUsPrint) {
-    TableScan s("neworder");
+    TableScan s("Document");
     Print p(std::make_unique<TableScan>(s));
 
     const auto& ius = p.CollectIUs();

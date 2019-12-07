@@ -6,30 +6,14 @@
 #include "imlab/schemac/schema_compiler.h"
 #include "imlab/infra/types.h"
 #include "imlab/schema.h"
+#include "database.h"
 
 namespace imlab {
 
     std::vector<const IU *> TableScan::CollectIUs() {
         const std::string table_name = table_;
 
-        const std::vector<IU>& IUs = [&]() -> const std::vector<IU>& {
-            if (table_name == "warehouse") return tpcc::warehouseTable::IUs;
-            if (table_name == "district") return tpcc::districtTable::IUs;
-            if (table_name == "customer") return tpcc::customerTable::IUs;
-            if (table_name == "history") return tpcc::historyTable::IUs;
-            if (table_name == "neworder") return tpcc::neworderTable::IUs;
-            if (table_name == "order") return tpcc::orderTable::IUs;
-            if (table_name == "orderline") return tpcc::orderlineTable::IUs;
-            if (table_name == "item") return tpcc::itemTable::IUs;
-            if (table_name == "stock") return tpcc::stockTable::IUs;
-        }();
-
-        std::vector<const IU*> refs {};
-        refs.reserve(IUs.size());
-        for (auto& iu : IUs) {
-            refs.push_back(&iu);
-        }
-        return refs;
+        if (table_name == "Document") return schema::DocumentTable::get_ius();
     }
 
     void TableScan::Prepare(const std::vector<const IU *> &required, Operator *consumer) {
