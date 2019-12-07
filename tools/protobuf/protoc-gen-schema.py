@@ -5,7 +5,7 @@ This little Python script serves as a plugin for protoc.
 
 Will be invoked with
 ```
-protoc --plugin=protoc-gen-schema=./protoc-gen-schema.py
+protoc --plugin=protoc-gen-schema=./protoc-gen-schema.py ...
 ```
 
 You can either use Proto2 or Proto3 files.
@@ -100,8 +100,7 @@ def generate_header(filedescriptorproto):
         for field in descriptorproto.field:
             if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
                 # we have a normal field
-                path = path + [field.name]
-                yield '    ' + 'DremelColumn<' + map_type(field.type) + '> ' + '_'.join(path) + ' {"' + '.'.join(path) + '"};\n'
+                yield '    ' + 'DremelColumn<' + map_type(field.type) + '> ' + '_'.join(path + [field.name]) + ' {"' + '.'.join(path + [field.name]) + '"};\n'
         for nested in descriptorproto.nested_type:
             # we have a nested field (e.g. group or another message)
             for line in _traverse_columns(path + [nested.name], nested):
