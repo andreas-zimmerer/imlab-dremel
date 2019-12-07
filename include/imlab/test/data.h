@@ -7,16 +7,8 @@
 
 namespace imlab_test {
 
-extern const char* const kTestWarehouse;
-extern const char* const kTestDistrict;
-extern const char* const kTestHistory;
-extern const char* const kTestItem;
-extern const char* const kTestNewOrder;
-extern const char* const kTestOrder;
-extern const char* const kTestOrderLine;
-extern const char* const kTestStock;
-extern const char* const kTestCustomer;
-extern const char* const kTestCustomer1Data;
+extern const char* const kTestDocumentSmall;
+extern const char* const kTestDocumentLarge;
 
 }  // namespace imlab_test
 
