@@ -26,7 +26,7 @@ from google.protobuf.compiler import plugin_pb2
 from google.protobuf.descriptor_pb2 import DescriptorProto, EnumDescriptorProto, FieldDescriptorProto
 
 
-def map_type(type):
+def map_type(type, schemac_type = False):
     """
     Maps a field type from Protobuf to an Imlab type.
     This is of course not a perfect mapping.
@@ -36,26 +36,48 @@ def map_type(type):
      - Strings are always Varchar<30>
     """
     mapping = {
-        FieldDescriptorProto.TYPE_DOUBLE: 'Numeric<10,4>',
-        FieldDescriptorProto.TYPE_FLOAT: 'Numeric<10,4>',
-        FieldDescriptorProto.TYPE_INT64: 'Integer',
-        FieldDescriptorProto.TYPE_UINT64: 'Integer',
-        FieldDescriptorProto.TYPE_INT32: 'Integer',
-        FieldDescriptorProto.TYPE_FIXED64: 'Integer',
-        FieldDescriptorProto.TYPE_FIXED32: 'Integer',
-        FieldDescriptorProto.TYPE_BOOL: 'unsupported',
-        FieldDescriptorProto.TYPE_STRING: 'Varchar<30>',
-        FieldDescriptorProto.TYPE_GROUP: '"GROUP" is invalid',
-        FieldDescriptorProto.TYPE_MESSAGE: '"MESSAGE" is invalid',
-        FieldDescriptorProto.TYPE_BYTES: 'unsupported',
-        FieldDescriptorProto.TYPE_UINT32: 'Integer',
-        FieldDescriptorProto.TYPE_ENUM: '"ENUM" is invalid',
-        FieldDescriptorProto.TYPE_SFIXED32: 'Integer',
-        FieldDescriptorProto.TYPE_SFIXED64: 'Integer',
-        FieldDescriptorProto.TYPE_SINT32: 'Integer',
-        FieldDescriptorProto.TYPE_SINT64: 'Integer',
+        FieldDescriptorProto.TYPE_DOUBLE: ['Numeric<10,4>', 'schemac::Type::Numeric(10, 4)'],
+        FieldDescriptorProto.TYPE_FLOAT: ['Numeric<10,4>', 'schemac::Type::Numeric(10, 4)'],
+        FieldDescriptorProto.TYPE_INT64: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_UINT64: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_INT32: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_FIXED64: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_FIXED32: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_BOOL: [],
+        FieldDescriptorProto.TYPE_STRING: ['Varchar<30>', 'schemac::Type::Varchar(30)'],
+        FieldDescriptorProto.TYPE_GROUP: [],
+        FieldDescriptorProto.TYPE_MESSAGE: [],
+        FieldDescriptorProto.TYPE_BYTES: [],
+        FieldDescriptorProto.TYPE_UINT32: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_ENUM: [],
+        FieldDescriptorProto.TYPE_SFIXED32: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_SFIXED64: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_SINT32: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_SINT64: ['Integer', 'schemac::Type::Integer()'],
     }
-    return mapping.get(type, 'invalid type')
+    m = mapping.get(type, 'invalid type')
+    if schemac_type:
+        return m[1]
+    else:
+        return m[0]
+
+
+def flatten_fields(message):
+    """
+    Traverses a Protobuf message and flattens all fields.
+    Yields a path consisting of all Protobuf descriptors in an array.
+    """
+    def _flatten_fields(path, descriptorproto):
+        for field in descriptorproto.field:
+            if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
+                # we have a normal field
+                yield path + [field]
+        for nested in descriptorproto.nested_type:
+            # we have a nested field (e.g. group or another message)
+            for line in _flatten_fields(path + [nested], nested):
+                yield line
+    return _flatten_fields([], message)
+
 
 def generate_header(filedescriptorproto):
     yield '// ---------------------------------------------------------------------------\n'
@@ -66,6 +88,8 @@ def generate_header(filedescriptorproto):
     yield '#define INCLUDE_IMLAB_SCHEMA_H_\n'
     yield '// ---------------------------------------------------------------------------\n'
     yield '#include "imlab/infra/dremel.h"\n'
+    yield '#include "imlab/infra/types.h"\n'
+    yield '#include "imlab/algebra/iu.h"\n'
     yield '#include <vector>\n'
     yield '#include <optional>\n'
     yield '// ---------------------------------------------------------------------------\n'
@@ -76,12 +100,12 @@ def generate_header(filedescriptorproto):
 
     # Traverse a nested message and create a according type definition.
     def _traverse_type(descriptorproto, ident):
+        yield ident + 'struct ' + descriptorproto.name + ' {\n'
+        ident_sub = ident + '    '
         for nested in descriptorproto.nested_type:
             # we have a nested field (e.g. group or another message)
-            yield ident + 'struct ' + nested.name + ' {\n'
-            for line in _traverse_type(nested, ident + '    '):
+            for line in _traverse_type(nested, ident_sub):
                 yield line
-            yield ident + '}\n'
         for field in descriptorproto.field:
             if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
                 type_name = map_type(field.type)
@@ -89,36 +113,29 @@ def generate_header(filedescriptorproto):
                 type_name = field.type_name.split('.')[-1]
 
             if field.label == FieldDescriptorProto.LABEL_REPEATED:
-                yield ident + 'std::vector<' + type_name + '> ' + field.json_name + ';\n'
+                yield ident_sub + 'std::vector<' + type_name + '> ' + field.json_name + ';\n'
             if field.label == FieldDescriptorProto.LABEL_OPTIONAL:
-                yield ident + 'std::optional<' + type_name + '> ' + field.json_name + ';\n'
+                yield ident_sub + 'std::optional<' + type_name + '> ' + field.json_name + ';\n'
             if field.label == FieldDescriptorProto.LABEL_REQUIRED:
-                yield ident + type_name + ' ' + field.json_name + ';\n'
-
-    # Traverse a nested message and create columns with a fully qualified name.
-    def _traverse_columns(path, descriptorproto):
-        for field in descriptorproto.field:
-            if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
-                # we have a normal field
-                yield '    ' + 'DremelColumn<' + map_type(field.type) + '> ' + '_'.join(path + [field.name]) + ' {"' + '.'.join(path + [field.name]) + '"};\n'
-                yield '    ' + 'std::vector<uint64_t> ' + '_'.join(path + [field.name]) + '_Record_TIDs; //  Maps the beginning of a record to a TID in the column.\n'
-                yield '\n'
-        for nested in descriptorproto.nested_type:
-            # we have a nested field (e.g. group or another message)
-            for line in _traverse_columns(path + [nested.name], nested):
-                yield line
+                yield ident_sub + type_name + ' ' + field.json_name + ';\n'
+        yield ident + '};\n'
 
     for message in filedescriptorproto.message_type:
-        yield 'struct ' + message.name + 'Type {\n'
-        for line in _traverse_type(message, '    '):
+        for line in _traverse_type(message, ''):
             yield line
-        yield '}\n'
         yield '\n'
-        yield 'class ' + message.name + 'Table : public TableBase<' + message.name + 'Type> {\n'
+        yield 'class ' + message.name + 'Table : public TableBase {\n'
+        yield ' public:\n'
+        yield '    uint64_t insert(' + message.name + ' record);\n'
+        yield '    static std::vector<const IU*> get_ius();\n'
+        yield '\n'
         yield ' private:\n'
-        for line in _traverse_columns([], message):
-            yield line
-        yield '}\n'
+        for fields in flatten_fields(message):
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + '_'.join([f.name for f in fields]) + ' {"' + '.'.join([f.name for f in fields]) + '"};\n'
+            yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs; //  Maps the beginning of a record to a TID in the column.\n'
+            yield '\n'
+        yield '    static const std::vector<IU> IUs;\n'
+        yield '};\n'
 
 
     yield '\n'
@@ -143,7 +160,23 @@ def generate_source(filedescriptorproto):
     yield '\n'
 
     for message in filedescriptorproto.message_type:
-        yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + 'Type record) {\n'
+        yield 'const std::vector<IU> ' + message.name + 'Table::IUs = {\n'
+        for fields in flatten_fields(message):
+            yield '    IU("' + message.name + '", "' + '.'.join([f.name for f in fields]) + '", ' + map_type(fields[-1].type, True) + '),\n'
+        yield '};\n'
+        yield '\n'
+
+        yield 'std::vector<const IU*> ' + message.name + 'Table::get_ius() {\n'
+        yield '    std::vector<const IU*> refs {};\n'
+        yield '    refs.reserve(IUs.size());\n'
+        yield '    for (auto& iu : IUs) {\n'
+        yield '        refs.push_back(&iu);\n'
+        yield '    }\n'
+        yield '    return refs;\n'
+        yield '}\n'
+        yield '\n'
+
+        yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + ' record) {\n'
         yield '\n'
         yield '}\n'
 
