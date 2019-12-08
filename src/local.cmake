@@ -13,7 +13,7 @@ file(GLOB_RECURSE SRC_CC "src/*.cc")
 # ---------------------------------------------------------------------------
 
 add_library(imlab SHARED ${SRC_CC})
-target_link_libraries(imlab rapidjson gflags Threads::Threads)
+target_link_libraries(imlab gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting
