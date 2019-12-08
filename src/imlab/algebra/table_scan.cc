@@ -14,6 +14,8 @@ namespace imlab {
         const std::string table_name = table_;
 
         if (table_name == "Document") return schema::DocumentTable::get_ius();
+
+        return {};
     }
 
     void TableScan::Prepare(const std::vector<const IU *> &required, Operator *consumer) {

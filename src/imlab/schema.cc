@@ -27,8 +27,7 @@ std::vector<const IU*> DocumentTable::get_ius() {
 }
 
 uint64_t DocumentTable::insert(Document record) {
-
-}
+    return 0;}
 
 // ---------------------------------------------------------------------------
 }  // namespace schema
