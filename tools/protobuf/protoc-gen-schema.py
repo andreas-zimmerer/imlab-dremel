@@ -23,6 +23,7 @@ It works quite nice with basic Protobuf stuff.
 
 import sys
 import io
+import os
 from google.protobuf.compiler import plugin_pb2
 from google.protobuf.descriptor_pb2 import FieldDescriptorProto
 
@@ -178,7 +179,7 @@ def generate_source(filedescriptorproto):
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + ' record) {\n'
-        yield '\n'
+        yield '    return 0;'
         yield '}\n'
 
     yield '\n'
@@ -203,11 +204,11 @@ def generate_code(request, response):
         sourcedata = ''.join(generate_source(fdesc))
 
         f = response.file.add()
-        f.name = 'schema.h'
+        f.name = os.path.splitext(fdesc.name)[0] + '.h'
         f.content = headerdata
 
         f = response.file.add()
-        f.name = 'schema.cc'
+        f.name = os.path.splitext(fdesc.name)[0] + '.cc'
         f.content = sourcedata
 
 
