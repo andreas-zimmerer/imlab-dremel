@@ -7,7 +7,7 @@ find_package(Git REQUIRED)
 
 # Rapidjson has some problems with Clang>=5
 # See https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=220388
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-exceptions -Wno-implicit-fallthrough")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant -Wno-shadow -Wno-exceptions -Wno-implicit-fallthrough -Wno-class-memaccess")
 
 # Get rapidjson
 ExternalProject_Add(
