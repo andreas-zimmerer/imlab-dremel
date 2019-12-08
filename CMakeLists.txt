@@ -43,6 +43,7 @@ include("${CMAKE_SOURCE_DIR}/vendor/benchmark.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/googletest.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/gflags.cmake")
 include("${CMAKE_SOURCE_DIR}/vendor/cpplint.cmake")
+include("${CMAKE_SOURCE_DIR}/vendor/rapidjson.cmake")
 
 # ---------------------------------------------------------------------------
 # Includes
@@ -55,6 +56,7 @@ include_directories(
     ${GMOCK_INCLUDE_DIR}
     ${GFLAGS_INCLUDE_DIR}
     ${BENCHMARK_INCLUDE_DIR}
+    ${RAPIDJSON_INCLUDE_DIR}
 )
 
 # ---------------------------------------------------------------------------
@@ -85,4 +87,3 @@ message(STATUS "    GTEST_INCLUDE_DIR           = ${GTEST_INCLUDE_DIR}")
 message(STATUS "    GTEST_LIBRARY_PATH          = ${GTEST_LIBRARY_PATH}")
 message(STATUS "    GMOCK_INCLUDE_DIR           = ${GMOCK_INCLUDE_DIR}")
 message(STATUS "    GMOCK_LIBRARY_PATH          = ${GMOCK_LIBRARY_PATH}")
-
