@@ -13,6 +13,7 @@ file(GLOB_RECURSE SRC_CC "src/*.cc")
 # ---------------------------------------------------------------------------
 
 add_library(imlab SHARED ${SRC_CC})
+add_dependencies(imlab rapidjson)
 target_link_libraries(imlab gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
