@@ -17,7 +17,9 @@ namespace imlab {
 
 class Database {
  public:
-    void LoadDremel(std::istream& in);
+    /// Load data from JSON into documentTable.
+    void LoadDocumentTable(std::istream& in);
+
     imlab::schema::DocumentTable documentTable;
 };
 

@@ -10,16 +10,16 @@
 
 namespace {
 
-TEST(DatabaseLoadingTest, LoadDremelDocumentSmall) {
+TEST(DatabaseLoadingTest, LoadDremelDocumentTableSmall) {
     imlab::Database db;
     std::stringstream in(imlab_test::kTestDocumentSmall);
-    db.LoadDremel(in);
+    db.LoadDocumentTable(in);
 }
 
-TEST(DatabaseLoadingTest, LoadDremelDocumentLarge) {
+TEST(DatabaseLoadingTest, LoadDremelDocumentTableLarge) {
     imlab::Database db;
     std::stringstream in(imlab_test::kTestDocumentLarge);
-    db.LoadDremel(in);
+    db.LoadDocumentTable(in);
 }
 
 }  // namespace
