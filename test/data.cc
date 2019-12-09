@@ -9,7 +9,7 @@ namespace imlab_test {
 const char* const kTestDocumentLarge = R"RAWJSON(
 [
   {
-    "DocId": "10",
+    "DocId": 10,
     "Links": {
       "Forward": [
         20,
@@ -49,7 +49,7 @@ const char* const kTestDocumentLarge = R"RAWJSON(
 const char* const kTestDocumentSmall = R"RAWJSON(
 [
   {
-    "DocId": "20",
+    "DocId": 20,
     "Links": {
       "Backward": [
         10,
