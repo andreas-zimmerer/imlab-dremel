@@ -179,7 +179,7 @@ def generate_source(filedescriptorproto):
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + ' record) {\n'
-        yield '    return 0;'
+        yield '    return 0;\n'
         yield '}\n'
 
     yield '\n'
