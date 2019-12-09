@@ -18,6 +18,8 @@ namespace imlab {
 class Database {
  public:
     /// Load data from JSON into documentTable.
+    /// The underlying file format of the istream should be JSON.
+    /// The JSON should be an array at the top level.
     void LoadDocumentTable(std::istream& in);
 
     imlab::schema::DocumentTable documentTable;

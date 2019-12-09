@@ -20,7 +20,7 @@ imlab::Database loadDatabase() {
     imlab::Database database{};
 
     std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
-    database.LoadDremel(dremel_file);
+    database.LoadDocumentTable(dremel_file);
 
     return database;
 }
