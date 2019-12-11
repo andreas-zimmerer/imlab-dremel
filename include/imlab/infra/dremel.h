@@ -54,7 +54,7 @@ class DremelColumn {
     explicit DremelColumn(std::string identifier, std::size_t max_definition_level) : identifier(std::move(identifier)), max_definition_level(max_definition_level) {}
 
     /// Returns the human-readable identifier for this column.
-    std::string& get_identifier() { return identifier; }
+    const std::string& get_identifier() { return identifier; }
 
     /// Insert a new value into the column with a given repetition and definition level.
     /// Returns the TID of the inserted value.
