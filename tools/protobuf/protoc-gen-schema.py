@@ -150,7 +150,7 @@ def generate_header(filedescriptorproto):
         yield ' private:\n'
         for fields in flatten_fields(message):
             definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + ', ' + str(definition_level) + '> ' + '_'.join([f.name for f in fields]) + ' { "' + '.'.join([f.name for f in fields]) + '" };\n'
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + '_'.join([f.name for f in fields]) + ' { "' + '.'.join([f.name for f in fields]) + '", ' + str(definition_level) + ' };\n'
             yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'

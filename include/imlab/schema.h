@@ -39,22 +39,22 @@ class DocumentTable : public TableBase {
     static std::vector<const IU*> get_ius();
 
  private:
-    DremelColumn<Integer, 0> DocId { "DocId" };
+    DremelColumn<Integer> DocId { "DocId", 0 };
     std::vector<uint64_t> DocId_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Integer, 2> Links_Backward { "Links.Backward" };
+    DremelColumn<Integer> Links_Backward { "Links.Backward", 2 };
     std::vector<uint64_t> Links_Backward_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Integer, 2> Links_Forward { "Links.Forward" };
+    DremelColumn<Integer> Links_Forward { "Links.Forward", 2 };
     std::vector<uint64_t> Links_Forward_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>, 2> Name_Language_Code { "Name.Language.Code" };
+    DremelColumn<Varchar<30>> Name_Language_Code { "Name.Language.Code", 2 };
     std::vector<uint64_t> Name_Language_Code_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>, 3> Name_Language_Country { "Name.Language.Country" };
+    DremelColumn<Varchar<30>> Name_Language_Country { "Name.Language.Country", 3 };
     std::vector<uint64_t> Name_Language_Country_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>, 2> Name_Url { "Name.Url" };
+    DremelColumn<Varchar<30>> Name_Url { "Name.Url", 2 };
     std::vector<uint64_t> Name_Url_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
     static const std::vector<IU> IUs;
