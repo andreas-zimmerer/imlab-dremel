@@ -26,7 +26,7 @@ std::vector<const IU*> DocumentTable::get_ius() {
     return refs;
 }
 
-uint64_t DocumentTable::insert(Document record) {
+uint64_t DocumentTable::insert(Document& record) {
     return size++;
 }
 

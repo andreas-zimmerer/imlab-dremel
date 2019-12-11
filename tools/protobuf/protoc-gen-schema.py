@@ -131,11 +131,11 @@ def generate_header(filedescriptorproto):
                 type_name = field.type_name.split('.')[-1]
 
             if field.label == FieldDescriptorProto.LABEL_REPEATED:
-                yield ident_sub + 'std::vector<' + type_name + '> ' + field.json_name + ';\n'
+                yield ident_sub + 'std::vector<' + type_name + '> ' + field.json_name + ' {};\n'
             if field.label == FieldDescriptorProto.LABEL_OPTIONAL:
-                yield ident_sub + 'std::optional<' + type_name + '> ' + field.json_name + ';\n'
+                yield ident_sub + 'std::optional<' + type_name + '> ' + field.json_name + ' {};\n'
             if field.label == FieldDescriptorProto.LABEL_REQUIRED:
-                yield ident_sub + type_name + ' ' + field.json_name + ';\n'
+                yield ident_sub + type_name + ' ' + field.json_name + ' {};\n'
         yield ident + '};\n'
 
     for message in filedescriptorproto.message_type:
@@ -144,7 +144,7 @@ def generate_header(filedescriptorproto):
         yield '\n'
         yield 'class ' + message.name + 'Table : public TableBase {\n'
         yield ' public:\n'
-        yield '    uint64_t insert(' + message.name + ' record);\n'
+        yield '    uint64_t insert(' + message.name + '& record);\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
         yield ' private:\n'
@@ -195,7 +195,7 @@ def generate_source(filedescriptorproto):
         yield '}\n'
         yield '\n'
 
-        yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + ' record) {\n'
+        yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + '& record) {\n'
         yield '    return size++;\n'
         yield '}\n'
 

@@ -17,25 +17,25 @@ namespace schema {
 
 struct Document {
     struct Links {
-        std::vector<Integer> Backward;
-        std::vector<Integer> Forward;
+        std::vector<Integer> Backward {};
+        std::vector<Integer> Forward {};
     };
     struct Name {
         struct Language {
-            Varchar<30> Code;
-            std::optional<Varchar<30>> Country;
+            Varchar<30> Code {};
+            std::optional<Varchar<30>> Country {};
         };
-        std::vector<Language> language;
-        std::optional<Varchar<30>> Url;
+        std::vector<Language> language {};
+        std::optional<Varchar<30>> Url {};
     };
-    Integer DocId;
-    std::optional<Links> links;
-    std::vector<Name> name;
+    Integer DocId {};
+    std::optional<Links> links {};
+    std::vector<Name> name {};
 };
 
 class DocumentTable : public TableBase {
  public:
-    uint64_t insert(Document record);
+    uint64_t insert(Document& record);
     static std::vector<const IU*> get_ius();
 
  private:
