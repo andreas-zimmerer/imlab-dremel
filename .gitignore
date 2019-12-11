@@ -2,6 +2,8 @@
 # IMLAB
 # ---------------------------------------------------------------------------
 
+/venv/
+
 /compile_commands.json
 
 # Cmake Build folders
@@ -10,6 +12,7 @@
 /debug
 /Debug
 /build
+/build-local
 /Build
 /.build
 /cmake-build-debug
