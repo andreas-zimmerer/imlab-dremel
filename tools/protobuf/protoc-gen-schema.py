@@ -114,6 +114,7 @@ def generate_header(filedescriptorproto):
     yield 'namespace imlab {\n'
     yield 'namespace schema {\n'
     yield '// ---------------------------------------------------------------------------\n'
+    yield 'using namespace dremel;\n'
     yield '\n'
 
     # Traverse a nested message and create a according type definition.

@@ -100,6 +100,7 @@ class DremelColumn {
 /// Handling of definition levels will be done for the caller. As long as the tree of FieldWriters is correct,
 /// there is no need to manually handle definition levels.
 class FieldWriter {
+    friend class ComplexFieldWriter;
  public:
     /// Creates a new FieldWriter at the given definition level.
     explicit FieldWriter(unsigned definition_level) : _definition_level(definition_level) {}

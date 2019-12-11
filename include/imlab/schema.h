@@ -14,6 +14,7 @@
 namespace imlab {
 namespace schema {
 // ---------------------------------------------------------------------------
+using namespace dremel;
 
 struct Document {
     struct Links {
