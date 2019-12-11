@@ -72,12 +72,28 @@ def flatten_fields(message):
     def _flatten_fields(path, descriptorproto):
         for field in descriptorproto.field:
             if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
-                # we have a normal field
+                # We have a normal field.
                 yield path + [field]
-        for nested in descriptorproto.nested_type:
-            # we have a nested field (e.g. group or another message)
-            for line in _flatten_fields(path + [nested], nested):
-                yield line
+            else:
+                # We have a nested field (e.g. group or another message).
+                # There should be an equally named item in 'nested_type' (but lowercase).
+                # The FieldDescriptorProto will go into the path and the DescriptorProto from nested_type will be
+                # used to further dissect the message.
+                # Why do we need to do this?
+                # Because nested_types also count as fields and all the info we need is in the FieldDescriptor.
+                # However, Descriptors define the hierarchy of fields in a message and a Field has no info about it.
+                # And sadly there is no direct mapping between Descriptors and Fields :(
+                nested = next(x for x in descriptorproto.nested_type if x.name.lower() == field.name.lower())
+
+                # Not exactly sure why, but Protobuf makes names of Fields that are in nested_type lowercase.
+                # But this is only the case for these FieldDescriptors.
+                # Leave-FieldDescriptors contain their original name from the file.
+                # Also the Descriptors of nested_type contain the original name from the file.
+                # Because we only want the original names from the schema file, we need to set it to the correct value.
+                field.name = nested.name
+
+                for line in _flatten_fields(path + [field], nested):
+                    yield line
     return _flatten_fields([], message)
 
 
@@ -133,7 +149,8 @@ def generate_header(filedescriptorproto):
         yield '\n'
         yield ' private:\n'
         for fields in flatten_fields(message):
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + '_'.join([f.name for f in fields]) + ' {"' + '.'.join([f.name for f in fields]) + '"};\n'
+            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + ', ' + str(definition_level) + '> ' + '_'.join([f.name for f in fields]) + ' { "' + '.'.join([f.name for f in fields]) + '" };\n'
             yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs;'
             yield ' //  Maps the beginning of a record to a TID in the column.\n'
             yield '\n'

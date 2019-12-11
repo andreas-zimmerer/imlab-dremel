@@ -12,9 +12,9 @@ const std::vector<IU> DocumentTable::IUs = {
     IU("Document", "DocId", schemac::Type::Integer()),
     IU("Document", "Links.Backward", schemac::Type::Integer()),
     IU("Document", "Links.Forward", schemac::Type::Integer()),
-    IU("Document", "Name.Url", schemac::Type::Varchar(30)),
     IU("Document", "Name.Language.Code", schemac::Type::Varchar(30)),
     IU("Document", "Name.Language.Country", schemac::Type::Varchar(30)),
+    IU("Document", "Name.Url", schemac::Type::Varchar(30)),
 };
 
 std::vector<const IU*> DocumentTable::get_ius() {
