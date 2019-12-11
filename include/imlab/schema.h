@@ -5,8 +5,8 @@
 #ifndef INCLUDE_IMLAB_SCHEMA_H_
 #define INCLUDE_IMLAB_SCHEMA_H_
 // ---------------------------------------------------------------------------
-#include <vector>
 #include <optional>
+#include <vector>
 #include "imlab/infra/dremel.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"
