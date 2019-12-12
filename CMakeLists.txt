@@ -36,6 +36,7 @@ endif (APPLE)
 find_package(Threads REQUIRED)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
+find_package(Protobuf REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 

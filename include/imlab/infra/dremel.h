@@ -9,10 +9,12 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <google/protobuf/message.h>
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {
 //---------------------------------------------------------------------------
+using TID = uint64_t;
 
 class TableBase {
  public:
@@ -51,20 +53,21 @@ class DremelColumn {
     /// \tparam indentifier A human readable identifier for this column.
     /// \tparam max_definition_level The number of optional and repeated fields in the record path.
     ///                              Note that 'required' fields should not be counted!
-    explicit DremelColumn(std::string identifier, std::size_t max_definition_level) : identifier(std::move(identifier)), max_definition_level(max_definition_level) {}
+    explicit DremelColumn(std::string identifier, std::size_t max_definition_level)
+        : identifier(std::move(identifier)), max_definition_level(max_definition_level) {}
 
     /// Returns the human-readable identifier for this column.
     const std::string& get_identifier() { return identifier; }
 
     /// Insert a new value into the column with a given repetition and definition level.
     /// Returns the TID of the inserted value.
-    uint64_t insert(DremelRow<T> row) {
+    TID insert(DremelRow<T> row) {
         rows.push_back({ row.value.value_or(nullptr), row.repetition_level, row.definition_level });
         return rows.size() - 1;
     }
 
     /// Retrieves a value together with its repetition and definition levels for a given TID.
-    DremelRow<T> get(uint64_t tid) {
+    DremelRow<T> get(TID tid) {
         auto& [value, r, d] = rows[tid];
         if (d < max_definition_level) {
           return { std::nullopt, r, d};
@@ -153,7 +156,7 @@ class AtomicFieldWriter : public FieldWriter {
 
 //---------------------------------------------------------------------------
 
-void DissectRecord();
+void DissectRecord(google::protobuf::Message& msg);
 
 void AssembleRecord();
 
