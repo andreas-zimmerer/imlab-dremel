@@ -7,9 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include "benchmark/benchmark.h"
-#include "database.h"
-#include "imlab/schema.h"
-#include "imlab/infra/types.h"
 
 namespace {
 
