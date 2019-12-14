@@ -8,7 +8,7 @@
 #include "imlab/algebra/print.h"
 #include "imlab/algebra/selection.h"
 #include "imlab/algebra/table_scan.h"
-#include "imlab/schema.h"
+#include "../tools/protobuf/gen/schema.h"
 #include "imlab/schemac/schema_parse_context.h"
 #include "imlab/queryc/query_parse_context.h"
 #include "imlab/queryc/query_compiler.h"
