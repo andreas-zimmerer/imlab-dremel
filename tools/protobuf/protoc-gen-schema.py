@@ -107,6 +107,7 @@ def generate_header(filedescriptorproto):
     yield '// ---------------------------------------------------------------------------\n'
     yield '#include <optional>\n'
     yield '#include <vector>\n'
+    yield '#include "imlab/schema_types.h"\n'
     yield '#include "imlab/infra/dremel.h"\n'
     yield '#include "imlab/infra/types.h"\n'
     yield '#include "imlab/algebra/iu.h"\n'
@@ -117,35 +118,14 @@ def generate_header(filedescriptorproto):
     yield 'using namespace dremel;\n'
     yield '\n'
 
-    # Traverse a nested message and create a according type definition.
-    def _traverse_type(descriptorproto, ident):
-        yield ident + 'struct ' + descriptorproto.name + ' {\n'
-        ident_sub = ident + '    '
-        for nested in descriptorproto.nested_type:
-            # we have a nested field (e.g. group or another message)
-            for line in _traverse_type(nested, ident_sub):
-                yield line
-        for field in descriptorproto.field:
-            if field.type != FieldDescriptorProto.TYPE_GROUP and field.type != FieldDescriptorProto.TYPE_MESSAGE and field.type != FieldDescriptorProto.TYPE_ENUM:
-                type_name = map_type(field.type)
-            else:
-                type_name = field.type_name.split('.')[-1]
-
-            if field.label == FieldDescriptorProto.LABEL_REPEATED:
-                yield ident_sub + 'std::vector<' + type_name + '> ' + field.json_name + ' {};\n'
-            if field.label == FieldDescriptorProto.LABEL_OPTIONAL:
-                yield ident_sub + 'std::optional<' + type_name + '> ' + field.json_name + ' {};\n'
-            if field.label == FieldDescriptorProto.LABEL_REQUIRED:
-                yield ident_sub + type_name + ' ' + field.json_name + ' {};\n'
-        yield ident + '};\n'
-
     for message in filedescriptorproto.message_type:
-        for line in _traverse_type(message, ''):
-            yield line
-        yield '\n'
         yield 'class ' + message.name + 'Table : public TableBase {\n'
         yield ' public:\n'
+        yield '    /// Insert a new record into the table.\n'
         yield '    uint64_t insert(' + message.name + '& record);\n'
+        yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
+        yield '    const FieldWriter* get_record_writer() { return &_field_writer; }\n'
+        yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
         yield ' private:\n'
@@ -155,6 +135,8 @@ def generate_header(filedescriptorproto):
             yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
+        yield '    const ComplexFieldWriter _field_writer;\n'
+        yield '\n'
         yield '    static const std::vector<IU> IUs;\n'
         yield '};\n'
 
@@ -194,6 +176,10 @@ def generate_source(filedescriptorproto):
         yield '    }\n'
         yield '    return refs;\n'
         yield '}\n'
+        yield '\n'
+
+        yield 'const ComplexFieldWriter ' + message.name + 'Table::_field_writer = {\n'
+        yield '};\n'
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + '& record) {\n'

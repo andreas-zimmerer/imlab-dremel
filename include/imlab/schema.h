@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 #include <optional>
 #include <vector>
+#include "imlab/schema_types.h"
 #include "imlab/infra/dremel.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"
@@ -16,26 +17,9 @@ namespace schema {
 // ---------------------------------------------------------------------------
 using namespace dremel;
 
-struct Document {
-    struct Links {
-        std::vector<Integer> Backward {};
-        std::vector<Integer> Forward {};
-    };
-    struct Name {
-        struct Language {
-            Varchar<30> Code {};
-            std::optional<Varchar<30>> Country {};
-        };
-        std::vector<Language> language {};
-        std::optional<Varchar<30>> Url {};
-    };
-    Integer DocId {};
-    std::optional<Links> links {};
-    std::vector<Name> name {};
-};
-
 class DocumentTable : public TableBase {
  public:
+    /// Insert a new record into the table.
     uint64_t insert(Document& record);
     static std::vector<const IU*> get_ius();
 
