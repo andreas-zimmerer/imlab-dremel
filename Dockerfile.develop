@@ -1,4 +1,4 @@
-FROM ubuntu:latest AS build
+FROM ubuntu:disco AS build
 
 ########################################################
 # Essential packages for remote debugging and login in
