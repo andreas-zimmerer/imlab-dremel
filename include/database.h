@@ -11,7 +11,7 @@
 #include <vector>
 #include "imlab/infra/hash.h"
 #include "imlab/infra/dremel.h"
-#include "imlab/schema.h"
+#include "../tools/protobuf/gen/schema.h"
 
 namespace imlab {
 

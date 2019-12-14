@@ -58,6 +58,7 @@ include_directories(
     ${GFLAGS_INCLUDE_DIR}
     ${BENCHMARK_INCLUDE_DIR}
     ${RAPIDJSON_INCLUDE_DIR}
+    ${PROTOBUF_INCLUDE_DIR}
 )
 
 # ---------------------------------------------------------------------------

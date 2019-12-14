@@ -6,7 +6,7 @@
 #include "imlab/test/data.h"
 #include "database.h"
 #include "gtest/gtest.h"
-#include "imlab/schema.h"
+#include "../tools/protobuf/gen/schema.h"
 
 namespace {
 
