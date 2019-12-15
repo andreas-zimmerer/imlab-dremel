@@ -131,7 +131,7 @@ def generate_header(filedescriptorproto):
         yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
-        yield ' private:\n'
+        yield ' protected:\n'
         for fields in flatten_fields(message):
             definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             column_name = '_'.join([f.name for f in fields])

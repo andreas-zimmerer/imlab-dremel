@@ -26,7 +26,7 @@ class DocumentTable : public TableBase {
     /// Get a reference to the IUs in this table.
     static std::vector<const IU*> get_ius();
 
- private:
+ protected:
     DremelColumn<Integer> DocId { "DocId", 0 };
     std::vector<uint64_t> DocId_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 

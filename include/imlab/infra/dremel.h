@@ -39,6 +39,13 @@ struct DremelRow {
     unsigned definition_level;
 };
 
+template<typename T>
+inline bool operator==(const DremelRow<T>& lhs, const DremelRow<T>& rhs){
+    return lhs.value == rhs.value
+        && lhs.repetition_level == rhs.repetition_level
+        && lhs.definition_level == rhs.definition_level;
+}
+
 /// A column in the Dremel format.
 /// What's special about a Dremel column is that not only values are stored,
 /// but also repetition and definition levels for every value.
