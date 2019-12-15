@@ -127,7 +127,7 @@ def generate_header(filedescriptorproto):
         yield '    /// Insert a new record into the table.\n'
         yield '    uint64_t insert(' + message.name + '& record);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
-        yield '    const FieldWriter* get_record_writer() { return &' + message.name + '_Writer; }\n'
+        yield '    FieldWriter* get_record_writer() override { return &' + message.name + '_Writer; }\n'
         yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'

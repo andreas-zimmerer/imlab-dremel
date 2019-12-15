@@ -158,8 +158,9 @@ void DissectRecordInternal(const google::protobuf::Message* msg, ComplexFieldWri
     }
 }
 
-void DissectRecord(google::protobuf::Message& msg) {
-//    DissectRecordInternal(msg, TODO, 0);
+void DissectRecord(TableBase& table, google::protobuf::Message& msg) {
+    // For the top level we can be 100% sure that this is a ComplexFieldWriter
+    DissectRecordInternal(&msg, dynamic_cast<ComplexFieldWriter*>(table.get_record_writer()), 0);
 }
 
 }  // namespace dremel

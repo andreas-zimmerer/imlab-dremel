@@ -16,9 +16,13 @@ namespace dremel {
 //---------------------------------------------------------------------------
 using TID = uint64_t;
 
+class FieldWriter;
+
 class TableBase {
  public:
     uint64_t get_size() { return size; }
+
+    virtual FieldWriter* get_record_writer() = 0;
  protected:
     uint64_t size = 0;
 };
@@ -167,7 +171,7 @@ class AtomicFieldWriter : public FieldWriter {
 
 //---------------------------------------------------------------------------
 
-void DissectRecord(google::protobuf::Message& msg);
+void DissectRecord(TableBase& table, google::protobuf::Message& msg);
 
 void AssembleRecord();
 

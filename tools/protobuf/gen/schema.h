@@ -22,7 +22,7 @@ class DocumentTable : public TableBase {
     /// Insert a new record into the table.
     uint64_t insert(Document& record);
     /// Get the corresponding FieldWriter-tree for this table.
-    const FieldWriter* get_record_writer() { return &Document_Writer; }
+    FieldWriter* get_record_writer() override { return &Document_Writer; }
     /// Get a reference to the IUs in this table.
     static std::vector<const IU*> get_ius();
 
