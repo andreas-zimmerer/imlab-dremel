@@ -64,7 +64,7 @@ def map_type(proto_type, schemac_type=False):
         return m[0]
 
 
-def flatten_fields(message):
+def flatten_fields(message, includeInner=False):
     """
     Traverses a Protobuf message and flattens all fields.
     Yields a path consisting of all Protobuf descriptors in an array.
@@ -91,6 +91,9 @@ def flatten_fields(message):
                 # Also the Descriptors of nested_type contain the original name from the file.
                 # Because we only want the original names from the schema file, we need to set it to the correct value.
                 field.name = nested.name
+
+                if includeInner:
+                    yield path + [field]
 
                 for line in _flatten_fields(path + [field], nested):
                     yield line
@@ -124,18 +127,55 @@ def generate_header(filedescriptorproto):
         yield '    /// Insert a new record into the table.\n'
         yield '    uint64_t insert(' + message.name + '& record);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
-        yield '    const FieldWriter* get_record_writer() { return &_field_writer; }\n'
+        yield '    const FieldWriter* get_record_writer() { return &' + message.name + '_Writer; }\n'
         yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
         yield ' private:\n'
         for fields in flatten_fields(message):
             definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + '_'.join([f.name for f in fields]) + ' { "' + '.'.join([f.name for f in fields]) + '", ' + str(definition_level) + ' };\n'
-            yield '    ' + 'std::vector<uint64_t> ' + '_'.join([f.name for f in fields]) + '_Record_TIDs;'
+            column_name = '_'.join([f.name for f in fields])
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { "' + '.'.join([f.name for f in fields]) + '", ' + str(definition_level) + ' };\n'
+            yield '    ' + 'std::vector<uint64_t> ' + column_name + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
-        yield '    const ComplexFieldWriter _field_writer;\n'
+
+        complex_field_writers = {}
+        yield '    // A tree-like structure of FieldWriters\n'
+        for fields in flatten_fields(message, True):
+            column_name = '_'.join([f.name for f in fields])
+            field_writer_name = column_name + '_Writer'
+            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
+            if fields[-1].type == FieldDescriptorProto.TYPE_MESSAGE or fields[-1].type == FieldDescriptorProto.TYPE_GROUP:
+                previous_children = complex_field_writers.get(field_writer_name, {}).get('children', [])
+                complex_field_writers[field_writer_name] = {
+                    'definition_level': str(definition_level),
+                    'field_id': str(fields[-1].number),
+                    'children': previous_children
+                }
+            else:
+                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + field_writer_name + ' { ' + str(definition_level) + ', ' +  str(fields[-1].number) + ', &' + column_name + ' };\n'
+
+            # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
+            if len(fields) >= 2:
+                # A regular writer with a ComplexFieldWriter as a parent
+                parent_name = column_name.rsplit('_', 1)[0] + '_Writer'
+            else:
+                # We have a top level writer here directly under the document writer
+                parent_name = message.name + '_Writer'
+            # Now update the tree
+            previous_definition_level = complex_field_writers.get(parent_name, {}).get('definition_level', '0')
+            previous_field_id = complex_field_writers.get(parent_name, {}).get('field_id', '0')
+            previous_children = complex_field_writers.get(parent_name, {}).get('children', [])
+            complex_field_writers[parent_name] = {
+                'definition_level': previous_definition_level,
+                'field_id': previous_field_id,
+                'children': previous_children + ['&' + field_writer_name]
+            }
+        # Print all flattened ComplexFieldWriters
+        for parent in complex_field_writers:
+            yield '    ComplexFieldWriter ' + parent + ' { ' + complex_field_writers[parent]['definition_level'] + ', ' + complex_field_writers[parent]['field_id'] + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
+
         yield '\n'
         yield '    static const std::vector<IU> IUs;\n'
         yield '};\n'
@@ -176,10 +216,6 @@ def generate_source(filedescriptorproto):
         yield '    }\n'
         yield '    return refs;\n'
         yield '}\n'
-        yield '\n'
-
-        yield 'const ComplexFieldWriter ' + message.name + 'Table::_field_writer = {\n'
-        yield '};\n'
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + '& record) {\n'

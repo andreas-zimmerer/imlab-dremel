@@ -21,6 +21,8 @@ class DocumentTable : public TableBase {
  public:
     /// Insert a new record into the table.
     uint64_t insert(Document& record);
+    /// Get the corresponding FieldWriter-tree for this table.
+    const FieldWriter* get_record_writer() { return &Document_Writer; }
     /// Get a reference to the IUs in this table.
     static std::vector<const IU*> get_ius();
 
@@ -42,6 +44,18 @@ class DocumentTable : public TableBase {
 
     DremelColumn<Varchar<30>> Name_Url { "Name.Url", 2 };
     std::vector<uint64_t> Name_Url_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
+
+    // A tree-like structure of FieldWriters
+    AtomicFieldWriter<Integer> DocId_Writer { 0, 1, &DocId };
+    AtomicFieldWriter<Integer> Links_Backward_Writer { 2, 3, &Links_Backward };
+    AtomicFieldWriter<Integer> Links_Forward_Writer { 2, 4, &Links_Forward };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Code_Writer { 2, 7, &Name_Language_Code };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { 3, 8, &Name_Language_Country };
+    AtomicFieldWriter<Varchar<30>> Name_Url_Writer { 2, 9, &Name_Url };
+    ComplexFieldWriter Document_Writer { 0, 0, { &DocId_Writer, &Links_Writer, &Name_Writer } };
+    ComplexFieldWriter Links_Writer { 1, 2, { &Links_Backward_Writer, &Links_Forward_Writer } };
+    ComplexFieldWriter Name_Writer { 1, 5, { &Name_Language_Writer, &Name_Url_Writer } };
+    ComplexFieldWriter Name_Language_Writer { 2, 6, { &Name_Language_Code_Writer, &Name_Language_Country_Writer } };
 
     static const std::vector<IU> IUs;
 };

@@ -106,13 +106,19 @@ class FieldWriter {
     friend class ComplexFieldWriter;
  public:
     /// Creates a new FieldWriter at the given definition level.
-    explicit FieldWriter(unsigned definition_level) : _definition_level(definition_level) {}
+    explicit FieldWriter(unsigned definition_level, unsigned field_id)
+        : _definition_level(definition_level), _field_id(field_id) {}
     /// Writes a 'null' value with the given repetition level to all columns underneath this writer.
     /// The definition level is determined by this writer.
     void write(unsigned repetition_level) { write(repetition_level, _definition_level); }
+    /// Gets the definition level of this FieldWriter
+    unsigned get_definition_level() { return _definition_level; }
+    /// Get the field number of the underlying Protobuf field
+    unsigned get_descriptor() { return _field_id; }
  protected:
     virtual void write(unsigned repetition_level, unsigned definition_level) = 0;
     const unsigned _definition_level;
+    const unsigned _field_id;
 };
 
 /// A FieldWriter for a "complex" field; in other words an inner node.
@@ -121,16 +127,20 @@ class FieldWriter {
 class ComplexFieldWriter : public FieldWriter {
  public:
     /// Creates a new ComplexFieldWriter at the given definition level and its child writers.
-    explicit ComplexFieldWriter(unsigned definition_level, std::vector<FieldWriter> child_writers)
-        : FieldWriter(definition_level), _child_writers(std::move(child_writers)) {}
+    ComplexFieldWriter(unsigned definition_level, unsigned field_id, std::vector<FieldWriter*> child_writers)
+        : FieldWriter(definition_level, field_id), _child_writers(std::move(child_writers)) {}
+    std::optional<FieldWriter*> find_child_writer(const google::protobuf::Descriptor* descriptor) {
+        auto it = std::find_if(_child_writers.begin(), _child_writers.end(), [&](const auto& c) { c.get_descriptor() == descriptor; });
+        return (it != _child_writers.end())? std::optional<FieldWriter*>(*it) : std::nullopt;
+    };
  protected:
     void write(unsigned repetition_level, unsigned definition_level) override {
         for (auto& child : _child_writers) {
-            child.write(repetition_level, definition_level);
+            child->write(repetition_level, definition_level);
         }
     }
  private:
-    std::vector<FieldWriter> _child_writers;
+    std::vector<FieldWriter*> _child_writers;
 };
 
 /// A FieldWriter that is actually associated with one (and only one!) column.
@@ -139,11 +149,11 @@ template<typename T>
 class AtomicFieldWriter : public FieldWriter {
  public:
     /// Creates a new AtomicFieldWriter that is directly associated with a DremelColumn at a given definition level.
-    explicit AtomicFieldWriter(unsigned definition_level, DremelColumn<T>* column)
-        : FieldWriter(definition_level), _column(column) {}
+    AtomicFieldWriter(unsigned definition_level, unsigned field_id, DremelColumn<T>* column)
+        : FieldWriter(definition_level, field_id), _column(column) {}
     /// Writes an explicitly given value into the column with the given repetition level.
     /// The definition level is the definition level of this writer.
-    void write(T value, unsigned repetition_level) {
+    void write_value(T value, unsigned repetition_level) {
       _column->insert({ value, repetition_level, _definition_level });
     }
  protected:
