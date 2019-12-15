@@ -27,7 +27,18 @@ std::vector<const IU*> DocumentTable::get_ius() {
 }
 
 uint64_t DocumentTable::insert(Document& record) {
+    // Before we insert records with DissectRecord, we need to remember the last indices in each column.
+    // They will be the starting points of the fields of the dissected record.
+    DocId_Record_TIDs.push_back(DocId.get_size());
+    Links_Backward_Record_TIDs.push_back(Links_Backward.get_size());
+    Links_Forward_Record_TIDs.push_back(Links_Forward.get_size());
+    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.get_size());
+    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.get_size());
+    Name_Url_Record_TIDs.push_back(Name_Url.get_size());
+
     DissectRecord(dynamic_cast<TableBase&>(*this), record);
+
+    // Now the table contains one more record
     return size++;
 }
 

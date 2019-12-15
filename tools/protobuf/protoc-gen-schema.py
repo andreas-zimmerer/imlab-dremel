@@ -223,7 +223,15 @@ def generate_source(filedescriptorproto):
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + '& record) {\n'
+        yield '    // Before we insert records with DissectRecord, we need to remember the last indices in each column.\n'
+        yield '    // They will be the starting points of the fields of the dissected record.\n'
+        for fields in flatten_fields(message):
+            column_name = '_'.join([f.name for f in fields])
+            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.get_size());\n'
+        yield '\n'
         yield '    DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
+        yield '\n'
+        yield '    // Now the table contains one more record\n'
         yield '    return size++;\n'
         yield '}\n'
 
