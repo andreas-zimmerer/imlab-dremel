@@ -15,6 +15,7 @@ namespace imlab {
 namespace dremel {
 //---------------------------------------------------------------------------
 using TID = uint64_t;
+using namespace google::protobuf;
 
 class FieldWriter;
 
@@ -117,7 +118,7 @@ class FieldWriter {
         : _definition_level(definition_level), _field_id(field_id) {}
     /// Writes a 'null' value with the given repetition level to all columns underneath this writer.
     /// The definition level is determined by this writer.
-    void write(unsigned repetition_level) { write(repetition_level, _definition_level); }
+    void write(unsigned repetition_level) { write(repetition_level, _definition_level - 1 /*minus itself*/); }
     /// Gets the definition level of this FieldWriter
     unsigned get_definition_level() { return _definition_level; }
     /// Get the field number of the underlying Protobuf field
@@ -174,7 +175,67 @@ class AtomicFieldWriter : public FieldWriter {
 
 //---------------------------------------------------------------------------
 
-void DissectRecord(TableBase& table, google::protobuf::Message& msg);
+// Protobuf does not provide a templated version to get the value of a field via reflection.
+// Only functions like GetInt32() are provided.
+// Same goes for the repeated versions like GetRepeatedInt32().
+template<typename T>
+T GetValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field);
+template<typename T>
+T GetRepeatedValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field, int index);
+
+
+/// Represents one single value in a Protobuf message.
+/// It's not always easy to work with raw Protobuf fields.
+/// This class tries to unify the work with repeated vs non-repeated fields
+/// and also getting the value out of a field.
+/// When the underlying field is "repeated", this class represents only ONE of the values.
+class ProtoFieldValue {
+ public:
+    ProtoFieldValue(const Message& msg, const FieldDescriptor* field)
+        : _ref(msg.GetReflection()), _msg(msg), _field(field), _index(0) {}
+    ProtoFieldValue(const Message& msg, const FieldDescriptor* field, const unsigned index)
+        : _ref(msg.GetReflection()), _msg(msg), _field(field), _index(index) {}
+
+    /// Get the underlying FieldDescriptor of this ProtoFieldValue
+    [[nodiscard]] const FieldDescriptor* GetField() const { return _field; }
+
+    /// Checks whether the field is empty or not.
+    [[nodiscard]] bool HasValue() const {
+        if (_field->is_repeated()) {
+            auto size = _ref->FieldSize(_msg, _field);
+            return size > 0 && _index < size;
+        } else {
+            return _ref->HasField(_msg, _field);
+        }
+    }
+
+    /// Checks whether the underlying field is atomic or a combination of other values.
+    [[nodiscard]] bool IsAtomic() const {
+        return _field->type() != FieldDescriptor::Type::TYPE_MESSAGE
+            && _field->type() != FieldDescriptor::Type::TYPE_GROUP;
+    }
+
+    /// Get the value of the field. Only works if HasValue() is true.
+    template<typename T>
+    T GetFieldValue() const {
+        if (_field->is_repeated()) {
+            return GetRepeatedValue<T>(_ref, _msg, _field, _index);
+        } else {
+            return GetValue<T>(_ref, _msg, _field);
+        }
+    }
+
+ private:
+    const Reflection* _ref;
+    const Message& _msg;
+    const FieldDescriptor* _field;
+    const unsigned _index;
+};
+
+/// Given a table, this function inserts a new record into this table
+/// by dissecting it into a columnar format.
+/// The value being inserted is a Protobuf message.
+void DissectRecord(TableBase& table, Message& msg);
 
 void AssembleRecord();
 
