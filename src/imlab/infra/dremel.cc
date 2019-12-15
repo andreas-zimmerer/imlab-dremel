@@ -153,8 +153,7 @@ void DissectRecordInternal(const google::protobuf::Message* msg, ComplexFieldWri
             // Now we can't simply take the definition level of the child_writer as the repetition level.
             // Why? Because the definition level is "the number of optional and repeated fields in the path"
             // and repetition levels is just "the number of repeated fields in the path".
-            // TODO: get correct repetition level
-            child_repetition_level = child_writer->get_definition_level();
+            child_repetition_level = child_writer->get_repetition_level();
         } else {
             // We have a new field that we didn't see before.
             seen_fields.insert(child_writer->get_field_id());

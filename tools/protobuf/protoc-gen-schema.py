@@ -146,15 +146,17 @@ def generate_header(filedescriptorproto):
             column_name = '_'.join([f.name for f in fields])
             field_writer_name = column_name + '_Writer'
             definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
+            repetition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             if fields[-1].type == FieldDescriptorProto.TYPE_MESSAGE or fields[-1].type == FieldDescriptorProto.TYPE_GROUP:
                 previous_children = complex_field_writers.get(field_writer_name, {}).get('children', [])
                 complex_field_writers[field_writer_name] = {
-                    'definition_level': str(definition_level),
-                    'field_id': str(fields[-1].number),
+                    'definition_level': definition_level,
+                    'repetition_level': repetition_level,
+                    'field_id': fields[-1].number,
                     'children': previous_children
                 }
             else:
-                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + field_writer_name + ' { ' + str(definition_level) + ', ' +  str(fields[-1].number) + ', &' + column_name + ' };\n'
+                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + field_writer_name + ' { ' + str(definition_level) + ', ' + str(repetition_level) + ', ' +  str(fields[-1].number) + ', &' + column_name + ' };\n'
 
             # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
             if len(fields) >= 2:
@@ -164,17 +166,19 @@ def generate_header(filedescriptorproto):
                 # We have a top level writer here directly under the document writer
                 parent_name = message.name + '_Writer'
             # Now update the tree
-            previous_definition_level = complex_field_writers.get(parent_name, {}).get('definition_level', '0')
-            previous_field_id = complex_field_writers.get(parent_name, {}).get('field_id', '0')
+            previous_definition_level = complex_field_writers.get(parent_name, {}).get('definition_level', 0)
+            previous_repetition_level = complex_field_writers.get(parent_name, {}).get('repetition_level', 0)
+            previous_field_id = complex_field_writers.get(parent_name, {}).get('field_id', 0)
             previous_children = complex_field_writers.get(parent_name, {}).get('children', [])
             complex_field_writers[parent_name] = {
                 'definition_level': previous_definition_level,
+                'repetition_level': previous_repetition_level,
                 'field_id': previous_field_id,
                 'children': previous_children + ['&' + field_writer_name]
             }
         # Print all flattened ComplexFieldWriters
         for parent in complex_field_writers:
-            yield '    ComplexFieldWriter ' + parent + ' { ' + complex_field_writers[parent]['definition_level'] + ', ' + complex_field_writers[parent]['field_id'] + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
+            yield '    ComplexFieldWriter ' + parent + ' { ' + str(complex_field_writers[parent]['definition_level']) + ', ' + str(complex_field_writers[parent]['repetition_level']) + ', ' + str(complex_field_writers[parent]['field_id']) + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
 
         yield '\n'
         yield '    static const std::vector<IU> IUs;\n'
