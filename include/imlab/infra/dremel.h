@@ -80,6 +80,9 @@ class DremelColumn {
         }
     }
 
+    /// Returns the number of elements in this column.
+    uint64_t get_size() { return rows.size(); }
+
  protected:
     /// Human-readable identifier of this column.
     const std::string identifier;

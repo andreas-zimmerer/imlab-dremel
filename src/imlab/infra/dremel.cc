@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 #include "imlab/infra/dremel.h"
 #include <unordered_set>
+#include "imlab/infra/types.h"
 
 using namespace google::protobuf;
 
@@ -14,100 +15,73 @@ void WriteField(FieldWriter* writer, unsigned repetition_level, const FieldDescr
         case FieldDescriptor::CPPTYPE_INT32:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<int32_t>*>(writer)->write_value(
-                        ref->GetRepeatedInt32(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                        Integer(ref->GetRepeatedInt32(*msg, field, i)), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<int32_t>*>(writer)->write_value(
-                    ref->GetInt32(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                    Integer(ref->GetInt32(*msg, field)), repetition_level);
             }
             break;
         case FieldDescriptor::CPPTYPE_INT64:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<int64_t>*>(writer)->write_value(
-                        ref->GetRepeatedInt64(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                        Integer(ref->GetRepeatedInt64(*msg, field, i)), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<int64_t>*>(writer)->write_value(
-                    ref->GetInt64(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                    Integer(ref->GetInt64(*msg, field)), repetition_level);
             }
             break;
         case FieldDescriptor::CPPTYPE_UINT32:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<uint32_t>*>(writer)->write_value(
-                        ref->GetRepeatedUInt32(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                        Integer(ref->GetRepeatedUInt32(*msg, field, i)), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<uint32_t>*>(writer)->write_value(
-                    ref->GetUInt32(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                    Integer(ref->GetUInt32(*msg, field)), repetition_level);
             }
             break;
         case FieldDescriptor::CPPTYPE_UINT64:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<uint64_t>*>(writer)->write_value(
-                        ref->GetRepeatedUInt64(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                        Integer(ref->GetRepeatedUInt64(*msg, field, i)), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<uint64_t>*>(writer)->write_value(
-                    ref->GetUInt64(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                    Integer(ref->GetUInt64(*msg, field)), repetition_level);
             }
             break;
-        case FieldDescriptor::CPPTYPE_DOUBLE:
-            if (field->is_repeated()) {
-                for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<double>*>(writer)->write_value(
-                        ref->GetRepeatedDouble(*msg, field, i), repetition_level);
-                }
-            } else {
-                dynamic_cast<AtomicFieldWriter<double>*>(writer)->write_value(
-                    ref->GetDouble(*msg, field), repetition_level);
-            }
+        case FieldDescriptor::CPPTYPE_DOUBLE:  // UNSUPPORTED
             break;
-        case FieldDescriptor::CPPTYPE_FLOAT:
-            if (field->is_repeated()) {
-                for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<float>*>(writer)->write_value(
-                        ref->GetRepeatedFloat(*msg, field, i), repetition_level);
-                }
-            } else {
-                dynamic_cast<AtomicFieldWriter<float>*>(writer)->write_value(
-                    ref->GetFloat(*msg, field), repetition_level);
-            }
+        case FieldDescriptor::CPPTYPE_FLOAT:  // UNSUPPORTED
             break;
-        case FieldDescriptor::CPPTYPE_BOOL:
-            if (field->is_repeated()) {
-                for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<bool>*>(writer)->write_value(
-                        ref->GetRepeatedBool(*msg, field, i), repetition_level);
-                }
-            } else {
-                dynamic_cast<AtomicFieldWriter<bool>*>(writer)->write_value(
-                    ref->GetBool(*msg, field), repetition_level);
-            }
+        case FieldDescriptor::CPPTYPE_BOOL:  // UNSUPPORTED
             break;
         case FieldDescriptor::CPPTYPE_ENUM:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<int>*>(writer)->write_value(
-                        ref->GetRepeatedEnumValue(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                        Integer(ref->GetRepeatedEnumValue(*msg, field, i)), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<int>*>(writer)->write_value(
-                    ref->GetEnumValue(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                    Integer(ref->GetEnumValue(*msg, field)), repetition_level);
             }
             break;
         case FieldDescriptor::CPPTYPE_STRING:
             if (field->is_repeated()) {
                 for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                    dynamic_cast<AtomicFieldWriter<std::string>*>(writer)->write_value(
-                        ref->GetRepeatedString(*msg, field, i), repetition_level);
+                    dynamic_cast<AtomicFieldWriter<Varchar<30>>*>(writer)->write_value(
+                        Varchar<30>::build(ref->GetRepeatedString(*msg, field, i).c_str()), repetition_level);
                 }
             } else {
-                dynamic_cast<AtomicFieldWriter<std::string>*>(writer)->write_value(
-                    ref->GetString(*msg, field), repetition_level);
+                dynamic_cast<AtomicFieldWriter<Varchar<30>>*>(writer)->write_value(
+                    Varchar<30>::build(ref->GetString(*msg, field).c_str()), repetition_level);
             }
             break;
         case FieldDescriptor::CPPTYPE_MESSAGE:break;
@@ -141,9 +115,7 @@ void DissectRecordInternal(const google::protobuf::Message* msg, ComplexFieldWri
         }
 
         // Write into columns.
-        if (!ref->HasField(*msg, field)) {
-            child_writer.value()->write(child_repetition_level);
-        } else if (field->type() != FieldDescriptor::Type::TYPE_MESSAGE) {
+        if (field->type() != FieldDescriptor::Type::TYPE_MESSAGE && field->type() != FieldDescriptor::Type::TYPE_GROUP) {
             WriteField(child_writer.value(), repetition_level, field, ref, msg);
         } else {
             // Descend deeper into the message.

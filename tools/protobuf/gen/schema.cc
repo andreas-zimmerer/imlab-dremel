@@ -27,6 +27,7 @@ std::vector<const IU*> DocumentTable::get_ius() {
 }
 
 uint64_t DocumentTable::insert(Document& record) {
+    DissectRecord(dynamic_cast<TableBase&>(*this), record);
     return size++;
 }
 

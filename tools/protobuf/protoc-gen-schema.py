@@ -219,6 +219,7 @@ def generate_source(filedescriptorproto):
         yield '\n'
 
         yield 'uint64_t ' + message.name + 'Table::insert(' + message.name + '& record) {\n'
+        yield '    DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
         yield '    return size++;\n'
         yield '}\n'
 
