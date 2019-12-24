@@ -278,9 +278,9 @@ class RecordFSM {
         }
     }
 
-    /// Generates code for the LaTeX tool Tikz to draw the FSM.
+    /// Generates code for graphviz to draw a the FSM.
     /// Only meaningful for visually displaying the FSM in papers or so.
-    std::string GenerateTikzGraph();
+    std::string GenerateGraphviz();
 
  protected:
     /// Constructs the state transitions of the FSM given a list of fields that should be included.

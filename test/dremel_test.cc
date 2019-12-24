@@ -112,7 +112,7 @@ TEST(DremelTest, ConstructCompleteFSM) {
 
     RecordFSM fsm {std::vector<Field>{DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url} };
 
-    std::cout << "Resulting FSM:" << std::endl << fsm.GenerateTikzGraph() << std::endl;
+    std::cout << fsm.GenerateGraphviz() << std::endl;
 
     ASSERT_EQ(fsm.NextField("DocId", 0).value(), "Links.Backward");
     ASSERT_EQ(fsm.NextField("Links.Backward", 1).value(), "Links.Backward");
@@ -136,7 +136,7 @@ TEST(DremelTest, ConstructPartialFSM) {
 
     RecordFSM fsm {std::vector<Field>{DocId, Name_Language_Country} };
 
-    std::cout << "Resulting FSM:" << std::endl << fsm.GenerateTikzGraph() << std::endl;
+    std::cout << fsm.GenerateGraphviz() << std::endl;
 
     ASSERT_EQ(fsm.NextField("DocId", 0).value(), "Name.Language.Country");
     ASSERT_EQ(fsm.NextField("Name.Language.Country", 1).value(), "Name.Language.Country");

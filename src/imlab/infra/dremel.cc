@@ -228,13 +228,11 @@ void RecordFSM::ConstructRecordFSM(const std::vector<Field>& fields) {
     }
 }
 
-std::string RecordFSM::GenerateTikzGraph() {
+std::string RecordFSM::GenerateGraphviz() {
     std::stringstream ss {};
-    ss << "\\usepackage{tikz}" << std::endl;
-    ss << "\\usetikzlibrary{arrows,automata,positioning}" << std::endl;
-    ss << std::endl;
-    ss << "\\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm, semithick]" << std::endl;
-    ss << "  \\tikzstyle{every state}=[rectangle, rounded corners]" << std::endl;
+    ss << "digraph finite_state_machine {" << std::endl;
+    ss << "    size=\"8,5\"" << std::endl;
+    ss << "    node [shape = rect, style = rounded];" << std::endl;
     ss << std::endl;
 
     // Set of all nodes
@@ -251,30 +249,26 @@ std::string RecordFSM::GenerateTikzGraph() {
         edges.emplace(std::make_pair(source, target), level);
     }
 
-    // Create all nodes.
-    for (auto& node : nodes) {
-        ss << "  \\node[state] (" << node << ") {" << node << "};" << std::endl;
-    }
-    ss << std::endl;
-
-    // Create edges between nodes.
-    ss << "  \\path " << std::endl;
     for (auto& source : nodes) {
         for (auto& target : nodes) {
             if (edges.find(std::make_pair(source, target)) != edges.end()) {
-                ss << "    (" << source << ") edge node {";
+                auto source_name = source;
+                std::replace(source_name.begin(), source_name.end(), '.', '_');
+                auto target_name = target;
+                std::replace(target_name.begin(), target_name.end(), '.', '_');
+
+                ss << "    " << source_name << " -> " << target_name << " [label=\"[";
                 // Print repetition levels as labels on edges:
                 auto level_range = edges.equal_range(std::make_pair(source, target));
                 for (auto &level_it = level_range.first; level_it != level_range.second; level_it++) {
-                    ss << level_it->second << ", ";
+                    ss << level_it->second << ",";
                 }
-                ss << "} (" << target << ")" << std::endl;
+                ss << "]\"];" << std::endl;
             }
         }
     }
-    ss << "  ;" << std::endl;
 
-    ss << "\\end{tikzpicture}" << std::endl;
+    ss << "}" << std::endl;
     return ss.str();
 }
 
