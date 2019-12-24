@@ -178,5 +178,105 @@ void DissectRecord(TableBase& table, google::protobuf::Message& msg) {
     DissectRecordInternal(&msg, dynamic_cast<ComplexFieldWriter*>(table.get_record_writer()), 0);
 }
 
+// ---------------------------------------------------------------------------
+
+void RecordFSM::ConstructRecordFSM(const std::vector<Field>& fields) {
+    for (unsigned i = 0; i < fields.size(); i++) {
+        auto& field = fields[i];
+        auto maxRepetitionLevel = field.max_repetition_level;
+        // Either next element or nullopt if we are at the last field.
+        auto barrier = (i == fields.size() - 1)? std::nullopt : std::make_optional(fields[i+1]);
+        // "common repetition level of barrier and field" -> Minimum of both.
+        // If we are at the end, repetition level is 0
+        auto barrierLevel = std::min(maxRepetitionLevel, barrier.has_value()? barrier.value().max_repetition_level : 0);
+
+        // Insert a default reflexive transition with the repetition level of this field.
+        // It might be overridden later on.
+        // This is not explicitly mentioned in the paper.
+        _transitions.insert_or_assign(std::make_pair(field.identifier, maxRepetitionLevel), field.identifier);
+
+        // Work on all backward edges of the FSM.
+        // To refer to the paper, this is an edge like from "Name.Url" to "Name.Language.Code" in Figure 4.
+        for (unsigned u = 0; u < i; u++) {
+            auto& preField = fields[u];
+            if (preField.max_repetition_level > barrierLevel) {
+                // Get common repetition level of preField and field
+                auto backLevel = std::min(preField.max_repetition_level, field.max_repetition_level);
+                // Insert a transition into the FSM
+                _transitions.insert_or_assign(std::make_pair(field.identifier, backLevel), preField.identifier);
+            }
+        }
+
+        // Handle transitions with multiple repetition levels to one destination.
+        for (unsigned level = barrierLevel + 1; level <= maxRepetitionLevel; level++) {
+            // If we don't have a transition from (field,level) yet, we copy it from (field,level-1).
+            if (_transitions.find(std::make_pair(field.identifier, level)) == _transitions.end()) {
+                const auto& pre = _transitions.find(std::make_pair(field.identifier, level - 1));
+                if (pre == _transitions.end()) {
+                    assert(false);
+                }
+                _transitions.insert_or_assign(std::make_pair(field.identifier, level - 1), pre->second);
+            }
+        }
+
+        // Handle forward transition to the next field.
+        if (barrier) { // TODO: ?? But only insert the transitions if the barrier is not the last element.
+            for (unsigned level = 0; level <= barrierLevel; level++) {
+                _transitions.insert_or_assign(std::make_pair(field.identifier, level), barrier.value().identifier);
+            }
+        }
+    }
+}
+
+std::string RecordFSM::GenerateTikzGraph() {
+    std::stringstream ss {};
+    ss << "\\usepackage{tikz}" << std::endl;
+    ss << "\\usetikzlibrary{arrows,automata,positioning}" << std::endl;
+    ss << std::endl;
+    ss << "\\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm, semithick]" << std::endl;
+    ss << "  \\tikzstyle{every state}=[rectangle, rounded corners]" << std::endl;
+    ss << std::endl;
+
+    // Set of all nodes
+    std::unordered_set<std::string> nodes {};
+
+    // Map of transitions with (source, target) -> [repetition_level, ...]
+    std::unordered_multimap<std::pair<std::string, std::string>, unsigned> edges {};
+
+    for (const auto& [key, value] : _transitions) {
+        auto& [source, level] = key;
+        auto& target = value;
+        nodes.emplace(source);
+        nodes.emplace(target);
+        edges.emplace(std::make_pair(source, target), level);
+    }
+
+    // Create all nodes.
+    for (auto& node : nodes) {
+        ss << "  \\node[state] (" << node << ") {" << node << "};" << std::endl;
+    }
+    ss << std::endl;
+
+    // Create edges between nodes.
+    ss << "  \\path " << std::endl;
+    for (auto& source : nodes) {
+        for (auto& target : nodes) {
+            if (edges.find(std::make_pair(source, target)) != edges.end()) {
+                ss << "    (" << source << ") edge node {";
+                // Print repetition levels as labels on edges:
+                auto level_range = edges.equal_range(std::make_pair(source, target));
+                for (auto &level_it = level_range.first; level_it != level_range.second; level_it++) {
+                    ss << level_it->second << ", ";
+                }
+                ss << "} (" << target << ")" << std::endl;
+            }
+        }
+    }
+    ss << "  ;" << std::endl;
+
+    ss << "\\end{tikzpicture}" << std::endl;
+    return ss.str();
+}
+
 }  // namespace dremel
 }  // namespace imlab
