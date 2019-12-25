@@ -7,7 +7,7 @@
 // Write a parser header file
 %defines
 // Define the parser class name
-%define parser_class_name {QueryParser}
+%define api.parser.class {QueryParser}
 // Create the parser in our namespace
 %define api.namespace { imlab::queryc }
 // Use C++ variant to store the values and get better type warnings (compared to "union")
@@ -27,7 +27,7 @@
 // Pass the compiler as parameter to yylex/yyparse.
 %param { imlab::queryc::QueryParseContext &sc }
 // In order to prevent naming conflicts, the .l files contain a prefix parameter. Prefix needs to be set here accordingly.
-%name-prefix "query"
+%define api.prefix {query}
 // ---------------------------------------------------------------------------------------------------
 // Added to the header file and parser implementation before bison definitions.
 // We include string for fstring tokens and forward declare the QueryParseContext.
