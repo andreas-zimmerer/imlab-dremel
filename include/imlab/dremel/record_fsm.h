@@ -4,12 +4,12 @@
 #ifndef INCLUDE_IMLAB_DREMEL_RECORD_FSM_H_
 #define INCLUDE_IMLAB_DREMEL_RECORD_FSM_H_
 //---------------------------------------------------------------------------
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <sstream>
-#include <google/protobuf/message.h>
-#include "imlab/infra/hash.h"
 #include "./schema_helper.h"
+#include "imlab/infra/hash.h"
+#include <google/protobuf/message.h>
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {

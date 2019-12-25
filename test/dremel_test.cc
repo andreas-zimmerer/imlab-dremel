@@ -7,8 +7,6 @@
 #include "database.h"
 #include "imlab/dremel/record_fsm.h"
 #include "imlab/dremel/schema_helper.h"
-#include "imlab/infra/dremel.h"
-#include "../tools/protobuf/gen/schema.h"
 #include "gtest/gtest.h"
 #include "gtest/gtest_prod.h"
 

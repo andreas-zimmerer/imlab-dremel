@@ -6,11 +6,6 @@
 #define INCLUDE_DATABASE_H_
 
 #include <istream>
-#include <array>
-#include <unordered_map>
-#include <vector>
-#include "imlab/infra/hash.h"
-#include "imlab/infra/dremel.h"
 #include "../tools/protobuf/gen/schema.h"
 
 namespace imlab {

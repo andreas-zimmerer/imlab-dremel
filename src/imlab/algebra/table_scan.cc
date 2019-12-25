@@ -6,7 +6,6 @@
 #include "imlab/schemac/schema_compiler.h"
 #include "imlab/infra/types.h"
 #include "../tools/protobuf/gen/schema.h"
-#include "database.h"
 
 namespace imlab {
 

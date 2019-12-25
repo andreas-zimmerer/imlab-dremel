@@ -8,7 +8,8 @@
 #include <optional>
 #include <vector>
 #include "./schema.pb.h"
-#include "imlab/infra/dremel.h"
+#include "imlab/dremel/storage.h"
+#include "imlab/dremel/field_writer.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"
 // ---------------------------------------------------------------------------
