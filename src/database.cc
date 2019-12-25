@@ -4,7 +4,6 @@
 
 #include "database.h"
 #include "rapidjson/document.h"
-#include "../tools/protobuf/gen/schema.pb.h"
 #include <rapidjson/istreamwrapper.h>
 
 namespace imlab {
