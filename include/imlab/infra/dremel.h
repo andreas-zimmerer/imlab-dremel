@@ -255,45 +255,6 @@ void AssembleRecord();
 
 //---------------------------------------------------------------------------
 
-struct Field {
-    std::string identifier;
-    unsigned max_repetition_level;
-};
-
-class RecordFSM {
- public:
-    explicit RecordFSM(const std::vector<Field>& fields) {
-        assert(fields.size() > 0);
-        _start_state = fields[0].identifier;
-        ConstructRecordFSM(fields);
-    };
-
-    /// Yields the next field of the FSM for a given state.
-    std::optional<std::string> NextField(const std::string& field, unsigned repetition_level) {
-        const auto& it = _transitions.find(std::make_pair(field, repetition_level));
-        if (it != _transitions.end()) {
-            return {it->second};
-        } else {
-            return std::nullopt;
-        }
-    }
-
-    /// Generates code for graphviz to draw a the FSM.
-    /// Only meaningful for visually displaying the FSM in papers or so.
-    std::string GenerateGraphviz();
-
- protected:
-    /// Constructs the state transitions of the FSM given a list of fields that should be included.
-    void ConstructRecordFSM(const std::vector<Field>& fields);
-
- private:
-    /// Maps field identifier and repetition_level to a new field identifier.
-    /// TODO: not sure if we really want string identifiers here...
-    /// TODO: is it possible to use references here?
-    std::unordered_map<std::pair<std::string, unsigned>, std::string> _transitions {};
-    std::string _start_state;
-};
-
 //---------------------------------------------------------------------------
 }  // namespace dremel
 }  // namespace imlab
