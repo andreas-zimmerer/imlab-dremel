@@ -5,7 +5,9 @@
 #include <sstream>
 #include "imlab/test/data.h"
 #include "database.h"
+#include "imlab/dremel/schema_helper.h"
 #include "imlab/infra/dremel.h"
+#include "../tools/protobuf/gen/schema.h"
 #include "gtest/gtest.h"
 #include "gtest/gtest_prod.h"
 
@@ -39,6 +41,79 @@ class TestClass : public imlab::schema::DocumentTable {
         _print(Name_Url);
     }
 };
+
+// ---------------------------------------------------------------------------
+
+TEST(DremelTest, Foo) {
+    const auto& desc = Document::descriptor();
+    for (int i=0; i< desc->field_count(); i++) {
+        std::cout << desc->field(i)->name() << " : " << desc->field(i)->index() << std::endl;
+    }
+    std::cout << Document_Name::descriptor()->index() << std::endl;
+
+    std::cout << Document_Name::descriptor()->DebugString() << std::endl;
+}
+
+TEST(DremelTest, RepetitionLevelDocId) {
+    const auto& desc = Document::descriptor()->FindFieldByName("DocId");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 0);
+}
+
+TEST(DremelTest, RepetitionLevelLinksBackward) {
+    const auto& desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 1);
+}
+
+TEST(DremelTest, RepetitionLevelLinksForward) {
+    const auto& desc = Document_Links::descriptor()->FindFieldByName("Forward");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 1);
+}
+
+TEST(DremelTest, RepetitionLevelNameLanguageCode) {
+    const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 2);
+}
+
+TEST(DremelTest, RepetitionLevelNameLanguageCountry) {
+    const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 2);
+}
+
+TEST(DremelTest, RepetitionLevelNameUrl) {
+    const auto& desc = Document_Name::descriptor()->FindFieldByName("Url");
+    auto repetition_level = GetMaxRepetitionLevel(desc);
+    ASSERT_EQ(repetition_level, 1);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(DremelTest, CommonRepetitionLevelLinks) {  // TODO: ask Andre if "1" is actually true.
+    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
+    auto repetition_level = GetCommonRepetitionLevel(links_backward_desc, links_forward_desc);
+    ASSERT_EQ(repetition_level, 1);
+}
+
+TEST(DremelTest, CommonRepetitionLevelLanguage) {
+    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto repetition_level = GetCommonRepetitionLevel(name_language_country_desc, name_language_code_desc);
+    ASSERT_EQ(repetition_level, 2);
+}
+
+TEST(DremelTest, CommonRepetitionLevelRoot) {
+    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto repetition_level = GetCommonRepetitionLevel(links_backward_desc, name_language_code_desc);
+    ASSERT_EQ(repetition_level, 0);
+}
+
+// ---------------------------------------------------------------------------
 
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
 TEST(DremelTest, ShreddingDocumentRecordSmall) {
