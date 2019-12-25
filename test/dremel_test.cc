@@ -45,16 +45,6 @@ class TestClass : public imlab::schema::DocumentTable {
 
 // ---------------------------------------------------------------------------
 
-TEST(DremelTest, Foo) {
-    const auto& desc = Document::descriptor();
-    for (int i=0; i< desc->field_count(); i++) {
-        std::cout << desc->field(i)->name() << " : " << desc->field(i)->index() << std::endl;
-    }
-    std::cout << Document_Name::descriptor()->index() << std::endl;
-
-    std::cout << Document_Name::descriptor()->DebugString() << std::endl;
-}
-
 TEST(DremelTest, RepetitionLevelDocId) {
     const auto& desc = Document::descriptor()->FindFieldByName("DocId");
     auto repetition_level = GetMaxRepetitionLevel(desc);
@@ -177,47 +167,49 @@ TEST(DremelTest, ShreddingDocumentRecordLarge) {
     ASSERT_EQ(tc->Name_Url.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
 }
 
+// ---------------------------------------------------------------------------
+
 // This test corresponds to the example from the Dremel paper in Figure 4.
 TEST(DremelTest, ConstructCompleteFSM) {
-    Field DocId {"DocId", 0 };
-    Field Links_Backward {"Links.Backward", 1 };
-    Field Links_Forward {"Links.Forward", 1 };
-    Field Name_Language_Code {"Name.Language.Code", 2 };
-    Field Name_Language_Country {"Name.Language.Country", 2 };
-    Field Name_Url {"Name.Url", 1 };
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
+    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
+    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
 
-    RecordFSM fsm {std::vector<Field>{DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url} };
+    RecordFSM fsm { std::vector<const FieldDescriptor*>{DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url} };
 
     std::cout << fsm.GenerateFsmGraph() << std::endl;
 
-    ASSERT_EQ(fsm.NextField("DocId", 0).value(), "Links.Backward");
-    ASSERT_EQ(fsm.NextField("Links.Backward", 1).value(), "Links.Backward");
-    ASSERT_EQ(fsm.NextField("Links.Backward", 0).value(), "Links.Forward");
-    ASSERT_EQ(fsm.NextField("Links.Forward", 1).value(), "Links.Forward");
-    ASSERT_EQ(fsm.NextField("Links.Forward", 0).value(), "Name.Language.Code");
-    ASSERT_EQ(fsm.NextField("Name.Language.Code", 0).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Code", 1).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Code", 2).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 2).value(), "Name.Language.Code");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 1).value(), "Name.Url");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 2).value(), "Name.Url");
-    ASSERT_EQ(fsm.NextField("Name.Url", 1).value(), "Name.Language.Code");
-    ASSERT_EQ(fsm.NextField("Name.Url", 0).has_value(), false);  // end state
+    ASSERT_EQ(fsm.NextField(DocId, 0), Links_Backward);
+    ASSERT_EQ(fsm.NextField(Links_Backward, 1), Links_Backward);
+    ASSERT_EQ(fsm.NextField(Links_Backward, 0), Links_Forward);
+    ASSERT_EQ(fsm.NextField(Links_Forward, 1), Links_Forward);
+    ASSERT_EQ(fsm.NextField(Links_Forward, 0), Name_Language_Code);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code, 0), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code, 1), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code, 2), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 2), Name_Language_Code);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 1), Name_Url);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 0), Name_Url);
+    ASSERT_EQ(fsm.NextField(Name_Url, 1), Name_Language_Code);
+    ASSERT_EQ(fsm.NextField(Name_Url, 0), nullptr);  // end state
 }
 
 // This test corresponds to the example from the Dremel paper in Figure 5.
 TEST(DremelTest, ConstructPartialFSM) {
-    Field DocId {"DocId", 0 };
-    Field Name_Language_Country {"Name.Language.Country", 2 };
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
 
-    RecordFSM fsm {std::vector<Field>{DocId, Name_Language_Country} };
+    RecordFSM fsm {std::vector<const FieldDescriptor*>{DocId, Name_Language_Country} };
 
     std::cout << fsm.GenerateFsmGraph() << std::endl;
 
-    ASSERT_EQ(fsm.NextField("DocId", 0).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 1).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 2).value(), "Name.Language.Country");
-    ASSERT_EQ(fsm.NextField("Name.Language.Country", 0).has_value(), false);  // end state
+    ASSERT_EQ(fsm.NextField(DocId, 0), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 1), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 2), Name_Language_Country);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country, 0), nullptr);  // end state
 }
 
 }  // namespace
