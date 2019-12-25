@@ -114,7 +114,7 @@ class RecordFSM {
                     }
                     std::sort(repetition_levels.begin(), repetition_levels.end());
                     for (int i = 0; i < repetition_levels.size(); i++) {
-                        ss << i << ((i != repetition_levels.size() - 1)? ", " : "");
+                        ss << repetition_levels[i] << ((i != repetition_levels.size() - 1)? ", " : "");
                     }
                     ss << "]\"];" << std::endl;
                 }
