@@ -32,29 +32,20 @@ void BM_Construct_Complete_FSM(benchmark::State &state) {
     state.SetItemsProcessed(state.iterations());
 }
 
-void BM_Shredding(benchmark::State &state) {
+/// Shreds a document into columnar representation.
+/// The size of the record to be shredded is determined by an additional benchmark parameter.
+/// The parameter determines the number of "Document.Name.Language"
+void BM_Shredding_nLanguage(benchmark::State &state) {
     imlab::schema::DocumentTable document_table {};
 
     // Large record from paper:
     Document document {};
-    document.set_docid(10);
-    Document_Links* document_links = document.mutable_links();
-    document_links->add_forward(20);
-    document_links->add_forward(40);
-    document_links->add_forward(60);
-    Document_Name* document_name_1 = document.add_name();
-    Document_Name_Language* document_name_1_language_1 = document_name_1->add_language();
-    document_name_1_language_1->set_code("en-us");
-    document_name_1_language_1->set_country("us");
-    Document_Name_Language* document_name_1_language_2 = document_name_1->add_language();
-    document_name_1_language_2->set_code("en");
-    document_name_1->set_url("http://A");
-    Document_Name* document_name_2 = document.add_name();
-    document_name_2->set_url("http://B");
-    Document_Name* document_name_3 = document.add_name();
-    Document_Name_Language* document_name_3_language_1 = document_name_1->add_language();
-    document_name_3_language_1->set_code("en-gb");
-    document_name_3_language_1->set_country("gb");
+    document.set_docid(0);
+    Document_Name* document_name = document.add_name();
+    for (int i = 0; i < state.range(0); i++) {
+        Document_Name_Language* document_name_language = document_name->add_language();
+        document_name_language->set_code("en-us");
+    }
 
     for (auto _ : state) {
         Shredder::DissectRecord(dynamic_cast<TableBase&>(document_table), document);
@@ -86,7 +77,7 @@ void BM_Load_Full_Dataset(benchmark::State &state) {
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
-BENCHMARK(BM_Shredding);
+BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
 BENCHMARK(BM_Load_Full_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
 
 int main(int argc, char** argv) {
