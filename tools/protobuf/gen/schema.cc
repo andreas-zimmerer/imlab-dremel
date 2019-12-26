@@ -4,6 +4,8 @@
 // ---------------------------------------------------------------------------
 #include "./schema.h"
 #include "imlab/dremel/shredding.h"
+#include "imlab/dremel/assembling.h"
+#include "imlab/dremel/record_fsm.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 namespace schema {
@@ -41,6 +43,24 @@ uint64_t DocumentTable::insert(Document& record) {
 
     // Now the table contains one more record
     return size++;
+}
+
+std::vector<Document> DocumentTable::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {
+    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < get_size());
+    RecordFSM fsm {fields};
+    // TODO get readers and initialize with TID
+    uint64_t DocId_index = DocId_Record_TIDs[from_tid];
+    uint64_t Links_Backward_index = Links_Backward_Record_TIDs[from_tid];
+    uint64_t Links_Forward_index = Links_Forward_Record_TIDs[from_tid];
+    uint64_t Name_Language_Code_index = Name_Language_Code_Record_TIDs[from_tid];
+    uint64_t Name_Language_Country_index = Name_Language_Country_Record_TIDs[from_tid];
+    uint64_t Name_Url_index = Name_Url_Record_TIDs[from_tid];
+
+    std::vector<Document> records {};
+    for (unsigned i = from_tid; i < to_tid; i++) {
+        records.push_back(Assembler<Document>::AssembleRecord(fsm, readers));
+    }
+    return records;
 }
 
 // ---------------------------------------------------------------------------

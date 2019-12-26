@@ -70,6 +70,34 @@ unsigned GetCommonRepetitionLevel(const FieldDescriptor* field1, const FieldDesc
     return GetMaxRepetitionLevel(GetFieldDescriptor(field1_path[common_ancestor_index]));
 }
 
+/// Computes the definition level of a given field.
+/// The definition level is the number of optional and repeated fields in the path.
+unsigned GetDefinitionLevel(const FieldDescriptor* desc) {
+    unsigned definition_level = 0;
+
+    auto* field = desc;
+    while (field != nullptr) {
+        if (field->is_repeated() || field->is_optional()) {
+            definition_level++;
+        }
+        field = GetFieldDescriptor(field->containing_type());
+    }
+    return definition_level;
+}
+
+/// In contrast to a "normal" definition level, the full definition level takes
+/// all fields in the path into account.
+unsigned GetFullDefinitionLevel(const FieldDescriptor* desc) {
+    unsigned full_definition_level = 0;
+
+    auto* field = desc;
+    while (field != nullptr) {
+        full_definition_level++;
+        field = GetFieldDescriptor(field->containing_type());
+    }
+    return full_definition_level;
+}
+
 //---------------------------------------------------------------------------
 }  // namespace dremel
 }  // namespace imlab

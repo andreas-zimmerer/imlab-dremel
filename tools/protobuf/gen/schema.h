@@ -12,6 +12,7 @@
 #include "imlab/dremel/field_writer.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"
+#include <google/protobuf/message.h>
 // ---------------------------------------------------------------------------
 namespace imlab {
 namespace schema {
@@ -22,6 +23,10 @@ class DocumentTable : public TableBase {
  public:
     /// Insert a new record into the table.
     uint64_t insert(Document& record);
+    /// Gets one record from the table.
+    Document get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid, fields)[0]; }
+    /// Gets a range of record from the table.
+    std::vector<Document> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);
     /// Get the corresponding FieldWriter-tree for this table.
     FieldWriter* get_record_writer() override { return &Document_Writer; }
     /// Get a reference to the IUs in this table.
