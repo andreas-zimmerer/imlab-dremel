@@ -9,6 +9,7 @@
 #include "imlab/dremel/schema_helper.h"
 #include "gtest/gtest.h"
 #include "gtest/gtest_prod.h"
+#include "../include/database.h"
 
 namespace {
 using namespace imlab::dremel;
@@ -106,7 +107,7 @@ TEST(DremelTest, CommonRepetitionLevelRoot) {
 
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
 TEST(DremelTest, ShreddingDocumentRecordSmall) {
-    imlab::Database db;
+    imlab::Database db {};
     std::stringstream in(imlab_test::kTestDocumentSmall);
 
     db.LoadDocumentTable(in);
@@ -132,7 +133,7 @@ TEST(DremelTest, ShreddingDocumentRecordSmall) {
 
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
 TEST(DremelTest, ShreddingDocumentRecordLarge) {
-    imlab::Database db;
+    imlab::Database db {};
     std::stringstream in(imlab_test::kTestDocumentLarge);
 
     db.LoadDocumentTable(in);
@@ -208,6 +209,21 @@ TEST(DremelTest, ConstructPartialFSM) {
     ASSERT_EQ(fsm.NextField(Name_Language_Country, 1), Name_Language_Country);
     ASSERT_EQ(fsm.NextField(Name_Language_Country, 2), Name_Language_Country);
     ASSERT_EQ(fsm.NextField(Name_Language_Country, 0), nullptr);  // end state
+}
+
+TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
+
+    imlab::Database db {};
+    std::stringstream in(imlab_test::kTestDocumentLarge);
+
+    db.LoadDocumentTable(in);
+    auto record = db.documentTable.get(0, {DocId, Name_Language_Country});
+
+    std::cout << record.DebugString() << std::endl;
+
+    // TODO assert
 }
 
 }  // namespace
