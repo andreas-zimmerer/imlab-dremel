@@ -6,14 +6,17 @@
 #include <chrono>  // NOLINT
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 #include "../tools/protobuf/gen/schema.h"
 #include "imlab/dremel/record_fsm.h"
 #include "imlab/dremel/shredding.h"
+#include "database.h"
 #include "benchmark/benchmark.h"
 
 namespace {
 using namespace imlab::dremel;
 
+/// Constructs a complete finite state machine for a "Document" record.
 void BM_Construct_Complete_FSM(benchmark::State &state) {
     auto* DocId = Document::descriptor()->FindFieldByName("DocId");
     auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
@@ -60,10 +63,31 @@ void BM_Shredding(benchmark::State &state) {
     state.SetItemsProcessed(state.iterations());
 }
 
+/// Loads a large, randomly generated dataset into the database.
+/// Involves:
+///  * reading from disk
+///  * reading JSON
+///  * constructing Protobuf records
+///  * shred records into columnar format
+void BM_Load_Full_Dataset(benchmark::State &state) {
+    // Generate some example data
+    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
+
+    imlab::Database db;
+    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+
+    for (auto _ : state) {
+        db.LoadDocumentTable(dremel_file);
+    }
+
+    state.SetItemsProcessed(db.documentTable.get_size());
+}
+
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
 BENCHMARK(BM_Shredding);
+BENCHMARK(BM_Load_Full_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
