@@ -81,7 +81,7 @@ class FieldWriter {
  public:
     /// Creates a new FieldWriter at the given definition level.
     explicit FieldWriter(const FieldDescriptor* field)
-        : _definition_level(GetDefinitionLevel(field)), _repetition_level(GetMaxRepetitionLevel(field)), _field_id(field->number()) {}
+        : _definition_level(GetDefinitionLevel(field)), _repetition_level(GetMaxRepetitionLevel(field)), _field_id(field? field->number() : -1) {}
     /// Writes a 'null' value with the given repetition level to all columns underneath this writer.
     /// The definition level is determined by this writer.
     void write(unsigned repetition_level) { write(repetition_level, _definition_level - 1 /*minus itself*/); }
