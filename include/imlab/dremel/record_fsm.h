@@ -9,7 +9,7 @@
 #include <sstream>
 #include "./schema_helper.h"
 #include "imlab/infra/hash.h"
-#include <google/protobuf/message.h>
+#include <google/protobuf/descriptor.h>
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {

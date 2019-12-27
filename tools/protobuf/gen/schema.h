@@ -12,7 +12,7 @@
 #include "imlab/dremel/field_writer.h"
 #include "imlab/infra/types.h"
 #include "imlab/algebra/iu.h"
-#include <google/protobuf/message.h>
+#include <google/protobuf/descriptor.h>
 // ---------------------------------------------------------------------------
 namespace imlab {
 namespace schema {
@@ -33,22 +33,22 @@ class DocumentTable : public TableBase {
     static std::vector<const IU*> get_ius();
 
  protected:
-    DremelColumn<Integer> DocId { "DocId", 0 };
+    DremelColumn<Integer> DocId { Document::descriptor()->FindFieldByName("DocId") };
     std::vector<uint64_t> DocId_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Integer> Links_Backward { "Links.Backward", 2 };
+    DremelColumn<Integer> Links_Backward { Document_Links::descriptor()->FindFieldByName("Backward") };
     std::vector<uint64_t> Links_Backward_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Integer> Links_Forward { "Links.Forward", 2 };
+    DremelColumn<Integer> Links_Forward { Document_Links::descriptor()->FindFieldByName("Forward") };
     std::vector<uint64_t> Links_Forward_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>> Name_Language_Code { "Name.Language.Code", 2 };
+    DremelColumn<Varchar<30>> Name_Language_Code { Document_Name_Language::descriptor()->FindFieldByName("Code") };
     std::vector<uint64_t> Name_Language_Code_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>> Name_Language_Country { "Name.Language.Country", 3 };
+    DremelColumn<Varchar<30>> Name_Language_Country { Document_Name_Language::descriptor()->FindFieldByName("Country") };
     std::vector<uint64_t> Name_Language_Country_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
-    DremelColumn<Varchar<30>> Name_Url { "Name.Url", 2 };
+    DremelColumn<Varchar<30>> Name_Url { Document_Name::descriptor()->FindFieldByName("Url") };
     std::vector<uint64_t> Name_Url_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
     // A tree-like structure of FieldWriters

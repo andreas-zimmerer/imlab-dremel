@@ -21,8 +21,8 @@ class TestClass : public imlab::schema::DocumentTable {
 
     template<typename T>
     void _print(DremelColumn<T> column) {
-        std::cout << column.get_identifier() << std::endl;
-        for (uint64_t tid = 0; tid < column.get_size(); tid++) {
+        std::cout << column.field()->full_name() << std::endl;
+        for (uint64_t tid = 0; tid < column.size(); tid++) {
             const auto& row = column.get(tid);
             if (row.value.has_value())
                 std::cout << "| " << row.value.value() << " | " << row.repetition_level << " | " << row.definition_level << " |" << std::endl;
@@ -115,19 +115,19 @@ TEST(DremelTest, ShreddingDocumentRecordSmall) {
     auto* tc = reinterpret_cast<TestClass*>(&db.documentTable);
     tc->print();
 
-    ASSERT_EQ(db.documentTable.get_size(), 1);
-    ASSERT_EQ(tc->DocId.get_size(), 1);
+    ASSERT_EQ(db.documentTable.size(), 1);
+    ASSERT_EQ(tc->DocId.size(), 1);
     ASSERT_EQ(tc->DocId.get(0), (DremelRow<Integer>{{Integer(20)}, 0, 0}));
-    ASSERT_EQ(tc->Links_Backward.get_size(), 2);
+    ASSERT_EQ(tc->Links_Backward.size(), 2);
     ASSERT_EQ(tc->Links_Backward.get(0), (DremelRow<Integer>{{Integer(10)}, 0, 2}));
     ASSERT_EQ(tc->Links_Backward.get(1), (DremelRow<Integer>{{Integer(30)}, 1, 2}));
-    ASSERT_EQ(tc->Links_Forward.get_size(), 1);
+    ASSERT_EQ(tc->Links_Forward.size(), 1);
     ASSERT_EQ(tc->Links_Forward.get(0), (DremelRow<Integer>{{Integer(80)}, 0, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.get_size(), 1);
+    ASSERT_EQ(tc->Name_Language_Code.size(), 1);
     ASSERT_EQ(tc->Name_Language_Code.get(0), (DremelRow<Varchar<30>>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Name_Language_Country.get_size(), 1);
+    ASSERT_EQ(tc->Name_Language_Country.size(), 1);
     ASSERT_EQ(tc->Name_Language_Country.get(0), (DremelRow<Varchar<30>>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Name_Url.get_size(), 1);
+    ASSERT_EQ(tc->Name_Url.size(), 1);
     ASSERT_EQ(tc->Name_Url.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://C")}, 0, 2}));
 }
 
@@ -141,26 +141,26 @@ TEST(DremelTest, ShreddingDocumentRecordLarge) {
     auto* tc = reinterpret_cast<TestClass*>(&db.documentTable);
     tc->print();
 
-    ASSERT_EQ(db.documentTable.get_size(), 1);
-    ASSERT_EQ(tc->DocId.get_size(), 1);
+    ASSERT_EQ(db.documentTable.size(), 1);
+    ASSERT_EQ(tc->DocId.size(), 1);
     ASSERT_EQ(tc->DocId.get(0), (DremelRow<Integer>{{Integer(10)}, 0, 0}));
-    ASSERT_EQ(tc->Links_Backward.get_size(), 1);
+    ASSERT_EQ(tc->Links_Backward.size(), 1);
     ASSERT_EQ(tc->Links_Backward.get(0), (DremelRow<Integer>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Links_Forward.get_size(), 3);
+    ASSERT_EQ(tc->Links_Forward.size(), 3);
     ASSERT_EQ(tc->Links_Forward.get(0), (DremelRow<Integer>{{Integer(20)}, 0, 2}));
     ASSERT_EQ(tc->Links_Forward.get(1), (DremelRow<Integer>{{Integer(40)}, 1, 2}));
     ASSERT_EQ(tc->Links_Forward.get(2), (DremelRow<Integer>{{Integer(60)}, 1, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.get_size(), 4);
+    ASSERT_EQ(tc->Name_Language_Code.size(), 4);
     ASSERT_EQ(tc->Name_Language_Code.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("en-us")}, 0, 2}));
     ASSERT_EQ(tc->Name_Language_Code.get(1), (DremelRow<Varchar<30>>{{Varchar<30>::build("en")}, 2, 2}));
     ASSERT_EQ(tc->Name_Language_Code.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
     ASSERT_EQ(tc->Name_Language_Code.get(3), (DremelRow<Varchar<30>>{{Varchar<30>::build("en-gb")}, 1, 2}));
-    ASSERT_EQ(tc->Name_Language_Country.get_size(), 4);
+    ASSERT_EQ(tc->Name_Language_Country.size(), 4);
     ASSERT_EQ(tc->Name_Language_Country.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("us")}, 0, 3}));
     ASSERT_EQ(tc->Name_Language_Country.get(1), (DremelRow<Varchar<30>>{std::nullopt, 2, 2}));
     ASSERT_EQ(tc->Name_Language_Country.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
     ASSERT_EQ(tc->Name_Language_Country.get(3), (DremelRow<Varchar<30>>{{Varchar<30>::build("gb")}, 1, 3}));
-    ASSERT_EQ(tc->Name_Url.get_size(), 3);
+    ASSERT_EQ(tc->Name_Url.size(), 3);
     ASSERT_EQ(tc->Name_Url.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://A")}, 0, 2}));
     ASSERT_EQ(tc->Name_Url.get(1), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://B")}, 1, 2}));
     ASSERT_EQ(tc->Name_Url.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));

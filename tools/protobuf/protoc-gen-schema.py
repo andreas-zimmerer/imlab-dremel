@@ -115,7 +115,7 @@ def generate_header(filedescriptorproto):
     yield '#include "imlab/dremel/field_writer.h"\n'
     yield '#include "imlab/infra/types.h"\n'
     yield '#include "imlab/algebra/iu.h"\n'
-    yield '#include <google/protobuf/message.h>\n'
+    yield '#include <google/protobuf/descriptor.h>\n'
     yield '// ---------------------------------------------------------------------------\n'
     yield 'namespace imlab {\n'
     yield 'namespace schema {\n'
@@ -139,9 +139,10 @@ def generate_header(filedescriptorproto):
         yield '\n'
         yield ' protected:\n'
         for fields in flatten_fields(message):
-            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             column_name = '_'.join([f.name for f in fields])
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { "' + '.'.join([f.name for f in fields]) + '", ' + str(definition_level) + ' };\n'
+            containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
+            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { ' + field_descriptor + ' };\n'
             yield '    ' + 'std::vector<uint64_t> ' + column_name + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
@@ -236,7 +237,7 @@ def generate_source(filedescriptorproto):
         yield '    // They will be the starting points of the fields of the dissected record.\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
-            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.get_size());\n'
+            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.size());\n'
         yield '\n'
         yield '    Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
         yield '\n'
@@ -246,7 +247,7 @@ def generate_source(filedescriptorproto):
         yield '\n'
 
         yield 'std::vector<' + message.name + '> ' + message.name + 'Table::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {\n'
-        yield '    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < get_size());\n'
+        yield '    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < size());\n'
         yield '    RecordFSM fsm {fields};\n'
         yield '    // TODO get readers and initialize with TID\n'
         for fields in flatten_fields(message):

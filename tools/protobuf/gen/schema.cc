@@ -32,12 +32,12 @@ std::vector<const IU*> DocumentTable::get_ius() {
 uint64_t DocumentTable::insert(Document& record) {
     // Before we insert records with DissectRecord, we need to remember the last indices in each column.
     // They will be the starting points of the fields of the dissected record.
-    DocId_Record_TIDs.push_back(DocId.get_size());
-    Links_Backward_Record_TIDs.push_back(Links_Backward.get_size());
-    Links_Forward_Record_TIDs.push_back(Links_Forward.get_size());
-    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.get_size());
-    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.get_size());
-    Name_Url_Record_TIDs.push_back(Name_Url.get_size());
+    DocId_Record_TIDs.push_back(DocId.size());
+    Links_Backward_Record_TIDs.push_back(Links_Backward.size());
+    Links_Forward_Record_TIDs.push_back(Links_Forward.size());
+    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.size());
+    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.size());
+    Name_Url_Record_TIDs.push_back(Name_Url.size());
 
     Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);
 
@@ -46,7 +46,7 @@ uint64_t DocumentTable::insert(Document& record) {
 }
 
 std::vector<Document> DocumentTable::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {
-    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < get_size());
+    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < size());
     RecordFSM fsm {fields};
     // TODO get readers and initialize with TID
     uint64_t DocId_index = DocId_Record_TIDs[from_tid];
