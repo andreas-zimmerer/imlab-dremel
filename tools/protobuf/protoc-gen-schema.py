@@ -157,9 +157,7 @@ def generate_header(filedescriptorproto):
                     'children': previous_children
                 }
             else:
-                containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
-                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
-                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + column_name + '_Writer { ' + field_descriptor + ', &' + column_name + ' };\n'
+                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + column_name + '_Writer { &' + column_name + ' };\n'
 
             # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
             if len(fields) >= 2:

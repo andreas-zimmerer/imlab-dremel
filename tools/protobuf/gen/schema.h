@@ -52,12 +52,12 @@ class DocumentTable : public TableBase {
     std::vector<uint64_t> Name_Url_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
     // A tree-like structure of FieldWriters
-    AtomicFieldWriter<Integer> DocId_Writer { Document::descriptor()->FindFieldByName("DocId"), &DocId };
-    AtomicFieldWriter<Integer> Links_Backward_Writer { Document_Links::descriptor()->FindFieldByName("Backward"), &Links_Backward };
-    AtomicFieldWriter<Integer> Links_Forward_Writer { Document_Links::descriptor()->FindFieldByName("Forward"), &Links_Forward };
-    AtomicFieldWriter<Varchar<30>> Name_Language_Code_Writer { Document_Name_Language::descriptor()->FindFieldByName("Code"), &Name_Language_Code };
-    AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { Document_Name_Language::descriptor()->FindFieldByName("Country"), &Name_Language_Country };
-    AtomicFieldWriter<Varchar<30>> Name_Url_Writer { Document_Name::descriptor()->FindFieldByName("Url"), &Name_Url };
+    AtomicFieldWriter<Integer> DocId_Writer { &DocId };
+    AtomicFieldWriter<Integer> Links_Backward_Writer { &Links_Backward };
+    AtomicFieldWriter<Integer> Links_Forward_Writer { &Links_Forward };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Code_Writer { &Name_Language_Code };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { &Name_Language_Country };
+    AtomicFieldWriter<Varchar<30>> Name_Url_Writer { &Name_Url };
     ComplexFieldWriter Root_Writer { nullptr, { &DocId_Writer, &Links_Writer, &Name_Writer } };
     ComplexFieldWriter Links_Writer { Document::descriptor()->FindFieldByName("Links"), { &Links_Backward_Writer, &Links_Forward_Writer } };
     ComplexFieldWriter Name_Writer { Document::descriptor()->FindFieldByName("Name"), { &Name_Language_Writer, &Name_Url_Writer } };

@@ -133,8 +133,8 @@ template<typename T>
 class AtomicFieldWriter : public FieldWriter {
  public:
     /// Creates a new AtomicFieldWriter that is directly associated with a DremelColumn.
-    AtomicFieldWriter(const FieldDescriptor* field, DremelColumn<T>* column)
-        : FieldWriter(field), _column(column) {}
+    AtomicFieldWriter(DremelColumn<T>* column)
+        : FieldWriter(column->field()), _column(column) {}
     /// Writes an explicitly given value into the column with the given repetition level.
     /// The definition level is the definition level of this writer.
     void write_value(T value, unsigned repetition_level) {
