@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------
 #include <vector>
 #include "./storage.h"
+#include "./schema_helper.h"
 #include "imlab/infra/hash.h"
 #include "imlab/infra/types.h"
 #include <google/protobuf/message.h>
@@ -14,15 +15,6 @@ namespace imlab {
 namespace dremel {
 //---------------------------------------------------------------------------
 using namespace google::protobuf;
-
-// Protobuf does not provide a templated version to get the value of a field via reflection.
-// Only functions like GetInt32() are provided.
-// Same goes for the repeated versions like GetRepeatedInt32().
-template<typename T>
-T GetValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field);
-template<typename T>
-T GetRepeatedValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field, int index);
-
 
 /// Represents one single value in a Protobuf message.
 /// It's not always easy to work with raw Protobuf fields.
@@ -59,9 +51,9 @@ class ProtoFieldValue {
     template<typename T>
     [[nodiscard]] T GetFieldValue() const {
         if (_field->is_repeated()) {
-            return GetRepeatedValue<T>(_ref, _msg, _field, _index);
+            return GetRepeatedValue<T>(_msg, _field, _index);
         } else {
-            return GetValue<T>(_ref, _msg, _field);
+            return GetValue<T>(_msg, _field);
         }
     }
 

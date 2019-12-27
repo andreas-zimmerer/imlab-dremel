@@ -11,6 +11,17 @@ namespace dremel {
 //---------------------------------------------------------------------------
 using namespace google::protobuf;
 
+// Protobuf does not provide a templated version to get/set the value of a field via reflection.
+// Only functions like GetInt32() are provided. Same goes for the repeated versions like GetRepeatedInt32().
+template<typename T>
+T GetValue(const Message& msg, const FieldDescriptor* field);
+template<typename T>
+T GetRepeatedValue(const Message& msg, const FieldDescriptor* field, int index);
+template<typename T>
+void SetValue(Message* msg, const FieldDescriptor* field, T value);
+template<typename T>
+void AddValue(Message* msg, const FieldDescriptor* field, T value);
+
 /// Converts a given Descriptor to a FieldDescriptor.
 /// Each Descriptor, except for the root, also has a FieldDescriptor associated with it,
 /// but it's kind of hard to get there.
