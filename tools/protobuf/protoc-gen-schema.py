@@ -133,7 +133,7 @@ def generate_header(filedescriptorproto):
         yield '    /// Gets a range of record from the table.\n'
         yield '    std::vector<' + message.name + '> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
-        yield '    FieldWriter* get_record_writer() override { return &' + message.name + '_Writer; }\n'
+        yield '    FieldWriter* get_record_writer() override { return &Root_Writer; }\n'
         yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
@@ -151,41 +151,37 @@ def generate_header(filedescriptorproto):
         yield '    // A tree-like structure of FieldWriters\n'
         for fields in flatten_fields(message, True):
             column_name = '_'.join([f.name for f in fields])
-            field_writer_name = column_name + '_Writer'
-            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
-            repetition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             if fields[-1].type == FieldDescriptorProto.TYPE_MESSAGE or fields[-1].type == FieldDescriptorProto.TYPE_GROUP:
-                previous_children = complex_field_writers.get(field_writer_name, {}).get('children', [])
-                complex_field_writers[field_writer_name] = {
-                    'definition_level': definition_level,
-                    'repetition_level': repetition_level,
-                    'field_id': fields[-1].number,
+                previous_children = complex_field_writers.get(column_name, {}).get('children', [])
+                complex_field_writers[column_name] = {
                     'children': previous_children
                 }
             else:
-                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + field_writer_name + ' { ' + str(definition_level) + ', ' + str(repetition_level) + ', ' +  str(fields[-1].number) + ', &' + column_name + ' };\n'
+                containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
+                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
+                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + column_name + '_Writer { ' + field_descriptor + ', &' + column_name + ' };\n'
 
             # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
             if len(fields) >= 2:
                 # A regular writer with a ComplexFieldWriter as a parent
-                parent_name = column_name.rsplit('_', 1)[0] + '_Writer'
+                parent_name = column_name.rsplit('_', 1)[0]
             else:
                 # We have a top level writer here directly under the document writer
-                parent_name = message.name + '_Writer'
+                parent_name = 'Root'
             # Now update the tree
-            previous_definition_level = complex_field_writers.get(parent_name, {}).get('definition_level', 0)
-            previous_repetition_level = complex_field_writers.get(parent_name, {}).get('repetition_level', 0)
-            previous_field_id = complex_field_writers.get(parent_name, {}).get('field_id', 0)
             previous_children = complex_field_writers.get(parent_name, {}).get('children', [])
             complex_field_writers[parent_name] = {
-                'definition_level': previous_definition_level,
-                'repetition_level': previous_repetition_level,
-                'field_id': previous_field_id,
-                'children': previous_children + ['&' + field_writer_name]
+                'children': previous_children + ['&' + column_name + '_Writer']
             }
         # Print all flattened ComplexFieldWriters
         for parent in complex_field_writers:
-            yield '    ComplexFieldWriter ' + parent + ' { ' + str(complex_field_writers[parent]['definition_level']) + ', ' + str(complex_field_writers[parent]['repetition_level']) + ', ' + str(complex_field_writers[parent]['field_id']) + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
+            if parent == 'Root':
+                field_descriptor = 'nullptr'
+            else:
+                containing_type = message.name + ('_' + parent.rsplit('_', 1)[0] if parent.count('_') > 0 else '')
+                field = parent.rsplit('_', 1)[1] if parent.count('_') > 0 else parent
+                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + field + '")'
+            yield '    ComplexFieldWriter ' + parent + '_Writer { ' + field_descriptor + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
 
         yield '\n'
         yield '    static const std::vector<IU> IUs;\n'

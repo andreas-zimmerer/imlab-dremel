@@ -28,7 +28,7 @@ class DocumentTable : public TableBase {
     /// Gets a range of record from the table.
     std::vector<Document> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);
     /// Get the corresponding FieldWriter-tree for this table.
-    FieldWriter* get_record_writer() override { return &Document_Writer; }
+    FieldWriter* get_record_writer() override { return &Root_Writer; }
     /// Get a reference to the IUs in this table.
     static std::vector<const IU*> get_ius();
 
@@ -52,16 +52,16 @@ class DocumentTable : public TableBase {
     std::vector<uint64_t> Name_Url_Record_TIDs;  // Maps the beginning of a record to a TID in the column.
 
     // A tree-like structure of FieldWriters
-    AtomicFieldWriter<Integer> DocId_Writer { 0, 0, 1, &DocId };
-    AtomicFieldWriter<Integer> Links_Backward_Writer { 2, 1, 3, &Links_Backward };
-    AtomicFieldWriter<Integer> Links_Forward_Writer { 2, 1, 4, &Links_Forward };
-    AtomicFieldWriter<Varchar<30>> Name_Language_Code_Writer { 2, 2, 7, &Name_Language_Code };
-    AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { 3, 2, 8, &Name_Language_Country };
-    AtomicFieldWriter<Varchar<30>> Name_Url_Writer { 2, 1, 9, &Name_Url };
-    ComplexFieldWriter Document_Writer { 0, 0, 0, { &DocId_Writer, &Links_Writer, &Name_Writer } };
-    ComplexFieldWriter Links_Writer { 1, 0, 2, { &Links_Backward_Writer, &Links_Forward_Writer } };
-    ComplexFieldWriter Name_Writer { 1, 1, 5, { &Name_Language_Writer, &Name_Url_Writer } };
-    ComplexFieldWriter Name_Language_Writer { 2, 2, 6, { &Name_Language_Code_Writer, &Name_Language_Country_Writer } };
+    AtomicFieldWriter<Integer> DocId_Writer { Document::descriptor()->FindFieldByName("DocId"), &DocId };
+    AtomicFieldWriter<Integer> Links_Backward_Writer { Document_Links::descriptor()->FindFieldByName("Backward"), &Links_Backward };
+    AtomicFieldWriter<Integer> Links_Forward_Writer { Document_Links::descriptor()->FindFieldByName("Forward"), &Links_Forward };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Code_Writer { Document_Name_Language::descriptor()->FindFieldByName("Code"), &Name_Language_Code };
+    AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { Document_Name_Language::descriptor()->FindFieldByName("Country"), &Name_Language_Country };
+    AtomicFieldWriter<Varchar<30>> Name_Url_Writer { Document_Name::descriptor()->FindFieldByName("Url"), &Name_Url };
+    ComplexFieldWriter Root_Writer { nullptr, { &DocId_Writer, &Links_Writer, &Name_Writer } };
+    ComplexFieldWriter Links_Writer { Document::descriptor()->FindFieldByName("Links"), { &Links_Backward_Writer, &Links_Forward_Writer } };
+    ComplexFieldWriter Name_Writer { Document::descriptor()->FindFieldByName("Name"), { &Name_Language_Writer, &Name_Url_Writer } };
+    ComplexFieldWriter Name_Language_Writer { Document_Name::descriptor()->FindFieldByName("Language"), { &Name_Language_Code_Writer, &Name_Language_Country_Writer } };
 
     static const std::vector<IU> IUs;
 };
