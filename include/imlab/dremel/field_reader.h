@@ -26,6 +26,7 @@ class IFieldReader {
 
  protected:
     virtual unsigned GetRepetitionLevel(FieldValue* field_value) = 0;
+    virtual unsigned GetDefinitionLevel(FieldValue* field_value) = 0;
     virtual void AppendToRecord(FieldValue* field_value, Message* msg) = 0;
     virtual bool is_null(FieldValue* field_value) = 0;
 
@@ -36,6 +37,7 @@ class FieldValue {
  public:
     FieldValue(IFieldReader* reader, uint64_t index) : _reader(reader), _index(index) {}
     unsigned repetition_level() { return _reader->GetRepetitionLevel(this); }
+    unsigned definition_level() { return _reader->GetDefinitionLevel(this); }
     uint64_t index() { return _index; }
     bool is_null() { return _reader->is_null(this); }
     void AppendToRecord(Message* msg) { _reader->AppendToRecord(this, msg); }
@@ -74,7 +76,7 @@ class FieldReader: public IFieldReader {
 
     FieldValue ReadNext() { return Read(_current_index++); }
 
-    FieldValue Peek() { return Read(_current_index + 1); }
+    FieldValue Peek() { return Read(_current_index); }
 
     const FieldDescriptor* field() override { return _column->field(); };
 
@@ -83,6 +85,14 @@ class FieldReader: public IFieldReader {
         if (field_value->index() < _column->size()) {
             const auto &row = _column->get(field_value->index());
             return row.repetition_level;
+        }
+        return 0;
+    }
+
+    unsigned GetDefinitionLevel(FieldValue* field_value) override {
+        if (field_value->index() < _column->size()) {
+            const auto &row = _column->get(field_value->index());
+            return row.definition_level;
         }
         return 0;
     }

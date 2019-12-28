@@ -244,4 +244,19 @@ TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
     // TODO assert
 }
 
+TEST(DremelTest, InsertAndGetSmallRecordWithPartialFSM) {
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
+
+    imlab::Database db {};
+    std::stringstream in(imlab_test::kTestDocumentSmall);
+
+    db.LoadDocumentTable(in);
+    auto record = db.documentTable.get(0, {DocId, Name_Language_Country});
+
+    std::cout << record.DebugString() << std::endl;
+
+    // TODO assert
+}
+
 }  // namespace
