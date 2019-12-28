@@ -82,25 +82,43 @@ TEST(DremelTest, RepetitionLevelNameUrl) {
 
 // ---------------------------------------------------------------------------
 
-TEST(DremelTest, CommonRepetitionLevelLinks) {  // TODO: ask Andre if "1" is actually true.
+TEST(DremelTest, CommonAncestorLinks) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto repetition_level = GetCommonRepetitionLevel(links_backward_desc, links_forward_desc);
-    ASSERT_EQ(repetition_level, 1);
+    const auto& links_desc = Document::descriptor()->FindFieldByName("links");
+    auto common_ancestor = GetCommonAncestor(links_backward_desc, links_forward_desc);
+    ASSERT_EQ(common_ancestor, links_desc);
 }
 
-TEST(DremelTest, CommonRepetitionLevelLanguage) {
+TEST(DremelTest, CommonAncestorLanguage) {
     const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
     const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto repetition_level = GetCommonRepetitionLevel(name_language_country_desc, name_language_code_desc);
-    ASSERT_EQ(repetition_level, 2);
+    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
+    auto common_ancestor = GetCommonAncestor(name_language_country_desc, name_language_code_desc);
+    ASSERT_EQ(common_ancestor, name_language_desc);
+}
+
+TEST(DremelTest, CommonAncestorEqualFieldsRepeated) {
+    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    const auto& links_desc = Document::descriptor()->FindFieldByName("links");
+    auto common_ancestor = GetCommonAncestor(links_backward_desc, links_forward_desc);
+    ASSERT_EQ(common_ancestor, links_desc);
+}
+
+TEST(DremelTest, CommonAncestorEqualFieldsNonRepeated) {
+    const auto& name_language_code_1_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_language_code_2_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
+    auto common_ancestor = GetCommonAncestor(name_language_code_1_desc, name_language_code_2_desc);
+    ASSERT_EQ(common_ancestor, name_desc);
 }
 
 TEST(DremelTest, CommonRepetitionLevelRoot) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto repetition_level = GetCommonRepetitionLevel(links_backward_desc, name_language_code_desc);
-    ASSERT_EQ(repetition_level, 0);
+    auto common_ancestor = GetCommonAncestor(links_backward_desc, name_language_code_desc);
+    ASSERT_EQ(common_ancestor, nullptr/*root*/);
 }
 
 // ---------------------------------------------------------------------------

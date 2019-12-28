@@ -129,8 +129,8 @@ def generate_header(filedescriptorproto):
         yield '    /// Insert a new record into the table.\n'
         yield '    uint64_t insert(' + message.name + '& record);\n'
         yield '    /// Gets one record from the table.\n'
-        yield '    ' + message.name + ' get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid, fields)[0]; }\n'
-        yield '    /// Gets a range of record from the table.\n'
+        yield '    ' + message.name + ' get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid + 1, fields)[0]; }\n'
+        yield '    /// Gets a range of record from the table. `to_tid` is exclusive.\n'
         yield '    std::vector<' + message.name + '> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
         yield '    FieldWriter* get_record_writer() override { return &Root_Writer; }\n'
@@ -178,7 +178,7 @@ def generate_header(filedescriptorproto):
             else:
                 containing_type = message.name + ('_' + parent.rsplit('_', 1)[0] if parent.count('_') > 0 else '')
                 field = parent.rsplit('_', 1)[1] if parent.count('_') > 0 else parent
-                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + field + '")'
+                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + field.lower() + '")'
             yield '    ComplexFieldWriter ' + parent + '_Writer { ' + field_descriptor + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
 
         yield '\n'
@@ -236,21 +236,35 @@ def generate_source(filedescriptorproto):
         yield '    Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
         yield '\n'
         yield '    // Now the table contains one more record\n'
-        yield '    return size++;\n'
+        yield '    return _size++;\n'
         yield '}\n'
         yield '\n'
 
         yield 'std::vector<' + message.name + '> ' + message.name + 'Table::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {\n'
-        yield '    assert(from_tid >= 0 && from_tid <= to_tid && to_tid < size());\n'
+        yield '    assert(from_tid >= 0 && from_tid <= to_tid && to_tid <= size());\n'
         yield '    RecordFSM fsm {fields};\n'
-        yield '    // TODO get readers and initialize with TID\n'
+        yield '\n'
+        yield '    std::vector<IFieldReader*> readers {};\n'
+        yield '\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
             yield '    uint64_t ' + column_name + '_index = ' + column_name + '_Record_TIDs[from_tid];\n'
+            yield '    FieldReader ' + column_name + '_Reader { &' + column_name + ', ' + column_name + '_index };\n'
+        yield '\n'
+        yield '    for (auto& field : fields) {\n'
+        for fields in flatten_fields(message):
+            column_name = '_'.join([f.name for f in fields])
+            containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
+            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
+            yield '        if (field == ' + field_descriptor + ') {\n'
+            yield '            readers.push_back(&' + column_name + '_Reader);\n'
+            yield '        } else\n'
+        yield '        {}\n'
+        yield '    }\n'
         yield '\n'
         yield '    std::vector<' + message.name + '> records {};\n'
         yield '    for (unsigned i = from_tid; i < to_tid; i++) {\n'
-        yield '        records.push_back(Assembler<' + message.name + '>::AssembleRecord(fsm, readers));\n'
+        yield '        records.push_back(Assembler<' + message.name + '>().AssembleRecord(fsm, readers));\n'
         yield '    }\n'
         yield '    return records;\n'
         yield '}\n'

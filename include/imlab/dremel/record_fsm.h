@@ -42,7 +42,7 @@ class RecordFSM {
             auto& field = fields[i];
             auto maxRepetitionLevel = GetMaxRepetitionLevel(field);
             auto barrier = (i != fields.size() - 1)? fields[i+1] : nullptr;
-            auto barrierLevel = (barrier != nullptr)? GetCommonRepetitionLevel(field, barrier) : 0;
+            auto barrierLevel = GetMaxRepetitionLevel(GetCommonAncestor(field, barrier));
 
             // Work on all backward edges of the FSM.
             // To refer to the paper, this is an edge like from "Name.Url" to "Name.Language.Code" in Figure 4.
@@ -50,7 +50,7 @@ class RecordFSM {
                 auto& preField = fields[u];
                 if (GetMaxRepetitionLevel(preField) > barrierLevel) {
                     // Get common repetition level of preField and field
-                    auto backLevel = GetCommonRepetitionLevel(preField, field);
+                    auto backLevel = GetMaxRepetitionLevel(GetCommonAncestor(preField, field));
                     // Insert a transition into the FSM
                     _transitions.insert_or_assign(std::make_pair(field, backLevel), preField);
                 }

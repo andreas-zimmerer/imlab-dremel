@@ -24,8 +24,8 @@ class DocumentTable : public TableBase {
     /// Insert a new record into the table.
     uint64_t insert(Document& record);
     /// Gets one record from the table.
-    Document get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid, fields)[0]; }
-    /// Gets a range of record from the table.
+    Document get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid + 1, fields)[0]; }
+    /// Gets a range of record from the table. `to_tid` is exclusive.
     std::vector<Document> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);
     /// Get the corresponding FieldWriter-tree for this table.
     FieldWriter* get_record_writer() override { return &Root_Writer; }
@@ -59,9 +59,9 @@ class DocumentTable : public TableBase {
     AtomicFieldWriter<Varchar<30>> Name_Language_Country_Writer { &Name_Language_Country };
     AtomicFieldWriter<Varchar<30>> Name_Url_Writer { &Name_Url };
     ComplexFieldWriter Root_Writer { nullptr, { &DocId_Writer, &Links_Writer, &Name_Writer } };
-    ComplexFieldWriter Links_Writer { Document::descriptor()->FindFieldByName("Links"), { &Links_Backward_Writer, &Links_Forward_Writer } };
-    ComplexFieldWriter Name_Writer { Document::descriptor()->FindFieldByName("Name"), { &Name_Language_Writer, &Name_Url_Writer } };
-    ComplexFieldWriter Name_Language_Writer { Document_Name::descriptor()->FindFieldByName("Language"), { &Name_Language_Code_Writer, &Name_Language_Country_Writer } };
+    ComplexFieldWriter Links_Writer { Document::descriptor()->FindFieldByName("links"), { &Links_Backward_Writer, &Links_Forward_Writer } };
+    ComplexFieldWriter Name_Writer { Document::descriptor()->FindFieldByName("name"), { &Name_Language_Writer, &Name_Url_Writer } };
+    ComplexFieldWriter Name_Language_Writer { Document_Name::descriptor()->FindFieldByName("language"), { &Name_Language_Code_Writer, &Name_Language_Country_Writer } };
 
     static const std::vector<IU> IUs;
 };

@@ -54,8 +54,22 @@ inline unsigned GetMaxRepetitionLevel(const FieldDescriptor* desc) {
     return repetition_level;
 }
 
-/// Computes the repetition level of the lowest common ancestor of two fields.
-inline unsigned GetCommonRepetitionLevel(const FieldDescriptor* field1, const FieldDescriptor* field2) {
+/// Gets the lowest common ancestor of two fields.
+inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, const FieldDescriptor* field2) {
+    if (field1 == nullptr || field2 == nullptr) {
+        return nullptr;
+    }
+
+    // Edge case: if the fields are equal, the common ancestor is the field above the first repeated field in the path.
+    // Why? TODO ;-)
+    if (field1 == field2) {
+        auto* f = field1;
+        while (f->containing_type() != nullptr && !f->is_repeated()) {
+            f = GetFieldDescriptor(f->containing_type());
+        }
+        return GetFieldDescriptor(f->containing_type());  // the field above.
+    }
+
     std::vector<const Descriptor*> field1_path {};
     std::vector<const Descriptor*> field2_path {};
 
@@ -78,7 +92,7 @@ inline unsigned GetCommonRepetitionLevel(const FieldDescriptor* field1, const Fi
             common_ancestor_index = field1_path.size() - i;
         }
     }
-    return GetMaxRepetitionLevel(GetFieldDescriptor(field1_path[common_ancestor_index]));
+    return GetFieldDescriptor(field1_path[common_ancestor_index]);
 }
 
 /// Computes the definition level of a given field.

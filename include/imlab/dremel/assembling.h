@@ -23,40 +23,72 @@ class Assembler {
 
  public:
     /// Assembles a shredded record from a column-store table.
-    static R AssembleRecordInternal(RecordFSM& fsm, std::vector<FieldReader*>& readers) {
-        R record {};
-        auto* ref = record.GetReflection();
-        auto* last_reader = ; // TODO
-        auto* reader = readers[0];
+    R AssembleRecord(RecordFSM& fsm, std::vector<IFieldReader*>& readers) {
+        R record {};  // Record that is assembled
+        msg_stack = { &record };
+        last_reader = nullptr;
+        reader = *readers.begin();
 
-        while (reader != *readers.end() /*TODO reader.hasdata()*/) {
-            auto value = reader->fetch();
+        while (true) {
+            auto value = reader->ReadNext();
             if (!value.is_null()) {
-                MoveToLevel(/*TODO tree level of reader*/, last_reader, reader);
-                // TODO: append readers value to record
+                MoveToLevel();
+
+                value.AppendToRecord(msg_stack[msg_stack.size() - 1]);
             } else {
-                MoveToLevel(GetFullDefinitionLevel(reader->field()), last_reader, reader);
+                MoveToLevel();
             }
 
-            auto* next_field = fsm.NextField(reader->field(), value.repetition_level);
-            reader = *std::find_if(readers.begin(), readers.end(), [&](const auto& r) { return r.field() == next_field; });
-            ReturnToLevel(/*TODO tree level of reader*/, last_reader);
+            auto* next_field = fsm.NextField((reader)->field(), (reader)->Peek().repetition_level());
+            auto next_reader = std::find_if(readers.begin(), readers.end(), [&](const auto& r) { return r->field() == next_field; });
+            if (next_reader == readers.end()) {
+                break;
+            }
+            reader = *next_reader;
+            ReturnToLevel();
         }
 
-        ReturnToLevel(0, last_reader);
+        //ReturnToLevel(0, last_reader, *reader);
         // TODO: end all nested records
 
         return record;
     }
 
  protected:
-    static void MoveToLevel(unsigned newLevel, FieldReader* lastReader, FieldReader* nextReader) {
+    void MoveToLevel() {
+        const auto* common_ancestor = GetCommonAncestor(last_reader? last_reader->field() : nullptr, reader->field());
+        auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
 
+        // Unwind message stack.
+        for (int i = 0; i < msg_stack.size() - common_ancestor_level - 1/*don't pop root*/; i++) {
+            msg_stack.pop_back();
+        }
+
+        // Re-build message stack accordingly.
+        std::vector<const FieldDescriptor*> parents {};
+        auto* parent_field = GetFieldDescriptor(reader->field()->containing_type());
+        for (int i = 0; i < GetFullDefinitionLevel(reader->field()) - common_ancestor_level - 1; i++) {
+            parents.push_back(parent_field);
+            parent_field = GetFieldDescriptor(parent_field->containing_type());
+        }
+        for (unsigned i = parents.size(); i > 0; i--) {
+            Message* parent_msg = msg_stack[msg_stack.size() - 1];
+            auto* field = parents[i - 1];
+            auto* ref = parent_msg->GetReflection();
+            Message* new_msg = (field->is_repeated())? ref->AddMessage(parent_msg, field) : ref->MutableMessage(parent_msg, field);
+            msg_stack.push_back(new_msg);
+        }
+
+        last_reader = reader;
     }
 
-    static void ReturnToLevel(unsigned newLevel, FieldReader* lastReader) {
-
+    void ReturnToLevel() {
+        //last_reader = reader;
     }
+
+    IFieldReader* last_reader;
+    IFieldReader* reader;
+    std::vector<Message*> msg_stack;
 };
 
 //---------------------------------------------------------------------------
