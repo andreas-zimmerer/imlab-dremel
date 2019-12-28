@@ -97,7 +97,7 @@ inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, c
 
     // If we know that one if the fields is a leaf in the path, but both fields are not equal,
     // one of them is actually an inner node that is on the path of the other field.
-    if (one_is_leaf && field1 != field2) {
+    if (one_is_leaf && field1 != field2 && field1_path.size() < field2_path.size()) {
         return *(field1_path.rbegin() + common_ancestor_index);
     }
 

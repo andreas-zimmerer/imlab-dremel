@@ -147,6 +147,23 @@ TEST(DremelSchemaHelperTest, CommonAncestorContainingField) {
     ASSERT_EQ(common_ancestor, name_language_desc);
 }
 
+// Interesting case: Field 2 is an inner node that contains field 1 as a leaf.
+TEST(DremelSchemaHelperTest, CommonAncestorContainingFieldReverse) {
+    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
+    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
+    auto common_ancestor = GetCommonAncestor(name_language_code_desc, name_language_desc);
+    ASSERT_EQ(common_ancestor, name_desc);
+}
+
+// Interesting case: Field 2 is an inner node that contains field 1 as a leaf, but we need to go up to the root.
+TEST(DremelSchemaHelperTest, CommonAncestorContainingFieldReverseRoot) {
+    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
+    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
+    auto common_ancestor = GetCommonAncestor(name_language_desc, name_desc);
+    ASSERT_EQ(common_ancestor, nullptr);
+}
+
 // Somewhat interesting: Both fields have nothing in common and the only common ancestor is the message itself.
 TEST(DremelSchemaHelperTest, CommonRepetitionLevelRoot) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");

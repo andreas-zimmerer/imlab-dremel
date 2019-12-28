@@ -43,7 +43,7 @@ class Assembler {
             } else {
                 auto* new_level = currently_read_field;
                 // TODO: probably this is not the correct new_level
-                for (int i = 0; i < GetDefinitionLevel(currently_read_field) - value.definition_level(); i++) {
+                for (int i = 0; i < GetFullDefinitionLevel(currently_read_field) - value.definition_level(); i++) {
                     new_level = GetFieldDescriptor(new_level->containing_type());
                 }
                 MoveToLevel(new_level);
@@ -54,8 +54,7 @@ class Assembler {
             ReturnToLevel(currently_read_field);
         }
 
-        //ReturnToLevel(0, last_reader, *reader);
-        // TODO: end all nested records
+        ReturnToLevel(nullptr);
 
         return record;
     }
@@ -66,9 +65,16 @@ class Assembler {
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
 
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        for (int i = 0; i < msg_stack.size() - common_ancestor_level - 1/*don't pop root*/; i++) {
+        int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
+        for (int i = 0; i < elements_to_remove; i++) {
             msg_stack.pop_back();
         }
+        //assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
+
+        /*if (GetFullDefinitionLevel(new_field) >= GetFullDefinitionLevel(currently_read_field)) {
+            last_read_field = new_field;
+            return;
+        }*/
 
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
@@ -76,6 +82,8 @@ class Assembler {
         // The target_field_type is "where we want to end up".
         auto* target_field_type = (new_field->type() == FieldDescriptor::TYPE_GROUP || new_field->type() == FieldDescriptor::TYPE_MESSAGE)?
                                   new_field->message_type() : new_field->containing_type();
+        target_field_type = new_field->containing_type();
+
         while (target_field_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
             parents.push_back(GetFieldDescriptor(target_field_type));
             target_field_type = GetFieldDescriptor(target_field_type)->containing_type();
@@ -96,7 +104,8 @@ class Assembler {
         auto new_field_level = GetFullDefinitionLevel(new_field);
 
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        for (int i = 0; i < msg_stack.size() - new_field_level - 1/*don't pop root*/; i++) {
+        int elements_to_remove = msg_stack.size() - new_field_level - 1/*don't pop root*/;
+        for (int i = 0; i < elements_to_remove; i++) {
             msg_stack.pop_back();
         }
 
