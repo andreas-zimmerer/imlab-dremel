@@ -66,17 +66,16 @@ class Assembler {
 
         // Re-build message stack accordingly.
         std::vector<const FieldDescriptor*> parents {};
-        auto* parent_field = GetFieldDescriptor(reader->field()->containing_type());
-        for (int i = 0; i < GetFullDefinitionLevel(reader->field()) - common_ancestor_level - 1; i++) {
-            parents.push_back(parent_field);
-            parent_field = GetFieldDescriptor(parent_field->containing_type());
+        auto* parent_type = reader->field()->containing_type();
+        while (parent_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
+            parents.push_back(GetFieldDescriptor(parent_type));
+            parent_type = GetFieldDescriptor(parent_type)->containing_type();
         }
-        for (unsigned i = parents.size(); i > 0; i--) {
+        for (auto field = parents.rbegin(); field != parents.rend(); field++) {
             Message* parent_msg = msg_stack[msg_stack.size() - 1];
-            auto* field = parents[i - 1];
-            auto* ref = parent_msg->GetReflection();
-            Message* new_msg = (field->is_repeated())? ref->AddMessage(parent_msg, field) : ref->MutableMessage(parent_msg, field);
-            msg_stack.push_back(new_msg);
+            Message* child_msg = ((*field)->is_repeated())? parent_msg->GetReflection()->AddMessage(parent_msg, *field)
+                                                          : parent_msg->GetReflection()->MutableMessage(parent_msg, *field);
+            msg_stack.push_back(child_msg);
         }
 
         last_reader = reader;
