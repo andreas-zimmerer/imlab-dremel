@@ -45,37 +45,37 @@ class TestClass : public imlab::schema::DocumentTable {
 
 // ---------------------------------------------------------------------------
 
-TEST(DremelTest, RepetitionLevelDocId) {
+TEST(DremelSchemaHelperTest, RepetitionLevelDocId) {
     const auto& desc = Document::descriptor()->FindFieldByName("DocId");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 0);
 }
 
-TEST(DremelTest, RepetitionLevelLinksBackward) {
+TEST(DremelSchemaHelperTest, RepetitionLevelLinksBackward) {
     const auto& desc = Document_Links::descriptor()->FindFieldByName("Backward");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 1);
 }
 
-TEST(DremelTest, RepetitionLevelLinksForward) {
+TEST(DremelSchemaHelperTest, RepetitionLevelLinksForward) {
     const auto& desc = Document_Links::descriptor()->FindFieldByName("Forward");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 1);
 }
 
-TEST(DremelTest, RepetitionLevelNameLanguageCode) {
+TEST(DremelSchemaHelperTest, RepetitionLevelNameLanguageCode) {
     const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 2);
 }
 
-TEST(DremelTest, RepetitionLevelNameLanguageCountry) {
+TEST(DremelSchemaHelperTest, RepetitionLevelNameLanguageCountry) {
     const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 2);
 }
 
-TEST(DremelTest, RepetitionLevelNameUrl) {
+TEST(DremelSchemaHelperTest, RepetitionLevelNameUrl) {
     const auto& desc = Document_Name::descriptor()->FindFieldByName("Url");
     auto repetition_level = GetMaxRepetitionLevel(desc);
     ASSERT_EQ(repetition_level, 1);
@@ -83,7 +83,8 @@ TEST(DremelTest, RepetitionLevelNameUrl) {
 
 // ---------------------------------------------------------------------------
 
-TEST(DremelTest, CommonAncestorLinks) {
+// Trivial case where both fields are repeated by themselves
+TEST(DremelSchemaHelperTest, CommonAncestorLinks) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
     const auto& links_desc = Document::descriptor()->FindFieldByName("links");
@@ -91,15 +92,27 @@ TEST(DremelTest, CommonAncestorLinks) {
     ASSERT_EQ(common_ancestor, links_desc);
 }
 
-TEST(DremelTest, CommonAncestorLanguage) {
-    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
+// Trivial case where both fields are non-repeated.
+TEST(DremelSchemaHelperTest, CommonAncestorLanguage) {
     const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
     const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
-    auto common_ancestor = GetCommonAncestor(name_language_country_desc, name_language_code_desc);
+    auto common_ancestor = GetCommonAncestor(name_language_code_desc, name_language_country_desc);
     ASSERT_EQ(common_ancestor, name_language_desc);
 }
 
-TEST(DremelTest, CommonAncestorEqualFieldsRepeated) {
+// Interesting case: For (code,country) it's easy because they belong under the same "language".
+// But if we have (country,code), they don't belong to the same "language" and hence we need to go a level up to "name".
+TEST(DremelSchemaHelperTest, CommonAncestorLanguageReverse) {
+    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
+    auto common_ancestor = GetCommonAncestor(name_language_country_desc, name_language_code_desc);
+    ASSERT_EQ(common_ancestor, name_desc);
+}
+
+// Trivial case where we have just one repeated field.
+TEST(DremelSchemaHelperTest, CommonAncestorEqualFieldsRepeated) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& links_desc = Document::descriptor()->FindFieldByName("links");
@@ -107,7 +120,9 @@ TEST(DremelTest, CommonAncestorEqualFieldsRepeated) {
     ASSERT_EQ(common_ancestor, links_desc);
 }
 
-TEST(DremelTest, CommonAncestorEqualFieldsNonRepeated) {
+// Interesting case: Both fields are equal, but because there can only be just one "code" in each "language",
+// they can't belong to the same "language" and hence we need to go up to "name".
+TEST(DremelSchemaHelperTest, CommonAncestorEqualFieldsNonRepeated) {
     const auto& name_language_code_1_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
     const auto& name_language_code_2_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
     const auto& name_desc = Document::descriptor()->FindFieldByName("name");
@@ -115,7 +130,25 @@ TEST(DremelTest, CommonAncestorEqualFieldsNonRepeated) {
     ASSERT_EQ(common_ancestor, name_desc);
 }
 
-TEST(DremelTest, CommonRepetitionLevelRoot) {
+// Interesting case: First Links_Forward, then Links_Backward -> can't exist in one message so
+// they have to be in different messages. Common ancestor is thus nullptr.
+TEST(DremelSchemaHelperTest, CommonAncestorDifferentMessage) {
+    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
+    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
+    auto common_ancestor = GetCommonAncestor(links_forward_desc, links_backward_desc);
+    ASSERT_EQ(common_ancestor, nullptr);
+}
+
+// Interesting case: Field 1 is an inner node that contains field 2 as a leaf.
+TEST(DremelSchemaHelperTest, CommonAncestorContainingField) {
+    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
+    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto common_ancestor = GetCommonAncestor(name_language_desc, name_language_code_desc);
+    ASSERT_EQ(common_ancestor, name_language_desc);
+}
+
+// Somewhat interesting: Both fields have nothing in common and the only common ancestor is the message itself.
+TEST(DremelSchemaHelperTest, CommonRepetitionLevelRoot) {
     const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
     const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
     auto common_ancestor = GetCommonAncestor(links_backward_desc, name_language_code_desc);
