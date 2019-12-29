@@ -51,17 +51,17 @@ class Assembler {
 
             currently_read_field = fsm.NextField(currently_read_field, field_reader_map.at(currently_read_field)->Peek().repetition_level());
 
-            ReturnToLevel(currently_read_field);
+            ReturnToLevel();
         }
 
-        ReturnToLevel(nullptr);
+        ReturnToLevel();
 
         return record;
     }
 
  protected:
     void MoveToLevel(const FieldDescriptor* new_field) {
-        const auto* common_ancestor = GetCommonAncestor(last_read_field, new_field);
+        const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
 
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
@@ -69,12 +69,12 @@ class Assembler {
         for (int i = 0; i < elements_to_remove; i++) {
             msg_stack.pop_back();
         }
-        //assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
+        assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
 
-        /*if (GetFullDefinitionLevel(new_field) >= GetFullDefinitionLevel(currently_read_field)) {
+        if (GetFullDefinitionLevel(new_field) < common_ancestor_level) {
             last_read_field = new_field;
             return;
-        }*/
+        }
 
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
@@ -82,7 +82,7 @@ class Assembler {
         // The target_field_type is "where we want to end up".
         auto* target_field_type = (new_field->type() == FieldDescriptor::TYPE_GROUP || new_field->type() == FieldDescriptor::TYPE_MESSAGE)?
                                   new_field->message_type() : new_field->containing_type();
-        target_field_type = new_field->containing_type();
+        //target_field_type = new_field->containing_type();
 
         while (target_field_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
             parents.push_back(GetFieldDescriptor(target_field_type));
@@ -98,18 +98,21 @@ class Assembler {
         last_read_field = new_field;
     }
 
-    void ReturnToLevel(const FieldDescriptor* new_field) {
-        return;
+    void ReturnToLevel() {
+        //return;
 
-        auto new_field_level = GetFullDefinitionLevel(new_field);
+        const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
+        auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
 
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        int elements_to_remove = msg_stack.size() - new_field_level - 1/*don't pop root*/;
+        int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
         for (int i = 0; i < elements_to_remove; i++) {
             msg_stack.pop_back();
         }
+        assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
 
-        last_read_field = new_field;
+        last_read_field = common_ancestor;
+        return;
     }
 
     // In the original paper, the following two FieldDescriptors are actually FieldReaders.
