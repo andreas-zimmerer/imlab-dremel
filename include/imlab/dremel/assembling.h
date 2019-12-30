@@ -61,19 +61,15 @@ class Assembler {
 
  protected:
     void MoveToLevel(const FieldDescriptor* new_field) {
+        // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
-
-        // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
-        for (int i = 0; i < elements_to_remove; i++) {
-            msg_stack.pop_back();
-        }
-        assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
-
-        if (GetFullDefinitionLevel(new_field) < common_ancestor_level) {
-            last_read_field = new_field;
-            return;
+        if (elements_to_remove > 0) {
+            for (int i = 0; i < elements_to_remove; i++) {
+                msg_stack.pop_back();
+            }
+            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
         }
 
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
@@ -95,24 +91,23 @@ class Assembler {
             msg_stack.push_back(child_msg);
         }
 
-        last_read_field = new_field;
+        last_read_field = currently_read_field;
     }
 
     void ReturnToLevel() {
         //return;
 
+        // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
-
-        // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
-        for (int i = 0; i < elements_to_remove; i++) {
-            msg_stack.pop_back();
+        if (elements_to_remove >= 0) {
+            for (int i = 0; i < elements_to_remove; i++) {
+                msg_stack.pop_back();
+            }
+            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
+            last_read_field = common_ancestor;
         }
-        assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
-
-        last_read_field = common_ancestor;
-        return;
     }
 
     // In the original paper, the following two FieldDescriptors are actually FieldReaders.
