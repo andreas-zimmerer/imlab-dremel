@@ -51,10 +51,10 @@ class Assembler {
 
             currently_read_field = fsm.NextField(currently_read_field, field_reader_map.at(currently_read_field)->Peek().repetition_level());
 
-            ReturnToLevel();
+            ReturnToLevel(currently_read_field);
         }
 
-        ReturnToLevel();
+        ReturnToLevel(nullptr);
 
         return record;
     }
@@ -94,11 +94,9 @@ class Assembler {
         last_read_field = currently_read_field;
     }
 
-    void ReturnToLevel() {
-        //return;
-
+    void ReturnToLevel(const FieldDescriptor* new_field) {
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
+        const auto* common_ancestor = GetCommonAncestor(last_read_field, new_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
         int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
         if (elements_to_remove >= 0) {
