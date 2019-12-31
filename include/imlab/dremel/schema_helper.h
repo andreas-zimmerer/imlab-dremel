@@ -83,7 +83,7 @@ inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, c
     // Index of lowest common ancestor counted from the end
     unsigned common_ancestor_index = 0;
     // Now we have two vectors of paths to the two fields in reversed order (root is at the end).
-    for (unsigned i = 0; i < std::min(field1_path.size(), field2_path.size()); i++) {
+    for (unsigned i = 0; i < std::min(field1_path.size(), field2_path.size()) - 1; i++) {
         if (*(field1_path.rbegin() + i) == *(field2_path.rbegin() + i)) {
             common_ancestor_index = i;
         } else {

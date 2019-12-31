@@ -69,8 +69,13 @@ class Assembler {
             for (int i = 0; i < elements_to_remove; i++) {
                 msg_stack.pop_back();
             }
-            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
+            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
         }
+
+        /*if(GetFullDefinitionLevel(new_field) <= common_ancestor_level) {
+            last_read_field = new_field;
+            return;
+        }*/
 
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
@@ -91,10 +96,11 @@ class Assembler {
             msg_stack.push_back(child_msg);
         }
 
-        last_read_field = currently_read_field;
+        last_read_field = new_field;
     }
 
     void ReturnToLevel(const FieldDescriptor* new_field) {
+        return;
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         const auto* common_ancestor = GetCommonAncestor(last_read_field, new_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);

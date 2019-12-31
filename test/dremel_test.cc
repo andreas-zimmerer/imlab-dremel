@@ -143,8 +143,9 @@ TEST(DremelSchemaHelperTest, CommonAncestorDifferentMessage) {
 TEST(DremelSchemaHelperTest, CommonAncestorContainingField) {
     const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
     const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
     auto common_ancestor = GetCommonAncestor(name_language_desc, name_language_code_desc);
-    ASSERT_EQ(common_ancestor, name_language_desc);
+    ASSERT_EQ(common_ancestor, name_desc);
 }
 
 // Interesting case: Field 2 is an inner node that contains field 1 as a leaf.
