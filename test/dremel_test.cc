@@ -3,13 +3,13 @@
 // ---------------------------------------------------------------------------
 
 #include <sstream>
+#include <fstream>
 #include "imlab/test/data.h"
 #include "database.h"
 #include "imlab/dremel/record_fsm.h"
 #include "imlab/dremel/schema_helper.h"
 #include "gtest/gtest.h"
 #include "gtest/gtest_prod.h"
-#include "../include/database.h"
 #include <google/protobuf/util/message_differencer.h>
 
 namespace {
@@ -343,10 +343,68 @@ TEST(DremelTest, InsertAndGetRoundtrip) {
     imlab::Database db {};
 
     db.documentTable.insert(document);
-    auto record = db.documentTable.get(0, {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+    const auto& record = db.documentTable.get(0, {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
 
     ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
         << "\nExpected Message:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
+}
+
+TEST(DremelTest, InsertAndGetIndividual) {
+    imlab::Database db {};
+    std::vector<Document> documents {};
+
+    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
+    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+    imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
+        db.documentTable.insert(d);
+        documents.push_back(d);
+    });
+
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
+    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
+    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
+
+    for (unsigned i = 0; i < documents.size(); i++) {
+        std::cout << "Getting record: " << i + 1 << std::endl;
+
+        const auto& record = db.documentTable.get(i,
+            {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+
+        ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(documents[i], record))
+                            << "\nExpected Message " << i + 1 << ":\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << record.DebugString();
+    }
+}
+
+TEST(DremelTest, InsertAndGetFullRange) {
+    imlab::Database db {};
+    std::vector<Document> documents {};
+
+    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
+    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+    imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
+        db.documentTable.insert(d);
+        documents.push_back(d);
+    });
+
+    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
+    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
+    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
+    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
+
+    const auto& documents_read = db.documentTable.get_range(0, documents.size(),
+        {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+
+    ASSERT_EQ(documents.size(), documents_read.size());
+
+    for (unsigned i = 0; i < documents.size(); i++) {
+        ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(documents[i], documents_read[i]))
+            << "\nExpected Message " << i + 1 << ":\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << documents_read[i].DebugString();
+    }
 }
 
 }  // namespace

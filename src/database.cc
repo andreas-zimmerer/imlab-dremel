@@ -8,7 +8,7 @@
 
 namespace imlab {
 
-void Database::LoadDocumentTable(std::istream &in) {
+void Database::DecodeJson(std::istream& in, const std::function<void (Document&)>& handler) {
     rapidjson::IStreamWrapper stream(in);
     rapidjson::Document d;
     d.ParseStream(stream);
@@ -67,8 +67,12 @@ void Database::LoadDocumentTable(std::istream &in) {
             }
         }
 
-        documentTable.insert(document);
+        handler(document);
     }
+}
+
+void Database::LoadDocumentTable(std::istream &in) {
+    DecodeJson(in, [&](auto& d) { documentTable.insert(d); });
 }
 
 }  // namespace imlab

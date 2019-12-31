@@ -4,12 +4,12 @@ import json
 import random
 import string
 
-TOTAL_NUMBER_OF_ENTRIES = 100000
+TOTAL_NUMBER_OF_ENTRIES = 1000
 MAX_NUMBER_BACKWARD_LINKS = 20
 MAX_NUMBER_FORWARD_LINKS = 20
 MAX_NUMBER_NAMES = 10
 MAX_NUMBER_LANGUAGES = 5
-LIKELIHOOD_OPTIONAL_FIELDS = 0.5
+LIKELIHOOD_OPTIONAL_FIELDS = 1.0
 
 country_codes = ['US', 'DE', 'IT', 'GB']
 country_names = ['United States', 'Germany', 'Italy', 'Great Britain']
