@@ -157,7 +157,7 @@ TEST(DremelSchemaHelperTest, CommonRepetitionLevelRoot) {
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
 TEST(DremelTest, ShreddingDocumentRecordSmall) {
     imlab::Database db {};
-    std::stringstream in(imlab_test::kTestDocumentSmall);
+    std::stringstream in(imlab_test::kTestDocumentPaperSmall);
 
     db.LoadDocumentTable(in);
 
@@ -183,7 +183,7 @@ TEST(DremelTest, ShreddingDocumentRecordSmall) {
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
 TEST(DremelTest, ShreddingDocumentRecordLarge) {
     imlab::Database db {};
-    std::stringstream in(imlab_test::kTestDocumentLarge);
+    std::stringstream in(imlab_test::kTestDocumentPaperLarge);
 
     db.LoadDocumentTable(in);
 
@@ -263,7 +263,7 @@ TEST(DremelTest, ConstructPartialFSM) {
 // Tests another example from the paper (Figure 5)
 TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
     imlab::Database db {};
-    std::stringstream in(imlab_test::kTestDocumentLarge);
+    std::stringstream in(imlab_test::kTestDocumentPaperLarge);
 
     db.LoadDocumentTable(in);
     auto record = db.documentTable.get(0, {
@@ -289,7 +289,7 @@ TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
 // Tests another example from the paper (Figure 5)
 TEST(DremelTest, InsertAndGetSmallRecordWithPartialFSM) {
     imlab::Database db {};
-    std::stringstream in(imlab_test::kTestDocumentSmall);
+    std::stringstream in(imlab_test::kTestDocumentPaperSmall);
 
     db.LoadDocumentTable(in);
     auto record = db.documentTable.get(0, {
@@ -306,26 +306,70 @@ TEST(DremelTest, InsertAndGetSmallRecordWithPartialFSM) {
         << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
 }
 
-TEST(DremelTest, InsertAndGetRoundtrip) {
+TEST(DremelTest, InsertAndGetEmptyRecordWithPartialFSM) {
+    imlab::Database db {};
+    std::stringstream in(imlab_test::kTestDocumentEmpty);
+
+    db.LoadDocumentTable(in);
+    auto record = db.documentTable.get(0, {
+        DocId_Field,
+        Name_Language_Country_Field
+    });
+
+    // Expected Result:
     Document document {};
-    document.set_docid(10);
-    Document_Links* document_links = document.mutable_links();
-    document_links->add_forward(20);
-    document_links->add_forward(40);
-    document_links->add_forward(60);
-    Document_Name* document_name_1 = document.add_name();
-    Document_Name_Language* document_name_1_language_1 = document_name_1->add_language();
-    document_name_1_language_1->set_code("en-us");
-    document_name_1_language_1->set_country("us");
-    Document_Name_Language* document_name_1_language_2 = document_name_1->add_language();
-    document_name_1_language_2->set_code("en");
-    document_name_1->set_url("http://A");
-    Document_Name* document_name_2 = document.add_name();
-    document_name_2->set_url("http://B");
-    Document_Name* document_name_3 = document.add_name();
-    Document_Name_Language* document_name_3_language_1 = document_name_3->add_language();
-    document_name_3_language_1->set_code("en-gb");
-    document_name_3_language_1->set_country("gb");
+    document.set_docid(30);
+
+    ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
+}
+
+TEST(DremelTest, InsertAndGetLargeRecordRoundtrip) {
+    Document document {};
+    std::stringstream in(imlab_test::kTestDocumentPaperLarge);
+    imlab::Database::DecodeJson(in, [&](auto& d) { document = d; });
+
+    imlab::Database db {};
+
+    db.documentTable.insert(document);
+    const auto& record = db.documentTable.get(0, {
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    });
+
+    ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
+}
+
+TEST(DremelTest, InsertAndGetSmallRecordRoundtrip) {
+    Document document {};
+    std::stringstream in(imlab_test::kTestDocumentPaperSmall);
+    imlab::Database::DecodeJson(in, [&](auto& d) { document = d; });
+
+    imlab::Database db {};
+
+    db.documentTable.insert(document);
+    const auto& record = db.documentTable.get(0, {
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    });
+
+    ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
+}
+
+TEST(DremelTest, InsertAndGetEmptyRecordRoundtrip) {
+    Document document {};
+    std::stringstream in(imlab_test::kTestDocumentEmpty);
+    imlab::Database::DecodeJson(in, [&](auto& d) { document = d; });
 
     imlab::Database db {};
 

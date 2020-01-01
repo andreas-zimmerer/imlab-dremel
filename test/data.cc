@@ -6,7 +6,7 @@
 
 namespace imlab_test {
 
-const char* const kTestDocumentLarge = R"RAWJSON(
+const char* const kTestDocumentPaperLarge = R"RAWJSON(
 [
   {
     "DocId": 10,
@@ -46,7 +46,7 @@ const char* const kTestDocumentLarge = R"RAWJSON(
 ]
 )RAWJSON";
 
-const char* const kTestDocumentSmall = R"RAWJSON(
+const char* const kTestDocumentPaperSmall = R"RAWJSON(
 [
   {
     "DocId": 20,
@@ -64,6 +64,14 @@ const char* const kTestDocumentSmall = R"RAWJSON(
         "Url": "http://C"
       }
     ]
+  }
+]
+)RAWJSON";
+
+const char* const kTestDocumentEmpty = R"RAWJSON(
+[
+  {
+    "DocId": 30
   }
 ]
 )RAWJSON";
