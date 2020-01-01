@@ -15,6 +15,18 @@
 namespace {
 using namespace imlab::dremel;
 
+// FieldDescriptors:
+const auto* DocId_Field = Document::descriptor()->FindFieldByName("DocId");
+const auto& Links_Field = Document::descriptor()->FindFieldByName("links");
+const auto* Links_Backward_Field = Document_Links::descriptor()->FindFieldByName("Backward");
+const auto* Links_Forward_Field = Document_Links::descriptor()->FindFieldByName("Forward");
+const auto* Name_Field = Document::descriptor()->FindFieldByName("name");
+const auto* Name_Language_Field = Document_Name::descriptor()->FindFieldByName("language");
+const auto* Name_Language_Code_Field = Document_Name_Language::descriptor()->FindFieldByName("Code");
+const auto* Name_Language_Country_Field = Document_Name_Language::descriptor()->FindFieldByName("Country");
+const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
+
+
 // Checking the contents of the private vectors and print contents of columns.
 class TestClass : public imlab::schema::DocumentTable {
     FRIEND_TEST(DremelTest, ShreddingDocumentRecordSmall);
@@ -46,38 +58,32 @@ class TestClass : public imlab::schema::DocumentTable {
 // ---------------------------------------------------------------------------
 
 TEST(DremelSchemaHelperTest, RepetitionLevelDocId) {
-    const auto& desc = Document::descriptor()->FindFieldByName("DocId");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(DocId_Field);
     ASSERT_EQ(repetition_level, 0);
 }
 
 TEST(DremelSchemaHelperTest, RepetitionLevelLinksBackward) {
-    const auto& desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(Links_Backward_Field);
     ASSERT_EQ(repetition_level, 1);
 }
 
 TEST(DremelSchemaHelperTest, RepetitionLevelLinksForward) {
-    const auto& desc = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(Links_Forward_Field);
     ASSERT_EQ(repetition_level, 1);
 }
 
 TEST(DremelSchemaHelperTest, RepetitionLevelNameLanguageCode) {
-    const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(Name_Language_Code_Field);
     ASSERT_EQ(repetition_level, 2);
 }
 
 TEST(DremelSchemaHelperTest, RepetitionLevelNameLanguageCountry) {
-    const auto& desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(Name_Language_Country_Field);
     ASSERT_EQ(repetition_level, 2);
 }
 
 TEST(DremelSchemaHelperTest, RepetitionLevelNameUrl) {
-    const auto& desc = Document_Name::descriptor()->FindFieldByName("Url");
-    auto repetition_level = GetMaxRepetitionLevel(desc);
+    auto repetition_level = GetMaxRepetitionLevel(Name_Url_Field);
     ASSERT_EQ(repetition_level, 1);
 }
 
@@ -85,92 +91,65 @@ TEST(DremelSchemaHelperTest, RepetitionLevelNameUrl) {
 
 // Trivial case where both fields are repeated by themselves
 TEST(DremelSchemaHelperTest, CommonAncestorLinks) {
-    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
-    const auto& links_desc = Document::descriptor()->FindFieldByName("links");
-    auto common_ancestor = GetCommonAncestor(links_backward_desc, links_forward_desc);
-    ASSERT_EQ(common_ancestor, links_desc);
+    auto common_ancestor = GetCommonAncestor(Links_Backward_Field, Links_Forward_Field);
+    ASSERT_EQ(common_ancestor, Links_Field);
 }
 
 // Trivial case where both fields are non-repeated.
 TEST(DremelSchemaHelperTest, CommonAncestorLanguage) {
-    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
-    auto common_ancestor = GetCommonAncestor(name_language_code_desc, name_language_country_desc);
-    ASSERT_EQ(common_ancestor, name_language_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Code_Field, Name_Language_Country_Field);
+    ASSERT_EQ(common_ancestor, Name_Language_Field);
 }
 
 // Interesting case: For (code,country) it's easy because they belong under the same "language".
 // But if we have (country,code), they don't belong to the same "language" and hence we need to go a level up to "name".
 TEST(DremelSchemaHelperTest, CommonAncestorLanguageReverse) {
-    const auto& name_language_country_desc = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
-    auto common_ancestor = GetCommonAncestor(name_language_country_desc, name_language_code_desc);
-    ASSERT_EQ(common_ancestor, name_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Country_Field, Name_Language_Code_Field);
+    ASSERT_EQ(common_ancestor, Name_Field);
 }
 
 // Trivial case where we have just one repeated field.
 TEST(DremelSchemaHelperTest, CommonAncestorEqualFieldsRepeated) {
-    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    const auto& links_desc = Document::descriptor()->FindFieldByName("links");
-    auto common_ancestor = GetCommonAncestor(links_backward_desc, links_forward_desc);
-    ASSERT_EQ(common_ancestor, links_desc);
+    auto common_ancestor = GetCommonAncestor(Links_Backward_Field, Links_Backward_Field);
+    ASSERT_EQ(common_ancestor, Links_Field);
 }
 
 // Interesting case: Both fields are equal, but because there can only be just one "code" in each "language",
 // they can't belong to the same "language" and hence we need to go up to "name".
 TEST(DremelSchemaHelperTest, CommonAncestorEqualFieldsNonRepeated) {
-    const auto& name_language_code_1_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_language_code_2_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
-    auto common_ancestor = GetCommonAncestor(name_language_code_1_desc, name_language_code_2_desc);
-    ASSERT_EQ(common_ancestor, name_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Code_Field, Name_Language_Code_Field);
+    ASSERT_EQ(common_ancestor, Name_Field);
 }
 
 // Interesting case: First Links_Forward, then Links_Backward -> can't exist in one message so
 // they have to be in different messages. Common ancestor is thus nullptr.
 TEST(DremelSchemaHelperTest, CommonAncestorDifferentMessage) {
-    const auto& links_forward_desc = Document_Links::descriptor()->FindFieldByName("Forward");
-    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto common_ancestor = GetCommonAncestor(links_forward_desc, links_backward_desc);
+    auto common_ancestor = GetCommonAncestor(Links_Forward_Field, Links_Backward_Field);
     ASSERT_EQ(common_ancestor, nullptr);
 }
 
 // Interesting case: Field 1 is an inner node that contains field 2 as a leaf.
 TEST(DremelSchemaHelperTest, CommonAncestorContainingField) {
-    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
-    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
-    auto common_ancestor = GetCommonAncestor(name_language_desc, name_language_code_desc);
-    ASSERT_EQ(common_ancestor, name_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Field, Name_Language_Code_Field);
+    ASSERT_EQ(common_ancestor, Name_Field);
 }
 
 // Interesting case: Field 2 is an inner node that contains field 1 as a leaf.
 TEST(DremelSchemaHelperTest, CommonAncestorContainingFieldReverse) {
-    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
-    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
-    auto common_ancestor = GetCommonAncestor(name_language_code_desc, name_language_desc);
-    ASSERT_EQ(common_ancestor, name_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Code_Field, Name_Language_Field);
+    ASSERT_EQ(common_ancestor, Name_Field);
 }
 
 // Interesting case: Field 2 is an inner node that contains field 1 as a leaf, but we need to go up to the root.
 TEST(DremelSchemaHelperTest, CommonAncestorContainingFieldReverseRoot) {
-    const auto& name_language_desc = Document_Name::descriptor()->FindFieldByName("language");
-    const auto& name_desc = Document::descriptor()->FindFieldByName("name");
-    auto common_ancestor = GetCommonAncestor(name_language_desc, name_desc);
+    auto common_ancestor = GetCommonAncestor(Name_Language_Field, Name_Field);
     ASSERT_EQ(common_ancestor, nullptr);
 }
 
 // Somewhat interesting: Both fields have nothing in common and the only common ancestor is the message itself.
 TEST(DremelSchemaHelperTest, CommonRepetitionLevelRoot) {
-    const auto& links_backward_desc = Document_Links::descriptor()->FindFieldByName("Backward");
-    const auto& name_language_code_desc = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto common_ancestor = GetCommonAncestor(links_backward_desc, name_language_code_desc);
-    ASSERT_EQ(common_ancestor, nullptr/*root*/);
+    auto common_ancestor = GetCommonAncestor(Links_Backward_Field, Name_Language_Code_Field);
+    ASSERT_EQ(common_ancestor, nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -240,79 +219,94 @@ TEST(DremelTest, ShreddingDocumentRecordLarge) {
 
 // This test corresponds to the example from the Dremel paper in Figure 4.
 TEST(DremelTest, ConstructCompleteFSM) {
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
-
-    RecordFSM fsm { std::vector<const FieldDescriptor*>{DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url} };
+    RecordFSM fsm {{
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    }};
 
     std::cout << fsm.GenerateFsmGraph() << std::endl;
 
-    ASSERT_EQ(fsm.NextField(DocId, 0), Links_Backward);
-    ASSERT_EQ(fsm.NextField(Links_Backward, 1), Links_Backward);
-    ASSERT_EQ(fsm.NextField(Links_Backward, 0), Links_Forward);
-    ASSERT_EQ(fsm.NextField(Links_Forward, 1), Links_Forward);
-    ASSERT_EQ(fsm.NextField(Links_Forward, 0), Name_Language_Code);
-    ASSERT_EQ(fsm.NextField(Name_Language_Code, 0), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Code, 1), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Code, 2), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 2), Name_Language_Code);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 1), Name_Url);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 0), Name_Url);
-    ASSERT_EQ(fsm.NextField(Name_Url, 1), Name_Language_Code);
-    ASSERT_EQ(fsm.NextField(Name_Url, 0), nullptr);  // end state
+    ASSERT_EQ(fsm.NextField(DocId_Field, 0), Links_Backward_Field);
+    ASSERT_EQ(fsm.NextField(Links_Backward_Field, 1), Links_Backward_Field);
+    ASSERT_EQ(fsm.NextField(Links_Backward_Field, 0), Links_Forward_Field);
+    ASSERT_EQ(fsm.NextField(Links_Forward_Field, 1), Links_Forward_Field);
+    ASSERT_EQ(fsm.NextField(Links_Forward_Field, 0), Name_Language_Code_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code_Field, 0), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code_Field, 1), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Code_Field, 2), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 2), Name_Language_Code_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 1), Name_Url_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 0), Name_Url_Field);
+    ASSERT_EQ(fsm.NextField(Name_Url_Field, 1), Name_Language_Code_Field);
+    ASSERT_EQ(fsm.NextField(Name_Url_Field, 0), nullptr);  // end state
 }
 
 // This test corresponds to the example from the Dremel paper in Figure 5.
 TEST(DremelTest, ConstructPartialFSM) {
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-
-    RecordFSM fsm {std::vector<const FieldDescriptor*>{DocId, Name_Language_Country} };
+    RecordFSM fsm {{
+        DocId_Field,
+        Name_Language_Country_Field
+    }};
 
     std::cout << fsm.GenerateFsmGraph() << std::endl;
 
-    ASSERT_EQ(fsm.NextField(DocId, 0), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 1), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 2), Name_Language_Country);
-    ASSERT_EQ(fsm.NextField(Name_Language_Country, 0), nullptr);  // end state
+    ASSERT_EQ(fsm.NextField(DocId_Field, 0), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 1), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 2), Name_Language_Country_Field);
+    ASSERT_EQ(fsm.NextField(Name_Language_Country_Field, 0), nullptr);  // end state
 }
 
+// Tests another example from the paper (Figure 5)
 TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-
     imlab::Database db {};
     std::stringstream in(imlab_test::kTestDocumentLarge);
 
     db.LoadDocumentTable(in);
-    auto record = db.documentTable.get(0, {DocId, Name_Language_Country});
+    auto record = db.documentTable.get(0, {
+        DocId_Field,
+        Name_Language_Country_Field
+    });
 
-    std::cout << record.DebugString() << std::endl;
+    // Expected Result
+    Document document {};
+    document.set_docid(10);
+    auto* name_1 = document.add_name();
+    auto* lang_1 = name_1->add_language();
+    lang_1->set_country("us");
+    auto* lang_2 = name_1->add_language();
+    auto* name_2 = document.add_name();
+    auto* lang_3 = name_2->add_language();
+    lang_3->set_country("gb");
 
-    // TODO assert
+    ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
 }
 
+// Tests another example from the paper (Figure 5)
 TEST(DremelTest, InsertAndGetSmallRecordWithPartialFSM) {
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-
     imlab::Database db {};
     std::stringstream in(imlab_test::kTestDocumentSmall);
 
     db.LoadDocumentTable(in);
-    auto record = db.documentTable.get(0, {DocId, Name_Language_Country});
+    auto record = db.documentTable.get(0, {
+        DocId_Field,
+        Name_Language_Country_Field
+    });
 
-    std::cout << record.DebugString() << std::endl;
+    // Expected Result:
+    Document document {};
+    document.set_docid(20);
+    document.add_name();
 
-    // TODO assert
+    ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
 }
 
 TEST(DremelTest, InsertAndGetRoundtrip) {
-    // Large record from paper:
     Document document {};
     document.set_docid(10);
     Document_Links* document_links = document.mutable_links();
@@ -333,22 +327,23 @@ TEST(DremelTest, InsertAndGetRoundtrip) {
     document_name_3_language_1->set_code("en-gb");
     document_name_3_language_1->set_country("gb");
 
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
-
     imlab::Database db {};
 
     db.documentTable.insert(document);
-    const auto& record = db.documentTable.get(0, {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+    const auto& record = db.documentTable.get(0, {
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    });
 
     ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(document, record))
-        << "\nExpected Message:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
+        << "\nExpected:\n\n" << document.DebugString() << "\nBut got:\n\n" << record.DebugString();
 }
 
+// Load a bunch of randomly generated record into the DB and retrieve them individually.
 TEST(DremelTest, InsertAndGetIndividual) {
     imlab::Database db {};
     std::vector<Document> documents {};
@@ -360,24 +355,24 @@ TEST(DremelTest, InsertAndGetIndividual) {
         documents.push_back(d);
     });
 
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
-
     for (unsigned i = 0; i < documents.size(); i++) {
         std::cout << "Getting record: " << i + 1 << std::endl;
 
-        const auto& record = db.documentTable.get(i,
-            {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+        const auto& record = db.documentTable.get(i, {
+            DocId_Field,
+            Links_Backward_Field,
+            Links_Forward_Field,
+            Name_Language_Code_Field,
+            Name_Language_Country_Field,
+            Name_Url_Field
+        });
 
         ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(documents[i], record))
-                            << "\nExpected Message " << i + 1 << ":\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << record.DebugString();
+            << "\nExpected (" << i + 1 << "):\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << record.DebugString();
     }
 }
 
+// Load a bunch of randomly generated record into the DB and retrieve them in one get_range request.
 TEST(DremelTest, InsertAndGetFullRange) {
     imlab::Database db {};
     std::vector<Document> documents {};
@@ -389,21 +384,20 @@ TEST(DremelTest, InsertAndGetFullRange) {
         documents.push_back(d);
     });
 
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
-
-    const auto& documents_read = db.documentTable.get_range(0, documents.size(),
-        {DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url});
+    const auto& documents_read = db.documentTable.get_range(0, documents.size(),{
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    });
 
     ASSERT_EQ(documents.size(), documents_read.size());
 
     for (unsigned i = 0; i < documents.size(); i++) {
         ASSERT_TRUE(google::protobuf::util::MessageDifferencer::Equals(documents[i], documents_read[i]))
-            << "\nExpected Message " << i + 1 << ":\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << documents_read[i].DebugString();
+            << "\nExpected (" << i + 1 << "):\n\n" << documents[i].DebugString() << "\nBut got:\n\n" << documents_read[i].DebugString();
     }
 }
 
