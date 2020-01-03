@@ -262,7 +262,7 @@ def generate_source(filedescriptorproto):
         yield '        {}\n'
         yield '    }\n'
         yield '\n'
-        yield '    Assembler<' + message.name + '> assembler { fsm, readers };\n'
+        yield '    RecordAssembler<' + message.name + '> assembler { fsm, readers };\n'
         yield '    std::vector<' + message.name + '> records {};\n'
         yield '    for (unsigned i = from_tid; i < to_tid; i++) {\n'
         yield '        records.push_back(assembler.AssembleNextRecord());\n'

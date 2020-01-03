@@ -18,7 +18,7 @@ using namespace google::protobuf;
 using TID = uint64_t;
 
 template<class R>
-class Assembler {
+class RecordAssembler {
     static_assert(std::is_base_of<Message, R>::value, "R must be derived from google::protobuf::Message");
 
  public:
@@ -26,7 +26,7 @@ class Assembler {
     /// This assembler is stateful:
     /// You can repeatedly call AssembleNextRecord() to assemble the following records from the storage as well.
     /// The Assembler is not thread-safe.
-    Assembler(RecordFSM& fsm, std::vector<IFieldReader*>& readers) : _fsm(fsm), _root_reader(readers[0]) {
+    RecordAssembler(RecordFSM& fsm, std::vector<IFieldReader*>& readers) : _fsm(fsm), _root_reader(readers[0]) {
         _field_reader_map.clear();
         for (auto& r : readers) {
             _field_reader_map[r->field()] = r;
@@ -41,7 +41,6 @@ class Assembler {
         _msg_stack = { &record };
         _last_read_field = nullptr;
         _currently_read_field = _root_reader->field();
-
 
         while (_currently_read_field != nullptr) {
             auto value = _field_reader_map.at(_currently_read_field)->ReadNext();
