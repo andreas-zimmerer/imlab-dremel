@@ -56,12 +56,10 @@ class RecordAssembler {
             }
 
             _currently_read_field = _fsm.NextField(_currently_read_field, _field_reader_map.at(_currently_read_field)->Peek().repetition_level());
-
             ReturnToLevel(_currently_read_field);
         }
 
         ReturnToLevel(nullptr);
-
         return record;
     }
 
@@ -93,9 +91,8 @@ class RecordAssembler {
             assert(GetFieldDescriptor(_msg_stack[_msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
         }
 
+        // --------------------------------------------------------------------
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
-        // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
-        std::vector<const FieldDescriptor*> parents {};
 
         // The target_field_type is "where we want to end up".
         const Descriptor* target_field_type;
@@ -110,6 +107,8 @@ class RecordAssembler {
             target_field_type = new_field->containing_type();
         }
 
+        // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
+        std::vector<const FieldDescriptor*> parents {};
         while (target_field_type != _msg_stack[_msg_stack.size() - 1]->GetDescriptor()) {
             parents.push_back(GetFieldDescriptor(target_field_type));
             target_field_type = GetFieldDescriptor(target_field_type)->containing_type();
@@ -125,6 +124,9 @@ class RecordAssembler {
     }
 
     void ReturnToLevel(const FieldDescriptor* new_field) {
+        // TODO: Not sure what to do here. Everything is handled by MoveToLevel anyway...
+        // TODO: Only exception would be the last call to ReturnToLevel(nullptr) to clean up everything.
+        // TODO: but Protobuf does not require this last cleanup.
         return;
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         const auto* common_ancestor = GetCommonAncestor(_last_read_field, new_field);
