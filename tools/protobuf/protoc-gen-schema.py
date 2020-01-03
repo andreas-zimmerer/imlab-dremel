@@ -115,6 +115,7 @@ def generate_header(filedescriptorproto):
     yield '#include "imlab/dremel/field_writer.h"\n'
     yield '#include "imlab/infra/types.h"\n'
     yield '#include "imlab/algebra/iu.h"\n'
+    yield '#include <google/protobuf/descriptor.h>\n'
     yield '// ---------------------------------------------------------------------------\n'
     yield 'namespace imlab {\n'
     yield 'namespace schema {\n'
@@ -127,16 +128,21 @@ def generate_header(filedescriptorproto):
         yield ' public:\n'
         yield '    /// Insert a new record into the table.\n'
         yield '    uint64_t insert(' + message.name + '& record);\n'
+        yield '    /// Gets one record from the table.\n'
+        yield '    ' + message.name + ' get(uint64_t tid, const std::vector<const FieldDescriptor*>& fields) { return get_range(tid, tid + 1, fields)[0]; }\n'
+        yield '    /// Gets a range of record from the table. `to_tid` is exclusive.\n'
+        yield '    std::vector<' + message.name + '> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
-        yield '    FieldWriter* get_record_writer() override { return &' + message.name + '_Writer; }\n'
+        yield '    FieldWriter* get_record_writer() override { return &Root_Writer; }\n'
         yield '    /// Get a reference to the IUs in this table.\n'
         yield '    static std::vector<const IU*> get_ius();\n'
         yield '\n'
         yield ' protected:\n'
         for fields in flatten_fields(message):
-            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             column_name = '_'.join([f.name for f in fields])
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { "' + '.'.join([f.name for f in fields]) + '", ' + str(definition_level) + ' };\n'
+            containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
+            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
+            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { ' + field_descriptor + ' };\n'
             yield '    ' + 'std::vector<uint64_t> ' + column_name + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
@@ -145,41 +151,35 @@ def generate_header(filedescriptorproto):
         yield '    // A tree-like structure of FieldWriters\n'
         for fields in flatten_fields(message, True):
             column_name = '_'.join([f.name for f in fields])
-            field_writer_name = column_name + '_Writer'
-            definition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_OPTIONAL or f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
-            repetition_level = len(list(filter(lambda f: f.label == FieldDescriptorProto.LABEL_REPEATED, fields)))
             if fields[-1].type == FieldDescriptorProto.TYPE_MESSAGE or fields[-1].type == FieldDescriptorProto.TYPE_GROUP:
-                previous_children = complex_field_writers.get(field_writer_name, {}).get('children', [])
-                complex_field_writers[field_writer_name] = {
-                    'definition_level': definition_level,
-                    'repetition_level': repetition_level,
-                    'field_id': fields[-1].number,
+                previous_children = complex_field_writers.get(column_name, {}).get('children', [])
+                complex_field_writers[column_name] = {
                     'children': previous_children
                 }
             else:
-                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + field_writer_name + ' { ' + str(definition_level) + ', ' + str(repetition_level) + ', ' +  str(fields[-1].number) + ', &' + column_name + ' };\n'
+                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + column_name + '_Writer { &' + column_name + ' };\n'
 
             # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
             if len(fields) >= 2:
                 # A regular writer with a ComplexFieldWriter as a parent
-                parent_name = column_name.rsplit('_', 1)[0] + '_Writer'
+                parent_name = column_name.rsplit('_', 1)[0]
             else:
                 # We have a top level writer here directly under the document writer
-                parent_name = message.name + '_Writer'
+                parent_name = 'Root'
             # Now update the tree
-            previous_definition_level = complex_field_writers.get(parent_name, {}).get('definition_level', 0)
-            previous_repetition_level = complex_field_writers.get(parent_name, {}).get('repetition_level', 0)
-            previous_field_id = complex_field_writers.get(parent_name, {}).get('field_id', 0)
             previous_children = complex_field_writers.get(parent_name, {}).get('children', [])
             complex_field_writers[parent_name] = {
-                'definition_level': previous_definition_level,
-                'repetition_level': previous_repetition_level,
-                'field_id': previous_field_id,
-                'children': previous_children + ['&' + field_writer_name]
+                'children': previous_children + ['&' + column_name + '_Writer']
             }
         # Print all flattened ComplexFieldWriters
         for parent in complex_field_writers:
-            yield '    ComplexFieldWriter ' + parent + ' { ' + str(complex_field_writers[parent]['definition_level']) + ', ' + str(complex_field_writers[parent]['repetition_level']) + ', ' + str(complex_field_writers[parent]['field_id']) + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
+            if parent == 'Root':
+                field_descriptor = 'nullptr'
+            else:
+                containing_type = message.name + ('_' + parent.rsplit('_', 1)[0] if parent.count('_') > 0 else '')
+                field = parent.rsplit('_', 1)[1] if parent.count('_') > 0 else parent
+                field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + field.lower() + '")'
+            yield '    ComplexFieldWriter ' + parent + '_Writer { ' + field_descriptor + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
 
         yield '\n'
         yield '    static const std::vector<IU> IUs;\n'
@@ -201,6 +201,8 @@ def generate_source(filedescriptorproto):
     yield '// ---------------------------------------------------------------------------\n'
     yield '#include "./schema.h"\n'
     yield '#include "imlab/dremel/shredding.h"\n'
+    yield '#include "imlab/dremel/assembling.h"\n'
+    yield '#include "imlab/dremel/record_fsm.h"\n'
     yield '// ---------------------------------------------------------------------------\n'
     yield 'namespace imlab {\n'
     yield 'namespace schema {\n'
@@ -229,12 +231,43 @@ def generate_source(filedescriptorproto):
         yield '    // They will be the starting points of the fields of the dissected record.\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
-            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.get_size());\n'
+            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.size());\n'
         yield '\n'
         yield '    Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
         yield '\n'
         yield '    // Now the table contains one more record\n'
-        yield '    return size++;\n'
+        yield '    return _size++;\n'
+        yield '}\n'
+        yield '\n'
+
+        yield 'std::vector<' + message.name + '> ' + message.name + 'Table::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {\n'
+        yield '    assert(from_tid >= 0 && from_tid <= to_tid && to_tid <= size());\n'
+        yield '    RecordFSM fsm {fields};\n'
+        yield '\n'
+        yield '    std::vector<IFieldReader*> readers {};\n'
+        yield '\n'
+        for fields in flatten_fields(message):
+            column_name = '_'.join([f.name for f in fields])
+            yield '    uint64_t ' + column_name + '_index = ' + column_name + '_Record_TIDs[from_tid];\n'
+            yield '    FieldReader ' + column_name + '_Reader { &' + column_name + ', ' + column_name + '_index };\n'
+        yield '\n'
+        yield '    for (auto& field : fields) {\n'
+        for fields in flatten_fields(message):
+            column_name = '_'.join([f.name for f in fields])
+            containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
+            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
+            yield '        if (field == ' + field_descriptor + ') {\n'
+            yield '            readers.push_back(&' + column_name + '_Reader);\n'
+            yield '        } else\n'
+        yield '        {}\n'
+        yield '    }\n'
+        yield '\n'
+        yield '    RecordAssembler<' + message.name + '> assembler { fsm, readers };\n'
+        yield '    std::vector<' + message.name + '> records {};\n'
+        yield '    for (unsigned i = from_tid; i < to_tid; i++) {\n'
+        yield '        records.push_back(assembler.AssembleNextRecord());\n'
+        yield '    }\n'
+        yield '    return records;\n'
         yield '}\n'
 
     yield '\n'

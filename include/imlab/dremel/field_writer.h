@@ -6,23 +6,15 @@
 //---------------------------------------------------------------------------
 #include <vector>
 #include "./storage.h"
+#include "./schema_helper.h"
 #include "imlab/infra/hash.h"
 #include "imlab/infra/types.h"
-#include <google/protobuf/message.h>
+#include <google/protobuf/descriptor.h>
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {
 //---------------------------------------------------------------------------
 using namespace google::protobuf;
-
-// Protobuf does not provide a templated version to get the value of a field via reflection.
-// Only functions like GetInt32() are provided.
-// Same goes for the repeated versions like GetRepeatedInt32().
-template<typename T>
-T GetValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field);
-template<typename T>
-T GetRepeatedValue(const Reflection* ref, const Message& msg, const FieldDescriptor* field, int index);
-
 
 /// Represents one single value in a Protobuf message.
 /// It's not always easy to work with raw Protobuf fields.
@@ -59,9 +51,9 @@ class ProtoFieldValue {
     template<typename T>
     [[nodiscard]] T GetFieldValue() const {
         if (_field->is_repeated()) {
-            return GetRepeatedValue<T>(_ref, _msg, _field, _index);
+            return GetRepeatedValue<T>(_msg, _field, _index);
         } else {
-            return GetValue<T>(_ref, _msg, _field);
+            return GetValue<T>(_msg, _field);
         }
     }
 
@@ -71,10 +63,6 @@ class ProtoFieldValue {
     const FieldDescriptor* _field;
     const unsigned _index;
 };
-
-
-/// Writes a given value into the table with a FieldWriter at a given repetition level.
-void WriteField(FieldWriter* writer, const ProtoFieldValue& value, unsigned repetition_level);
 
 
 /// The base class for a FieldWriter.
@@ -92,10 +80,8 @@ class FieldWriter {
     friend class ComplexFieldWriter;
  public:
     /// Creates a new FieldWriter at the given definition level.
-    /// When writing values, the given definition level will be used.
-    /// The given repetition level will never be used for writing, but serves as a reference point.
-    explicit FieldWriter(unsigned definition_level, unsigned repetition_level, unsigned field_id)
-        : _definition_level(definition_level), _repetition_level(repetition_level), _field_id(field_id) {}
+    explicit FieldWriter(const FieldDescriptor* field)
+        : _definition_level(GetDefinitionLevel(field)), _repetition_level(GetMaxRepetitionLevel(field)), _field_id(field? field->number() : -1) {}
     /// Writes a 'null' value with the given repetition level to all columns underneath this writer.
     /// The definition level is determined by this writer.
     void write(unsigned repetition_level) { write(repetition_level, _definition_level - 1 /*minus itself*/); }
@@ -119,11 +105,11 @@ class FieldWriter {
 class ComplexFieldWriter : public FieldWriter {
  public:
     /// Creates a new ComplexFieldWriter at the given definition level and its child writers.
-    ComplexFieldWriter(unsigned definition_level, unsigned repetition_level, unsigned field_id, std::vector<FieldWriter*> child_writers)
-        : FieldWriter(definition_level, repetition_level, field_id), _child_writers(std::move(child_writers)) {}
-    /// Returns the corresponding FieldWriter for the field with the given field_id
-    std::optional<FieldWriter*> find_child_writer(unsigned field_id) {
-        auto it = std::find_if(_child_writers.begin(), _child_writers.end(), [&](FieldWriter* c) { return c->get_field_id() == field_id; });
+    ComplexFieldWriter(const FieldDescriptor* field, std::vector<FieldWriter*> child_writers)
+        : FieldWriter(field), _child_writers(std::move(child_writers)) {}
+    /// Returns the corresponding FieldWriter for the field with the given field_number
+    std::optional<FieldWriter*> find_child_writer(unsigned field_number) {
+        auto it = std::find_if(_child_writers.begin(), _child_writers.end(), [&](FieldWriter* c) { return c->get_field_id() == field_number; });
         return (it != _child_writers.end())? std::optional<FieldWriter*>(*it) : std::nullopt;
     };
  protected:
@@ -142,9 +128,9 @@ class ComplexFieldWriter : public FieldWriter {
 template<typename T>
 class AtomicFieldWriter : public FieldWriter {
  public:
-    /// Creates a new AtomicFieldWriter that is directly associated with a DremelColumn at a given definition level.
-    AtomicFieldWriter(unsigned definition_level, unsigned repetition_level, unsigned field_id, DremelColumn<T>* column)
-        : FieldWriter(definition_level, repetition_level, field_id), _column(column) {}
+    /// Creates a new AtomicFieldWriter that is directly associated with a DremelColumn.
+    explicit AtomicFieldWriter(DremelColumn<T>* column)
+        : FieldWriter(column->field()), _column(column) {}
     /// Writes an explicitly given value into the column with the given repetition level.
     /// The definition level is the definition level of this writer.
     void write_value(T value, unsigned repetition_level) {
@@ -157,6 +143,44 @@ class AtomicFieldWriter : public FieldWriter {
  private:
     DremelColumn<T>* _column;
 };
+
+
+/// Writes a given value into the table with a FieldWriter at a given repetition level.
+inline void WriteField(FieldWriter* writer, const ProtoFieldValue& value, unsigned repetition_level) {
+    if (!value.HasValue()) {
+        writer->write(repetition_level);
+        return;
+    }
+
+    switch (value.GetField()->cpp_type()) {
+        case FieldDescriptor::CPPTYPE_INT32:
+            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                Integer(value.GetFieldValue<int32_t>()), repetition_level);
+            break;
+        case FieldDescriptor::CPPTYPE_INT64:
+            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                Integer(value.GetFieldValue<int64_t>()), repetition_level);
+            break;
+        case FieldDescriptor::CPPTYPE_UINT32:
+            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                Integer(value.GetFieldValue<uint32_t>()), repetition_level);
+            break;
+        case FieldDescriptor::CPPTYPE_UINT64:
+            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
+                Integer(value.GetFieldValue<uint64_t>()), repetition_level);
+            break;
+        case FieldDescriptor::CPPTYPE_STRING:
+            dynamic_cast<AtomicFieldWriter<Varchar<30>>*>(writer)->write_value(
+                Varchar<30>::build(value.GetFieldValue<std::string>().c_str()), repetition_level);
+            break;
+        case FieldDescriptor::CPPTYPE_DOUBLE:  // UNSUPPRTED
+        case FieldDescriptor::CPPTYPE_FLOAT:  // UNSUPPRTED
+        case FieldDescriptor::CPPTYPE_BOOL:  // UNSUPPRTED
+        case FieldDescriptor::CPPTYPE_ENUM:  // UNSUPPRTED
+        case FieldDescriptor::CPPTYPE_MESSAGE:  // INVALID
+            break;
+    }
+}
 
 //---------------------------------------------------------------------------
 }  // namespace dremel

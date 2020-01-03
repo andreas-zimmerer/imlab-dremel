@@ -8,21 +8,24 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include <google/protobuf/descriptor.h>
+#include "./schema_helper.h"
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {
 //---------------------------------------------------------------------------
+using namespace google::protobuf;
 using TID = uint64_t;
 
 class FieldWriter;  // Forward-declare
 
 class TableBase {
  public:
-    uint64_t get_size() { return size; }
+    uint64_t size() { return _size; }
 
     virtual FieldWriter* get_record_writer() = 0;
  protected:
-    uint64_t size = 0;
+    uint64_t _size = 0;
 };
 
 /// A row in Dremel consists of
@@ -59,26 +62,26 @@ class DremelColumn {
  public:
     /// Creates a new column in the Dremel format.
     ///
-    /// \tparam indentifier A human readable identifier for this column.
-    /// \tparam max_definition_level The number of optional and repeated fields in the record path.
-    ///                              Note that 'required' fields should not be counted!
-    explicit DremelColumn(std::string identifier, std::size_t max_definition_level)
-        : identifier(std::move(identifier)), max_definition_level(max_definition_level) {}
+    /// \tparam field The field of the message that is stored in this column.
+    explicit DremelColumn(const FieldDescriptor* field)
+        : _field(field), _max_definition_level(GetDefinitionLevel(field)) {}
 
-    /// Returns the human-readable identifier for this column.
-    const std::string& get_identifier() { return identifier; }
+    /// Returns the field of the record which is stored in this column.
+    const FieldDescriptor* field() { return _field; }
 
     /// Insert a new value into the column with a given repetition and definition level.
     /// Returns the TID of the inserted value.
     TID insert(DremelRow<T> row) {
-        rows.push_back({ row.value.value_or(T{}), row.repetition_level, row.definition_level });
-        return rows.size() - 1;
+        _rows.push_back({ row.value.value_or(T{}), row.repetition_level, row.definition_level });
+        return _rows.size() - 1;
     }
 
     /// Retrieves a value together with its repetition and definition levels for a given TID.
     DremelRow<T> get(TID tid) {
-        auto& [value, r, d] = rows[tid];
-        if (d < max_definition_level) {
+        auto& [value, r, d] = _rows[tid];
+        // Null values are stored implicitly if the definition
+        // level is smaller than the maximum definition level.
+        if (d < _max_definition_level) {
             return { std::nullopt, r, d};
         } else {
             return { value, r, d};
@@ -86,19 +89,14 @@ class DremelColumn {
     }
 
     /// Returns the number of elements in this column.
-    uint64_t get_size() { return rows.size(); }
+    uint64_t size() { return _rows.size(); }
 
  protected:
-    /// Human-readable identifier of this column.
-    const std::string identifier;
+    const FieldDescriptor* _field;
 
-    /// The maximum definition level values can have in this column.
-    /// Defined as the number of optional and repeated fields in the record path.
-    const std::size_t max_definition_level;
+    const std::size_t _max_definition_level;
 
-    /// Null values are stored implicitly if the definition
-    /// level is smaller than the maximum definition level.
-    std::vector<std::tuple<T, unsigned, unsigned>> rows;
+    std::vector<std::tuple<T, unsigned, unsigned>> _rows;
 };
 
 //---------------------------------------------------------------------------

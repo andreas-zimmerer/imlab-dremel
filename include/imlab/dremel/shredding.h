@@ -41,8 +41,8 @@ class Shredder {
                     fields.emplace_back(*msg, field);
                 } else {
                     // For every value in the repeated field, there will be a corresponding ProtoFieldValue.
-                    for (int i = 0; i < ref->FieldSize(*msg, field); i++) {
-                        fields.emplace_back(*msg, field, i);
+                    for (int u = 0; u < ref->FieldSize(*msg, field); u++) {
+                        fields.emplace_back(*msg, field, u);
                     }
                 }
             }

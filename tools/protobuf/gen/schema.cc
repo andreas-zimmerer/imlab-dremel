@@ -4,6 +4,8 @@
 // ---------------------------------------------------------------------------
 #include "./schema.h"
 #include "imlab/dremel/shredding.h"
+#include "imlab/dremel/assembling.h"
+#include "imlab/dremel/record_fsm.h"
 // ---------------------------------------------------------------------------
 namespace imlab {
 namespace schema {
@@ -30,17 +32,66 @@ std::vector<const IU*> DocumentTable::get_ius() {
 uint64_t DocumentTable::insert(Document& record) {
     // Before we insert records with DissectRecord, we need to remember the last indices in each column.
     // They will be the starting points of the fields of the dissected record.
-    DocId_Record_TIDs.push_back(DocId.get_size());
-    Links_Backward_Record_TIDs.push_back(Links_Backward.get_size());
-    Links_Forward_Record_TIDs.push_back(Links_Forward.get_size());
-    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.get_size());
-    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.get_size());
-    Name_Url_Record_TIDs.push_back(Name_Url.get_size());
+    DocId_Record_TIDs.push_back(DocId.size());
+    Links_Backward_Record_TIDs.push_back(Links_Backward.size());
+    Links_Forward_Record_TIDs.push_back(Links_Forward.size());
+    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.size());
+    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.size());
+    Name_Url_Record_TIDs.push_back(Name_Url.size());
 
     Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);
 
     // Now the table contains one more record
-    return size++;
+    return _size++;
+}
+
+std::vector<Document> DocumentTable::get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields) {
+    assert(from_tid >= 0 && from_tid <= to_tid && to_tid <= size());
+    RecordFSM fsm {fields};
+
+    std::vector<IFieldReader*> readers {};
+
+    uint64_t DocId_index = DocId_Record_TIDs[from_tid];
+    FieldReader DocId_Reader { &DocId, DocId_index };
+    uint64_t Links_Backward_index = Links_Backward_Record_TIDs[from_tid];
+    FieldReader Links_Backward_Reader { &Links_Backward, Links_Backward_index };
+    uint64_t Links_Forward_index = Links_Forward_Record_TIDs[from_tid];
+    FieldReader Links_Forward_Reader { &Links_Forward, Links_Forward_index };
+    uint64_t Name_Language_Code_index = Name_Language_Code_Record_TIDs[from_tid];
+    FieldReader Name_Language_Code_Reader { &Name_Language_Code, Name_Language_Code_index };
+    uint64_t Name_Language_Country_index = Name_Language_Country_Record_TIDs[from_tid];
+    FieldReader Name_Language_Country_Reader { &Name_Language_Country, Name_Language_Country_index };
+    uint64_t Name_Url_index = Name_Url_Record_TIDs[from_tid];
+    FieldReader Name_Url_Reader { &Name_Url, Name_Url_index };
+
+    for (auto& field : fields) {
+        if (field == Document::descriptor()->FindFieldByName("DocId")) {
+            readers.push_back(&DocId_Reader);
+        } else
+        if (field == Document_Links::descriptor()->FindFieldByName("Backward")) {
+            readers.push_back(&Links_Backward_Reader);
+        } else
+        if (field == Document_Links::descriptor()->FindFieldByName("Forward")) {
+            readers.push_back(&Links_Forward_Reader);
+        } else
+        if (field == Document_Name_Language::descriptor()->FindFieldByName("Code")) {
+            readers.push_back(&Name_Language_Code_Reader);
+        } else
+        if (field == Document_Name_Language::descriptor()->FindFieldByName("Country")) {
+            readers.push_back(&Name_Language_Country_Reader);
+        } else
+        if (field == Document_Name::descriptor()->FindFieldByName("Url")) {
+            readers.push_back(&Name_Url_Reader);
+        } else
+        {}
+    }
+
+    RecordAssembler<Document> assembler { fsm, readers };
+    std::vector<Document> records {};
+    for (unsigned i = from_tid; i < to_tid; i++) {
+        records.push_back(assembler.AssembleNextRecord());
+    }
+    return records;
 }
 
 // ---------------------------------------------------------------------------
