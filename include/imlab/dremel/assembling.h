@@ -80,9 +80,20 @@ class Assembler {
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
         std::vector<const FieldDescriptor*> parents {};
+
         // The target_field_type is "where we want to end up".
-        auto* target_field_type = (new_field->type() == FieldDescriptor::TYPE_GROUP || new_field->type() == FieldDescriptor::TYPE_MESSAGE)?
-                                  new_field->message_type() : new_field->containing_type();
+        const Descriptor* target_field_type;
+        if (new_field == nullptr) {
+            // If a field does not exist in a record, new_field might be the message root.
+            target_field_type = msg_stack[0]->GetDescriptor();
+        } else if (new_field->type() == FieldDescriptor::TYPE_GROUP || new_field->type() == FieldDescriptor::TYPE_MESSAGE) {
+            // An inner node is just a normal case.
+            target_field_type = new_field->message_type();
+        } else {
+            // If we are at a leaf field, we actually want the containing field because of how Protobuf handles the fields.
+            target_field_type = new_field->containing_type();
+        }
+
         //target_field_type = new_field->containing_type();
 
         while (target_field_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
