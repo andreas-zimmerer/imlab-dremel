@@ -32,7 +32,8 @@ build_debug:
 tester:
     stage: test
     script:
-        - ./build/tester --gtest_filter=-DatabaseQueryTest.AnalyticalQuery*
+        - cd build
+        - ./tester --gtest_filter=-DatabaseQueryTest.AnalyticalQuery*
     dependencies:
         - build_debug
     tags:
