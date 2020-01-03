@@ -22,36 +22,43 @@ class Assembler {
     static_assert(std::is_base_of<Message, R>::value, "R must be derived from google::protobuf::Message");
 
  public:
+    /// Creates a record assembler; initiated to read the record where the current set of readers point to.
+    /// This assembler is stateful:
+    /// You can repeatedly call AssembleNextRecord() to assemble the following records from the storage as well.
+    /// The Assembler is not thread-safe.
+    Assembler(RecordFSM& fsm, std::vector<IFieldReader*>& readers) : _fsm(fsm), _root_reader(readers[0]) {
+        _field_reader_map.clear();
+        for (auto& r : readers) {
+            _field_reader_map[r->field()] = r;
+        }
+    }
+
     /// Assembles a shredded record from a column-store table.
-    R AssembleRecord(RecordFSM& fsm, std::vector<IFieldReader*>& readers) {
+    R AssembleNextRecord() {
         R record {};  // Record that is assembled
 
-        // Init all the things
-        msg_stack = { &record };
-        last_read_field = nullptr;
-        currently_read_field = readers[0]->field();
-        field_reader_map.clear();
-        for (auto& r : readers) {
-            field_reader_map[r->field()] = r;
-        }
+        // Init all the things for a new record.
+        _msg_stack = { &record };
+        _last_read_field = nullptr;
+        _currently_read_field = _root_reader->field();
 
-        while (currently_read_field != nullptr) {
-            auto value = field_reader_map.at(currently_read_field)->ReadNext();
+
+        while (_currently_read_field != nullptr) {
+            auto value = _field_reader_map.at(_currently_read_field)->ReadNext();
             if (!value.is_null()) {
-                MoveToLevel(currently_read_field);
-                value.AppendToRecord(msg_stack[msg_stack.size() - 1]);
+                MoveToLevel(_currently_read_field);
+                value.AppendToRecord(_msg_stack[_msg_stack.size() - 1]);
             } else {
-                auto* new_level = currently_read_field;
-                // TODO: probably this is not the correct new_level
-                for (int i = 0; i < GetFullDefinitionLevel(currently_read_field) - value.definition_level(); i++) {
+                auto* new_level = _currently_read_field;
+                for (int i = 0; i < GetFullDefinitionLevel(_currently_read_field) - value.definition_level(); i++) {
                     new_level = GetFieldDescriptor(new_level->containing_type());
                 }
                 MoveToLevel(new_level);
             }
 
-            currently_read_field = fsm.NextField(currently_read_field, field_reader_map.at(currently_read_field)->Peek().repetition_level());
+            _currently_read_field = _fsm.NextField(_currently_read_field, _field_reader_map.at(_currently_read_field)->Peek().repetition_level());
 
-            ReturnToLevel(currently_read_field);
+            ReturnToLevel(_currently_read_field);
         }
 
         ReturnToLevel(nullptr);
@@ -60,16 +67,31 @@ class Assembler {
     }
 
  protected:
+    // In the original paper, the following two FieldDescriptors are actually FieldReaders.
+    // But it doesn't really matter and I found it easier to work with FieldDescriptors here.
+    const FieldDescriptor* _last_read_field = nullptr;
+    const FieldDescriptor* _currently_read_field = nullptr;
+    // This stack resembles the nested structure of a message.
+    std::vector<Message*> _msg_stack {};
+
+    // A finite state machine to switch between fields within a record.
+    RecordFSM& _fsm;
+    // A reader to the first field in the record.
+    IFieldReader* _root_reader;
+    // We also create a mapping between fields and FieldReaders
+    std::unordered_map<const FieldDescriptor*, IFieldReader*> _field_reader_map;
+
+
     void MoveToLevel(const FieldDescriptor* new_field) {
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        const auto* common_ancestor = GetCommonAncestor(last_read_field, currently_read_field);
+        const auto* common_ancestor = GetCommonAncestor(_last_read_field, _currently_read_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
-        int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
+        int elements_to_remove = _msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
         if (elements_to_remove > 0) {
             for (int i = 0; i < elements_to_remove; i++) {
-                msg_stack.pop_back();
+                _msg_stack.pop_back();
             }
-            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
+            assert(GetFieldDescriptor(_msg_stack[_msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
         }
 
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
@@ -80,7 +102,7 @@ class Assembler {
         const Descriptor* target_field_type;
         if (new_field == nullptr) {
             // If a field does not exist in a record, new_field might be the message root.
-            target_field_type = msg_stack[0]->GetDescriptor();
+            target_field_type = _msg_stack[0]->GetDescriptor();
         } else if (new_field->type() == FieldDescriptor::TYPE_GROUP || new_field->type() == FieldDescriptor::TYPE_MESSAGE) {
             // An inner node is just a normal case.
             target_field_type = new_field->message_type();
@@ -89,43 +111,34 @@ class Assembler {
             target_field_type = new_field->containing_type();
         }
 
-        while (target_field_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
+        while (target_field_type != _msg_stack[_msg_stack.size() - 1]->GetDescriptor()) {
             parents.push_back(GetFieldDescriptor(target_field_type));
             target_field_type = GetFieldDescriptor(target_field_type)->containing_type();
         }
         for (auto field = parents.rbegin(); field != parents.rend(); field++) {
-            Message* parent_msg = msg_stack[msg_stack.size() - 1];
+            Message* parent_msg = _msg_stack[_msg_stack.size() - 1];
             Message* child_msg = ((*field)->is_repeated())? parent_msg->GetReflection()->AddMessage(parent_msg, *field)
                                                           : parent_msg->GetReflection()->MutableMessage(parent_msg, *field);
-            msg_stack.push_back(child_msg);
+            _msg_stack.push_back(child_msg);
         }
 
-        last_read_field = new_field;
+        _last_read_field = new_field;
     }
 
     void ReturnToLevel(const FieldDescriptor* new_field) {
         return;
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
-        const auto* common_ancestor = GetCommonAncestor(last_read_field, new_field);
+        const auto* common_ancestor = GetCommonAncestor(_last_read_field, new_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
-        int elements_to_remove = msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
+        int elements_to_remove = _msg_stack.size() - common_ancestor_level - 1/*don't pop root*/;
         if (elements_to_remove >= 0) {
             for (int i = 0; i < elements_to_remove; i++) {
-                msg_stack.pop_back();
+                _msg_stack.pop_back();
             }
-            assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
-            last_read_field = common_ancestor;
+            assert(GetFieldDescriptor(_msg_stack[_msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
+            _last_read_field = common_ancestor;
         }
     }
-
-    // In the original paper, the following two FieldDescriptors are actually FieldReaders.
-    // But it doesn't really matter and I found it easier to work with FieldDescriptors here.
-    const FieldDescriptor* last_read_field;
-    const FieldDescriptor* currently_read_field;
-    // This stack resembles the nested structure of a message.
-    std::vector<Message*> msg_stack;
-    // We also create a mapping between fields and FieldReaders
-    std::unordered_map<const FieldDescriptor*, IFieldReader*> field_reader_map;
 };
 
 //---------------------------------------------------------------------------

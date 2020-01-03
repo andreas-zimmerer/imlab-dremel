@@ -86,9 +86,10 @@ std::vector<Document> DocumentTable::get_range(uint64_t from_tid, uint64_t to_ti
         {}
     }
 
+    Assembler<Document> assembler { fsm, readers };
     std::vector<Document> records {};
     for (unsigned i = from_tid; i < to_tid; i++) {
-        records.push_back(Assembler<Document>().AssembleRecord(fsm, readers));
+        records.push_back(assembler.AssembleNextRecord());
     }
     return records;
 }
