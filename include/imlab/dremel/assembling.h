@@ -107,6 +107,13 @@ class RecordAssembler {
             target_field_type = new_field->containing_type();
         }
 
+        // Maybe the target_field_type is even further up...
+        // Unwind the message stack even further if that's the case.
+        if (GetFullDefinitionLevel(GetFieldDescriptor(target_field_type)) < _msg_stack.size() - 1) {
+            ReturnToLevel(GetFieldDescriptor(target_field_type));
+        }
+
+        // Now we can actually start to build up the message stack again up to target_field_type.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
         std::vector<const FieldDescriptor*> parents {};
         while (target_field_type != _msg_stack[_msg_stack.size() - 1]->GetDescriptor()) {
@@ -124,10 +131,6 @@ class RecordAssembler {
     }
 
     void ReturnToLevel(const FieldDescriptor* new_field) {
-        // TODO: Not sure what to do here. Everything is handled by MoveToLevel anyway...
-        // TODO: Only exception would be the last call to ReturnToLevel(nullptr) to clean up everything.
-        // TODO: but Protobuf does not require this last cleanup.
-        return;
         // Unwind message stack: End nested records up to the level of the lowest common ancestor.
         const auto* common_ancestor = GetCommonAncestor(_last_read_field, new_field);
         auto common_ancestor_level = GetFullDefinitionLevel(common_ancestor);
@@ -136,7 +139,7 @@ class RecordAssembler {
             for (int i = 0; i < elements_to_remove; i++) {
                 _msg_stack.pop_back();
             }
-            assert(GetFieldDescriptor(_msg_stack[_msg_stack.size() - 1]->GetDescriptor())==common_ancestor);
+            assert(GetFieldDescriptor(_msg_stack[_msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
             _last_read_field = common_ancestor;
         }
     }

@@ -56,34 +56,25 @@ inline unsigned GetMaxRepetitionLevel(const FieldDescriptor* desc) {
 
 /// Gets the lowest common ancestor of two fields.
 inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, const FieldDescriptor* field2) {
-    if (field1 == nullptr || field2 == nullptr) {
-        return nullptr;
-    }
-
-    std::vector<const FieldDescriptor*> field1_path {};
-    std::vector<const FieldDescriptor*> field2_path {};
+    std::vector<const FieldDescriptor*> field1_path { field1 };
+    std::vector<const FieldDescriptor*> field2_path { field2 };
 
     // Collect the path of FieldDescriptors that lead to both fields (in reverse order!)
     auto* parent1 = field1;
-    do {
-        field1_path.push_back(parent1);
+    while (parent1 != nullptr) {
         parent1 = GetFieldDescriptor(parent1->containing_type());
-    } while (parent1 != nullptr);
+        field1_path.push_back(parent1);
+    }
     auto* parent2 = field2;
-    do {
-        field2_path.push_back(parent2);
+    while (parent2 != nullptr) {
         parent2 = GetFieldDescriptor(parent2->containing_type());
-    } while (parent2 != nullptr);
-
-    if (*field1_path.rbegin() != *field2_path.rbegin()) {
-        // They have nothing in common -> only message itself
-        return nullptr;
+        field2_path.push_back(parent2);
     }
 
-    // Index of lowest common ancestor counted from the end
+    // Index of lowest common ancestor counted from the end.
     unsigned common_ancestor_index = 0;
     // Now we have two vectors of paths to the two fields in reversed order (root is at the end).
-    for (unsigned i = 0; i < std::min(field1_path.size(), field2_path.size()) - 1; i++) {
+    for (unsigned i = 0; i < std::min(field1_path.size(), field2_path.size()); i++) {
         if (*(field1_path.rbegin() + i) == *(field2_path.rbegin() + i)) {
             common_ancestor_index = i;
         } else {
@@ -91,38 +82,34 @@ inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, c
         }
     }
 
-    // One of the fields is a leaf. Can happen when both fields are equal or one of them is an inner node above the other.
-    bool one_is_leaf = (common_ancestor_index == field1_path.size() - 1)
-                    || (common_ancestor_index == field2_path.size() - 1);
+    // Helper: not necessarily direct parent, but somewhere above.
+    bool field1_is_parent_of_field2 = *(field1_path.rbegin() + common_ancestor_index) == field1 && field1 != field2;
+    bool field2_is_parent_of_field1 = *(field2_path.rbegin() + common_ancestor_index) == field2 && field1 != field2;
 
-    // If we know that one if the fields is a leaf in the path, but both fields are not equal,
-    // one of them is actually an inner node that is on the path of the other field.
-    if (one_is_leaf && field1 != field2 && field1_path.size() < field2_path.size()) {
-        return *(field1_path.rbegin() + common_ancestor_index);
+    // Edge case:
+    // When field1 is a parent node of field2, return the parent (field1).
+    if (field1_is_parent_of_field2) {
+        return field1;
     }
 
-    // At this point we have the lowest field in the tree that is common for both fields.
-    // Now we have to handle certain situations regarding field ordering.
-    //  1) If the first field after the common ancestor has a smaller index than the second field
-    //     (was declared before the second field), everything is fine because both fields belong to
-    //     exactly this ancestor within the message.
-    //  2) Else, although the two fields do have a common ancestor type, they do not belong to the same
-    //     ancestor in the actual message. This is for example the case if field 1 comes after field 2
-    //     when their parent type is repeated. Although they have the same parent type, they don't belong
-    //     to the exact same parent, but to a repeated version. Because of that, the parent of the parent
-    //     is their actual common ancestor.
-    if (!one_is_leaf && (*(field1_path.rbegin() + common_ancestor_index + 1))->index() < (*(field2_path.rbegin() + common_ancestor_index + 1))->index()) {
-        return *(field1_path.rbegin() + common_ancestor_index);
-    } else {
+    // Edge case:
+    // When both fields are equal, we need to go up the tree until we find a repeated field and return the field above.
+    // Same happens when field1 and field2 are in reverse order as they were declared in the message schema.
+    // The latter happens either for the trivial case of two (atomic) fields or if field2 is parent of field1.
+    if (field1 == field2 || (field2_is_parent_of_field1 || (*(field1_path.rbegin() + common_ancestor_index + 1))->index() >= (*(field2_path.rbegin() + common_ancestor_index + 1))->index())) {
         auto f = field1_path.rbegin() + common_ancestor_index;  // common_ancestor could also be the field itself if fields are equal.
         while (f != field1_path.rbegin() && !(*f)->is_repeated()) {
             f--;
         }
         if (f == field1_path.rbegin()) {
-            return nullptr;  // this case happens when both fields need to be in different messages.
+            // This case happens when both fields need to be in different messages because there is no above repeating field.
+            return nullptr;
         }
-        return *(--f);  // the field above.
+        return *(--f);  // the field above the repeated field.
     }
+
+    // Normal case:
+    return *(field1_path.rbegin() + common_ancestor_index);
 }
 
 /// Computes the definition level of a given field.

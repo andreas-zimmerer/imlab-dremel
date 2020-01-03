@@ -131,7 +131,7 @@ TEST(DremelSchemaHelperTest, CommonAncestorDifferentMessage) {
 // Interesting case: Field 1 is an inner node that contains field 2 as a leaf.
 TEST(DremelSchemaHelperTest, CommonAncestorContainingField) {
     auto common_ancestor = GetCommonAncestor(Name_Language_Field, Name_Language_Code_Field);
-    ASSERT_EQ(common_ancestor, Name_Field);
+    ASSERT_EQ(common_ancestor, Name_Language_Field);
 }
 
 // Interesting case: Field 2 is an inner node that contains field 1 as a leaf.
