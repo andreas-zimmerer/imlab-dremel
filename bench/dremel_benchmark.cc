@@ -71,7 +71,7 @@ void BM_Load_Full_Dataset(benchmark::State &state) {
         db.LoadDocumentTable(dremel_file);
     }
 
-    state.SetItemsProcessed(db.documentTable.get_size());
+    state.SetItemsProcessed(db.documentTable.size());
 }
 
 }  // namespace
