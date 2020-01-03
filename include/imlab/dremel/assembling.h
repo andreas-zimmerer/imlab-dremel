@@ -72,11 +72,6 @@ class Assembler {
             assert(GetFieldDescriptor(msg_stack[msg_stack.size() - 1]->GetDescriptor()) == common_ancestor);
         }
 
-        /*if(GetFullDefinitionLevel(new_field) <= common_ancestor_level) {
-            last_read_field = new_field;
-            return;
-        }*/
-
         // Re-build message stack accordingly: Start nested records from the level of the lowest common ancestor.
         // First, gather which fields we need to add to our stack (reverse order), then convert them to messages.
         std::vector<const FieldDescriptor*> parents {};
@@ -93,8 +88,6 @@ class Assembler {
             // If we are at a leaf field, we actually want the containing field because of how Protobuf handles the fields.
             target_field_type = new_field->containing_type();
         }
-
-        //target_field_type = new_field->containing_type();
 
         while (target_field_type != msg_stack[msg_stack.size() - 1]->GetDescriptor()) {
             parents.push_back(GetFieldDescriptor(target_field_type));

@@ -400,8 +400,6 @@ TEST(DremelTest, InsertAndGetIndividual) {
     });
 
     for (unsigned i = 0; i < documents.size(); i++) {
-        std::cout << "Getting record: " << i + 1 << std::endl;
-
         const auto& record = db.documentTable.get(i, {
             DocId_Field,
             Links_Backward_Field,
