@@ -12,6 +12,7 @@
 #include "imlab/dremel/shredding.h"
 #include "database.h"
 #include "benchmark/benchmark.h"
+#include "../include/database.h"
 
 namespace {
 using namespace imlab::dremel;
@@ -74,11 +75,65 @@ void BM_Load_Full_Dataset(benchmark::State &state) {
     state.SetItemsProcessed(db.documentTable.size());
 }
 
+/// Load a record into the database and retrieve it.
+/// Measure the time it takes for the get()-operation. Involves:
+///  * building the FSM to get the appropriate fields.
+///  * assemble record
+void BM_Assemble_Document(benchmark::State &state) {
+    imlab::Database db {};
+
+    // Large Document record from Dremel paper.
+    Document document {};
+    document.set_docid(10);
+    Document_Links* document_links = document.mutable_links();
+    document_links->add_forward(20);
+    document_links->add_forward(40);
+    document_links->add_forward(60);
+    Document_Name* document_name_1 = document.add_name();
+    Document_Name_Language* document_name_1_language_1 = document_name_1->add_language();
+    document_name_1_language_1->set_code("en-us");
+    document_name_1_language_1->set_country("us");
+    Document_Name_Language* document_name_1_language_2 = document_name_1->add_language();
+    document_name_1_language_2->set_code("en");
+    document_name_1->set_url("http://A");
+    Document_Name* document_name_2 = document.add_name();
+    document_name_2->set_url("http://B");
+    Document_Name* document_name_3 = document.add_name();
+    Document_Name_Language* document_name_3_language_1 = document_name_3->add_language();
+    document_name_3_language_1->set_code("en-gb");
+    document_name_3_language_1->set_country("gb");
+
+    db.documentTable.insert(document);
+
+    // FieldDescriptors of fields we want to retrieve.
+    const auto* DocId_Field = Document::descriptor()->FindFieldByName("DocId");
+    const auto& Links_Field = Document::descriptor()->FindFieldByName("links");
+    const auto* Links_Backward_Field = Document_Links::descriptor()->FindFieldByName("Backward");
+    const auto* Links_Forward_Field = Document_Links::descriptor()->FindFieldByName("Forward");
+    const auto* Name_Language_Code_Field = Document_Name_Language::descriptor()->FindFieldByName("Code");
+    const auto* Name_Language_Country_Field = Document_Name_Language::descriptor()->FindFieldByName("Country");
+    const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
+
+    for (auto _ : state) {
+        const auto& record = db.documentTable.get(0, {
+            DocId_Field,
+            Links_Backward_Field,
+            Links_Forward_Field,
+            Name_Language_Code_Field,
+            Name_Language_Country_Field,
+            Name_Url_Field
+        });
+    }
+
+    state.SetItemsProcessed(state.iterations());
+}
+
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
 BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
 BENCHMARK(BM_Load_Full_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_Assemble_Document);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
