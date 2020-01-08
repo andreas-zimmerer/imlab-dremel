@@ -4,7 +4,7 @@
 #include "imlab/schemac/schema_parse_context.h"
 #include "./gen/schema_parser.h"
 #include <sstream>
-#include <unordered_set>
+#include <algorithm>
 #include "imlab/infra/error.h"
 // ---------------------------------------------------------------------------------------------------
 using SchemaParseContext = imlab::schemac::SchemaParseContext;

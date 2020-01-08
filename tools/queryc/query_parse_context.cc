@@ -5,9 +5,8 @@
 #include "./gen/query_parser.h"
 #include <sstream>
 #include <set>
+#include <algorithm>
 #include "imlab/infra/error.h"
-#include "imlab/infra/hash.h"
-#include "imlab/schemac/schema_parse_context.h"
 #include "imlab/schemac/schema_compiler.h"
 #include "imlab/algebra/table_scan.h"
 #include "imlab/algebra/print.h"
