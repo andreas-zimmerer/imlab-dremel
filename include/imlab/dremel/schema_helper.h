@@ -5,6 +5,8 @@
 #define INCLUDE_IMLAB_DREMEL_SCHEMA_HELPER_H_
 //---------------------------------------------------------------------------
 #include <google/protobuf/message.h>
+#include <unordered_map>
+#include "imlab/infra/hash.h"
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {
@@ -54,8 +56,15 @@ inline unsigned GetMaxRepetitionLevel(const FieldDescriptor* desc) {
     return repetition_level;
 }
 
+static std::unordered_map<std::pair<const FieldDescriptor*, const FieldDescriptor*>, const FieldDescriptor*> _common_ancestor_cache {};
+
 /// Gets the lowest common ancestor of two fields.
 inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, const FieldDescriptor* field2) {
+    auto cached = _common_ancestor_cache.find(std::make_pair(field1, field2));
+    if (cached != _common_ancestor_cache.end()) {
+        return cached->second;
+    }
+
     std::vector<const FieldDescriptor*> field1_path { field1 };
     std::vector<const FieldDescriptor*> field2_path { field2 };
 
@@ -89,6 +98,7 @@ inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, c
     // Edge case:
     // When field1 is a parent node of field2, return the parent (field1).
     if (field1_is_parent_of_field2) {
+        _common_ancestor_cache.emplace(std::make_pair(field1, field2), field1);
         return field1;
     }
 
@@ -103,13 +113,18 @@ inline const FieldDescriptor* GetCommonAncestor(const FieldDescriptor* field1, c
         }
         if (f == field1_path.rbegin()) {
             // This case happens when both fields need to be in different messages because there is no above repeating field.
+            _common_ancestor_cache.emplace(std::make_pair(field1, field2), nullptr);
             return nullptr;
         }
-        return *(--f);  // the field above the repeated field.
+        auto parent = *(--f);
+        _common_ancestor_cache.emplace(std::make_pair(field1, field2), parent);
+        return parent;  // the field above the repeated field.
     }
 
     // Normal case:
-    return *(field1_path.rbegin() + common_ancestor_index);
+    auto common_ancestor = *(field1_path.rbegin() + common_ancestor_index);
+    _common_ancestor_cache.emplace(std::make_pair(field1, field2), common_ancestor);
+    return common_ancestor;
 }
 
 /// Computes the definition level of a given field.
