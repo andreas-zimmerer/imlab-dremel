@@ -11,6 +11,8 @@ namespace imlab {
 // ---------------------------------------------------------------------------
 class Query {
  public:
+    explicit Query() {}
+    explicit Query(Print p) : op(std::move(p)) {}
     std::optional<Print> op{};
 
     void GenerateCode(std::ostream& _o) { op->Produce(_o); }

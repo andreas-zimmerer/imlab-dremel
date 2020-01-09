@@ -2,11 +2,15 @@
 // IMLAB
 // ---------------------------------------------------------------------------
 
+#include <dlfcn.h>
+#include <fstream>
 #include "database.h"
 #include "rapidjson/document.h"
 #include <rapidjson/istreamwrapper.h>
+#include "imlab/queryc/query_compiler.h"
 
 namespace imlab {
+    using QueryCompiler = imlab::queryc::QueryCompiler;
 
 void Database::DecodeJson(std::istream& in, const std::function<void (Document&)>& handler) {
     rapidjson::IStreamWrapper stream(in);
@@ -71,8 +75,74 @@ void Database::DecodeJson(std::istream& in, const std::function<void (Document&)
     }
 }
 
+/// Executes a compiled query.
 void Database::LoadDocumentTable(std::istream &in) {
     DecodeJson(in, [&](auto& d) { documentTable.insert(d); });
+}
+
+void ExecuteQuery(imlab::Database &db, const std::string &dylib_path) {
+    void *handle = dlopen(dylib_path.c_str(), RTLD_NOW);
+    if (!handle) {
+        std::cerr << "error: " << dlerror() << std::endl;
+        exit(1);
+    }
+    auto run_query = reinterpret_cast<void (*)(imlab::Database &)>(dlsym(handle, "Run"));
+    if (!run_query) {
+        std::cerr << "error: " << dlerror() << std::endl;
+        exit(1);
+    }
+
+    run_query(db);
+
+    if (dlclose(handle)) {
+        std::cerr << "error: " << dlerror() << std::endl;
+        exit(1);
+    }
+}
+
+QueryStats Database::RunQuery(Query& query) {
+    //---------------------------------------------------------------------------------------
+    auto code_generation_begin = std::chrono::steady_clock::now();
+
+    std::ofstream query_out_h("../tools/queryc/gen/query.h", std::ofstream::trunc);
+    std::ofstream query_out_cc("../tools/queryc/gen/query.cc", std::ofstream::trunc);
+    QueryCompiler compiler {query_out_h, query_out_cc};
+
+    compiler.Compile(query);
+
+    query_out_h.close();
+    query_out_cc.close();
+
+    auto code_generation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - code_generation_begin).count();
+    //---------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------
+    auto code_compilation_begin = std::chrono::steady_clock::now();
+
+    auto err = system("c++ ../tools/queryc/gen/query.cc -o ../tools/queryc/gen/query.so -std=c++17 -shared -fPIC -rdynamic");
+    if (err) {
+        throw std::runtime_error("Unable to compile query.");
+    }
+
+    auto code_compilation_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - code_compilation_begin).count();
+    //---------------------------------------------------------------------------------------
+
+    //---------------------------------------------------------------------------------------
+    auto query_execution_begin = std::chrono::steady_clock::now();
+
+    ExecuteQuery(*this, "../tools/queryc/gen/query.so");
+
+    auto query_execution_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - query_execution_begin).count();
+    //---------------------------------------------------------------------------------------
+
+    return QueryStats {
+        code_generation_duration,
+        code_compilation_duration,
+        query_execution_duration
+    };
 }
 
 }  // namespace imlab

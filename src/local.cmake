@@ -14,7 +14,7 @@ file(GLOB_RECURSE SRC_CC "src/*.cc")
 
 add_library(imlab SHARED ${SRC_CC})
 add_dependencies(imlab rapidjson)
-target_link_libraries(imlab proto_schema gflags Threads::Threads)
+target_link_libraries(imlab proto_schema query gflags Threads::Threads)
 
 # ---------------------------------------------------------------------------
 # Linting

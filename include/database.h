@@ -7,9 +7,16 @@
 
 #include <istream>
 #include <functional>
+#include <imlab/algebra/query.h>
 #include "../tools/protobuf/gen/schema.h"
 
 namespace imlab {
+
+struct QueryStats {
+    long code_generation_duration;
+    long code_compilation_duration;
+    long query_execution_duration;
+};
 
 class Database {
  public:
@@ -19,6 +26,8 @@ class Database {
     void LoadDocumentTable(std::istream& in);
 
     static void DecodeJson(std::istream& in, const std::function<void (Document&)>& handler);
+
+    QueryStats RunQuery(Query& query);
 
     imlab::schema::DocumentTable documentTable;
 };
