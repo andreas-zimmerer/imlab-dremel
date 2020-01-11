@@ -20,7 +20,7 @@ class QueryExecutionTest : public ::testing::Test {
         system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
         std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
         imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
-            db.documentTable.insert(d);
+            db.DocumentTable.insert(d);
             documents.push_back(d);
         });
     }
@@ -42,7 +42,7 @@ TEST_F(QueryExecutionTest, Selection) {
     TableScan scan("Document");
     Selection sel(std::make_unique<TableScan>(std::move(scan)), {});  // TODO: some IUs
     Print print(std::make_unique<Selection>(std::move(sel)));
-    print.Prepare({}, nullptr);  // TODO: some IUs
+    print.Prepare({imlab::schema::DocumentTable::fields()}, nullptr);
     Query query {std::move(print)};
 
     db.RunQuery(query);

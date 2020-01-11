@@ -8,9 +8,9 @@
 #include <optional>
 #include <vector>
 #include "./schema.pb.h"
-#include "imlab/dremel/storage.h"
-#include "imlab/dremel/field_writer.h"
-#include "imlab/infra/types.h"
+#include "../../../include/imlab/dremel/storage.h"
+#include "../../../include/imlab/dremel/field_writer.h"
+#include "../../../include/imlab/infra/types.h"
 #include <google/protobuf/descriptor.h>
 // ---------------------------------------------------------------------------
 namespace imlab {

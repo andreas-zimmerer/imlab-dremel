@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------
 #include <google/protobuf/message.h>
 #include <unordered_map>
-#include "imlab/infra/hash.h"
+#include "../infra/hash.h"
 //---------------------------------------------------------------------------
 namespace imlab {
 namespace dremel {

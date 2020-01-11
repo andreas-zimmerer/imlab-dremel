@@ -27,14 +27,11 @@ namespace imlab {
     void Print::Consume(std::ostream& _o, const Operator* child) {
         // Print:
         // cout_lock.lock();
-        // out_ << [table]_[column] ...;
+        // out_ << record.DebugString();
         // cout_lock.unlock();
 
         _o << "cout_lock.lock();" << std::endl;
-        _o << "std::cout";
-        for (auto& iu : required_fields_) {
-            _o << " << record.DebugString(); << std::endl";
-        }
+        _o << "std::cout << record.DebugString() << std::endl;" << std::endl;
         _o << "cout_lock.unlock();" << std::endl;
     }
 

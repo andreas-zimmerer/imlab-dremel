@@ -77,7 +77,7 @@ void Database::DecodeJson(std::istream& in, const std::function<void (Document&)
 
 /// Executes a compiled query.
 void Database::LoadDocumentTable(std::istream &in) {
-    DecodeJson(in, [&](auto& d) { documentTable.insert(d); });
+    DecodeJson(in, [&](auto& d) { DocumentTable.insert(d); });
 }
 
 void ExecuteQuery(imlab::Database &db, const std::string &dylib_path) {

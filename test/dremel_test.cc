@@ -161,10 +161,10 @@ TEST(DremelTest, ShreddingDocumentRecordSmall) {
 
     db.LoadDocumentTable(in);
 
-    auto* tc = reinterpret_cast<TestClass*>(&db.documentTable);
+    auto* tc = reinterpret_cast<TestClass*>(&db.DocumentTable);
     tc->print();
 
-    ASSERT_EQ(db.documentTable.size(), 1);
+    ASSERT_EQ(db.DocumentTable.size(), 1);
     ASSERT_EQ(tc->DocId_Column.size(), 1);
     ASSERT_EQ(tc->DocId_Column.get(0), (DremelRow<int64_t>{{20}, 0, 0}));
     ASSERT_EQ(tc->Links_Backward_Column.size(), 2);
@@ -187,10 +187,10 @@ TEST(DremelTest, ShreddingDocumentRecordLarge) {
 
     db.LoadDocumentTable(in);
 
-    auto* tc = reinterpret_cast<TestClass*>(&db.documentTable);
+    auto* tc = reinterpret_cast<TestClass*>(&db.DocumentTable);
     tc->print();
 
-    ASSERT_EQ(db.documentTable.size(), 1);
+    ASSERT_EQ(db.DocumentTable.size(), 1);
     ASSERT_EQ(tc->DocId_Column.size(), 1);
     ASSERT_EQ(tc->DocId_Column.get(0), (DremelRow<int64_t>{{10}, 0, 0}));
     ASSERT_EQ(tc->Links_Backward_Column.size(), 1);
@@ -266,7 +266,7 @@ TEST(DremelTest, InsertAndGetLargeRecordWithPartialFSM) {
     std::stringstream in(imlab_test::kTestDocumentPaperLarge);
 
     db.LoadDocumentTable(in);
-    auto record = db.documentTable.get(0, {
+    auto record = db.DocumentTable.get(0, {
         DocId_Field,
         Name_Language_Country_Field
     });
@@ -292,7 +292,7 @@ TEST(DremelTest, InsertAndGetSmallRecordWithPartialFSM) {
     std::stringstream in(imlab_test::kTestDocumentPaperSmall);
 
     db.LoadDocumentTable(in);
-    auto record = db.documentTable.get(0, {
+    auto record = db.DocumentTable.get(0, {
         DocId_Field,
         Name_Language_Country_Field
     });
@@ -311,7 +311,7 @@ TEST(DremelTest, InsertAndGetEmptyRecordWithPartialFSM) {
     std::stringstream in(imlab_test::kTestDocumentEmpty);
 
     db.LoadDocumentTable(in);
-    auto record = db.documentTable.get(0, {
+    auto record = db.DocumentTable.get(0, {
         DocId_Field,
         Name_Language_Country_Field
     });
@@ -331,8 +331,8 @@ TEST(DremelTest, InsertAndGetLargeRecordRoundtrip) {
 
     imlab::Database db {};
 
-    db.documentTable.insert(document);
-    const auto& record = db.documentTable.get(0, {
+    db.DocumentTable.insert(document);
+    const auto& record = db.DocumentTable.get(0, {
         DocId_Field,
         Links_Backward_Field,
         Links_Forward_Field,
@@ -352,8 +352,8 @@ TEST(DremelTest, InsertAndGetSmallRecordRoundtrip) {
 
     imlab::Database db {};
 
-    db.documentTable.insert(document);
-    const auto& record = db.documentTable.get(0, {
+    db.DocumentTable.insert(document);
+    const auto& record = db.DocumentTable.get(0, {
         DocId_Field,
         Links_Backward_Field,
         Links_Forward_Field,
@@ -373,8 +373,8 @@ TEST(DremelTest, InsertAndGetEmptyRecordRoundtrip) {
 
     imlab::Database db {};
 
-    db.documentTable.insert(document);
-    const auto& record = db.documentTable.get(0, {
+    db.DocumentTable.insert(document);
+    const auto& record = db.DocumentTable.get(0, {
         DocId_Field,
         Links_Backward_Field,
         Links_Forward_Field,
@@ -395,12 +395,12 @@ TEST(DremelTest, InsertAndGetIndividual) {
     system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
     std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
     imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
-        db.documentTable.insert(d);
+        db.DocumentTable.insert(d);
         documents.push_back(d);
     });
 
     for (unsigned i = 0; i < documents.size(); i++) {
-        const auto& record = db.documentTable.get(i, {
+        const auto& record = db.DocumentTable.get(i, {
             DocId_Field,
             Links_Backward_Field,
             Links_Forward_Field,
@@ -422,11 +422,11 @@ TEST(DremelTest, InsertAndGetFullRange) {
     system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
     std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
     imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
-        db.documentTable.insert(d);
+        db.DocumentTable.insert(d);
         documents.push_back(d);
     });
 
-    const auto& documents_read = db.documentTable.get_range(0, documents.size(),{
+    const auto& documents_read = db.DocumentTable.get_range(0, documents.size(), {
         DocId_Field,
         Links_Backward_Field,
         Links_Forward_Field,

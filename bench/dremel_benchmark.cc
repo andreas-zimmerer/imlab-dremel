@@ -72,7 +72,7 @@ void BM_Load_Full_Dataset(benchmark::State &state) {
         db.LoadDocumentTable(dremel_file);
     }
 
-    state.SetItemsProcessed(db.documentTable.size());
+    state.SetItemsProcessed(db.DocumentTable.size());
 }
 
 /// Load a record into the database and retrieve it.
@@ -103,7 +103,7 @@ void BM_Assemble_Document(benchmark::State &state) {
     document_name_3_language_1->set_code("en-gb");
     document_name_3_language_1->set_country("gb");
 
-    db.documentTable.insert(document);
+    db.DocumentTable.insert(document);
 
     // FieldDescriptors of fields we want to retrieve.
     const auto* DocId_Field = Document::descriptor()->FindFieldByName("DocId");
@@ -115,7 +115,7 @@ void BM_Assemble_Document(benchmark::State &state) {
     const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
 
     for (auto _ : state) {
-        const auto& record = db.documentTable.get(0, {
+        const auto& record = db.DocumentTable.get(0, {
             DocId_Field,
             Links_Backward_Field,
             Links_Forward_Field,

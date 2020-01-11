@@ -7,8 +7,8 @@
 #include <vector>
 #include "./storage.h"
 #include "./schema_helper.h"
-#include "imlab/infra/hash.h"
-#include "imlab/infra/types.h"
+#include "../infra/hash.h"
+#include "../infra/types.h"
 #include <google/protobuf/descriptor.h>
 //---------------------------------------------------------------------------
 namespace imlab {
@@ -109,7 +109,9 @@ class ComplexFieldWriter : public FieldWriter {
         : FieldWriter(field), _child_writers(std::move(child_writers)) {}
     /// Returns the corresponding FieldWriter for the field with the given field_number
     std::optional<FieldWriter*> find_child_writer(unsigned field_number) {
-        auto it = std::find_if(_child_writers.begin(), _child_writers.end(), [&](FieldWriter* c) { return c->get_field_id() == field_number; });
+        auto it = std::find_if(_child_writers.begin(), _child_writers.end(), [&](FieldWriter* c) {
+            return c->get_field_id() == field_number;
+        });
         return (it != _child_writers.end())? std::optional<FieldWriter*>(*it) : std::nullopt;
     };
  protected:

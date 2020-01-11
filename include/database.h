@@ -7,7 +7,7 @@
 
 #include <istream>
 #include <functional>
-#include <imlab/algebra/query.h>
+#include "./imlab/algebra/query.h"
 #include "../tools/protobuf/gen/schema.h"
 
 namespace imlab {
@@ -20,7 +20,7 @@ struct QueryStats {
 
 class Database {
  public:
-    /// Load data from JSON into documentTable.
+    /// Load data from JSON into DocumentTable.
     /// The underlying file format of the istream should be JSON.
     /// The JSON should be an array at the top level.
     void LoadDocumentTable(std::istream& in);
@@ -29,7 +29,7 @@ class Database {
 
     QueryStats RunQuery(Query& query);
 
-    imlab::schema::DocumentTable documentTable;
+    imlab::schema::DocumentTable DocumentTable;
 };
 
 }  // namespace imlab

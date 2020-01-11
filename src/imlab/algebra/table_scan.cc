@@ -35,11 +35,13 @@ namespace imlab {
 
         _o << "tbb::parallel_for(tbb::blocked_range<size_t>(0, db." << table_ << "Table.size()), [&](const tbb::blocked_range<size_t>& index_range) {" << std::endl;
         _o << "    for(size_t i = index_range.begin(); i != index_range.end(); ++i) {" << std::endl;
-        _o << "        auto& record = db." << table_ << "Table.get(i, {";
+        _o << "        const auto& record = db." << table_ << "Table.get(i, {" << std::endl;
         for (auto& field : required_fields_) {
-            _o << field->full_name() << ", ";
+            auto field_name = field->containing_type()->full_name();
+            std::replace(field_name.begin(), field_name.end(), '.', '_');
+            _o << "            " << field_name << "::descriptor()->FindFieldByName(\"" << field->name() << "\")," << std::endl;
         }
-        _o << "});" << std::endl;
+        _o << "        });" << std::endl;
 
         consumer_->Consume(_o, this);
 
