@@ -6,30 +6,21 @@
 
 namespace imlab {
 
-    std::vector<const IU*> Print::CollectIUs() {
+    std::vector<const google::protobuf::FieldDescriptor*> Print::CollectFields() {
         return {};
     }
 
-    void Print::Prepare(const std::vector<const IU*> &required, Operator* consumer) {
-        required_ius_ = required;
+    void Print::Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator* consumer) {
+        required_fields_ = required;
         consumer_ = consumer;
 
-        child_->Prepare(required_ius_, this);
+        child_->Prepare(required_fields_, this);
     }
 
     void Print::Produce(std::ostream& _o) {
         // Create a lock for the output (because otherwise the prints might be interleaved)
         _o << "std::mutex cout_lock;" << std::endl << std::endl;
 
-        // Print column names
-        for (auto& iu : required_ius_) {
-            _o << "std::cout << \" | \" << std::right << std::setw(20) << \"" << iu->column << "\";" << std::endl;
-        }
-        _o << "std::cout << \" |\" << std::endl;" << std::endl;
-        for (auto& iu : required_ius_) {
-            _o << "std::cout << \" | --------------------\";" << std::endl;
-        }
-        _o << "std::cout << \" |\" << std::endl;" << std::endl << std::endl;
         child_->Produce(_o);
     }
 
@@ -41,10 +32,9 @@ namespace imlab {
 
         _o << "cout_lock.lock();" << std::endl;
         _o << "std::cout";
-        for (auto& iu : required_ius_) {
-            _o << " << \" | \" << std::right << std::setw(20) << " << iu->table << "_" << iu->column;
+        for (auto& iu : required_fields_) {
+            _o << " << record.DebugString(); << std::endl";
         }
-        _o << " << \" |\" << std::endl;" << std::endl;
         _o << "cout_lock.unlock();" << std::endl;
     }
 

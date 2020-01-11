@@ -154,24 +154,24 @@ inline void WriteField(FieldWriter* writer, const ProtoFieldValue& value, unsign
 
     switch (value.GetField()->cpp_type()) {
         case FieldDescriptor::CPPTYPE_INT32:
-            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
-                Integer(value.GetFieldValue<int32_t>()), repetition_level);
+            dynamic_cast<AtomicFieldWriter<int32_t>*>(writer)->write_value(
+                value.GetFieldValue<int32_t>(), repetition_level);
             break;
         case FieldDescriptor::CPPTYPE_INT64:
-            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
-                Integer(value.GetFieldValue<int64_t>()), repetition_level);
+            dynamic_cast<AtomicFieldWriter<int64_t>*>(writer)->write_value(
+                value.GetFieldValue<int64_t>(), repetition_level);
             break;
         case FieldDescriptor::CPPTYPE_UINT32:
-            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
-                Integer(value.GetFieldValue<uint32_t>()), repetition_level);
+            dynamic_cast<AtomicFieldWriter<uint32_t>*>(writer)->write_value(
+                value.GetFieldValue<uint32_t>(), repetition_level);
             break;
         case FieldDescriptor::CPPTYPE_UINT64:
-            dynamic_cast<AtomicFieldWriter<Integer>*>(writer)->write_value(
-                Integer(value.GetFieldValue<uint64_t>()), repetition_level);
+            dynamic_cast<AtomicFieldWriter<uint64_t>*>(writer)->write_value(
+                value.GetFieldValue<uint64_t>(), repetition_level);
             break;
         case FieldDescriptor::CPPTYPE_STRING:
-            dynamic_cast<AtomicFieldWriter<Varchar<30>>*>(writer)->write_value(
-                Varchar<30>::build(value.GetFieldValue<std::string>().c_str()), repetition_level);
+            dynamic_cast<AtomicFieldWriter<std::string>*>(writer)->write_value(
+                value.GetFieldValue<std::string>(), repetition_level);
             break;
         case FieldDescriptor::CPPTYPE_DOUBLE:  // UNSUPPRTED
         case FieldDescriptor::CPPTYPE_FLOAT:  // UNSUPPRTED

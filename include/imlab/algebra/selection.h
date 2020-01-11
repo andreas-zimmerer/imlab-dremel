@@ -17,23 +17,23 @@ class Selection: public Operator {
     // Child operator
     std::unique_ptr<Operator> child_;
     // Predicates
-    std::vector<std::pair<const IU*, std::string>> predicates_;
+    std::vector<std::pair<const google::protobuf::FieldDescriptor*, std::string>> predicates_;
 
     // Required ius
-    std::vector<const IU*> required_ius_;
+    std::vector<const google::protobuf::FieldDescriptor*> required_fields_;
     // Consumer
     Operator *consumer_;
 
  public:
     // Constructor
-    Selection(std::unique_ptr<Operator> child, std::vector<std::pair<const IU*, std::string>> predicates)
+    Selection(std::unique_ptr<Operator> child, std::vector<std::pair<const google::protobuf::FieldDescriptor*, std::string>> predicates)
         : child_(std::move(child)), predicates_(std::move(predicates)) {}
 
     // Collect all IUs produced by the operator
-    std::vector<const IU*> CollectIUs() override;
+    std::vector<const google::protobuf::FieldDescriptor*> CollectFields() override;
 
     // Prepare the operator
-    void Prepare(const std::vector<const IU*> &required, Operator* consumer) override;
+    void Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator* consumer) override;
     // Produce all tuples
     void Produce(std::ostream& _o) override;
     // Consume tuple

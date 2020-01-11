@@ -50,19 +50,19 @@ class FieldValue {
 template<typename T>
 void AppendToRecordGeneric(T value, const FieldDescriptor* field, Message* msg);
 
-template<> inline void AppendToRecordGeneric(Integer value, const FieldDescriptor* field, Message* msg) {
+template<> inline void AppendToRecordGeneric(int64_t value, const FieldDescriptor* field, Message* msg) {
     if (field->is_repeated()) {
-        AddValue(msg, field, (int64_t)value.value);
+        AddValue(msg, field, value);
     } else {
-        SetValue(msg, field, (int64_t)value.value);
+        SetValue(msg, field, value);
     }
 }
 
-template<> inline void AppendToRecordGeneric(Varchar<30> value, const FieldDescriptor* field, Message* msg) {
+template<> inline void AppendToRecordGeneric(std::string value, const FieldDescriptor* field, Message* msg) { // TODO: make reference
     if (field->is_repeated()) {
-        AddValue(msg, field, (std::string)value.value);
+        AddValue(msg, field, value);
     } else {
-        SetValue(msg, field, (std::string)value.value);
+        SetValue(msg, field, value);
     }
 }
 

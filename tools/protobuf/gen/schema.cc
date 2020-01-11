@@ -11,33 +11,19 @@ namespace imlab {
 namespace schema {
 // ---------------------------------------------------------------------------
 
-const std::vector<IU> DocumentTable::IUs = {
-    IU("Document", "DocId", schemac::Type::Integer()),
-    IU("Document", "Links.Backward", schemac::Type::Integer()),
-    IU("Document", "Links.Forward", schemac::Type::Integer()),
-    IU("Document", "Name.Language.Code", schemac::Type::Varchar(30)),
-    IU("Document", "Name.Language.Country", schemac::Type::Varchar(30)),
-    IU("Document", "Name.Url", schemac::Type::Varchar(30)),
-};
-
-std::vector<const IU*> DocumentTable::get_ius() {
-    std::vector<const IU*> refs {};
-    refs.reserve(IUs.size());
-    for (auto& iu : IUs) {
-        refs.push_back(&iu);
-    }
-    return refs;
+std::vector<const FieldDescriptor*> DocumentTable::fields() {
+    return { DocId_Descriptor, Links_Backward_Descriptor, Links_Forward_Descriptor, Name_Language_Code_Descriptor, Name_Language_Country_Descriptor, Name_Url_Descriptor, };
 }
 
 uint64_t DocumentTable::insert(Document& record) {
     // Before we insert records with DissectRecord, we need to remember the last indices in each column.
     // They will be the starting points of the fields of the dissected record.
-    DocId_Record_TIDs.push_back(DocId.size());
-    Links_Backward_Record_TIDs.push_back(Links_Backward.size());
-    Links_Forward_Record_TIDs.push_back(Links_Forward.size());
-    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code.size());
-    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country.size());
-    Name_Url_Record_TIDs.push_back(Name_Url.size());
+    DocId_Record_TIDs.push_back(DocId_Column.size());
+    Links_Backward_Record_TIDs.push_back(Links_Backward_Column.size());
+    Links_Forward_Record_TIDs.push_back(Links_Forward_Column.size());
+    Name_Language_Code_Record_TIDs.push_back(Name_Language_Code_Column.size());
+    Name_Language_Country_Record_TIDs.push_back(Name_Language_Country_Column.size());
+    Name_Url_Record_TIDs.push_back(Name_Url_Column.size());
 
     Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);
 
@@ -52,35 +38,35 @@ std::vector<Document> DocumentTable::get_range(uint64_t from_tid, uint64_t to_ti
     std::vector<IFieldReader*> readers {};
 
     uint64_t DocId_index = DocId_Record_TIDs[from_tid];
-    FieldReader DocId_Reader { &DocId, DocId_index };
+    FieldReader DocId_Reader { &DocId_Column, DocId_index };
     uint64_t Links_Backward_index = Links_Backward_Record_TIDs[from_tid];
-    FieldReader Links_Backward_Reader { &Links_Backward, Links_Backward_index };
+    FieldReader Links_Backward_Reader { &Links_Backward_Column, Links_Backward_index };
     uint64_t Links_Forward_index = Links_Forward_Record_TIDs[from_tid];
-    FieldReader Links_Forward_Reader { &Links_Forward, Links_Forward_index };
+    FieldReader Links_Forward_Reader { &Links_Forward_Column, Links_Forward_index };
     uint64_t Name_Language_Code_index = Name_Language_Code_Record_TIDs[from_tid];
-    FieldReader Name_Language_Code_Reader { &Name_Language_Code, Name_Language_Code_index };
+    FieldReader Name_Language_Code_Reader { &Name_Language_Code_Column, Name_Language_Code_index };
     uint64_t Name_Language_Country_index = Name_Language_Country_Record_TIDs[from_tid];
-    FieldReader Name_Language_Country_Reader { &Name_Language_Country, Name_Language_Country_index };
+    FieldReader Name_Language_Country_Reader { &Name_Language_Country_Column, Name_Language_Country_index };
     uint64_t Name_Url_index = Name_Url_Record_TIDs[from_tid];
-    FieldReader Name_Url_Reader { &Name_Url, Name_Url_index };
+    FieldReader Name_Url_Reader { &Name_Url_Column, Name_Url_index };
 
     for (auto& field : fields) {
-        if (field == Document::descriptor()->FindFieldByName("DocId")) {
+        if (field == DocId_Descriptor) {
             readers.push_back(&DocId_Reader);
         } else
-        if (field == Document_Links::descriptor()->FindFieldByName("Backward")) {
+        if (field == Links_Backward_Descriptor) {
             readers.push_back(&Links_Backward_Reader);
         } else
-        if (field == Document_Links::descriptor()->FindFieldByName("Forward")) {
+        if (field == Links_Forward_Descriptor) {
             readers.push_back(&Links_Forward_Reader);
         } else
-        if (field == Document_Name_Language::descriptor()->FindFieldByName("Code")) {
+        if (field == Name_Language_Code_Descriptor) {
             readers.push_back(&Name_Language_Code_Reader);
         } else
-        if (field == Document_Name_Language::descriptor()->FindFieldByName("Country")) {
+        if (field == Name_Language_Country_Descriptor) {
             readers.push_back(&Name_Language_Country_Reader);
         } else
-        if (field == Document_Name::descriptor()->FindFieldByName("Url")) {
+        if (field == Name_Url_Descriptor) {
             readers.push_back(&Name_Url_Reader);
         } else
         {}

@@ -7,16 +7,16 @@
 
 namespace imlab {
 
-    std::vector<const IU*> Selection::CollectIUs() {
-        const auto& child_ius = child_->CollectIUs();
+    std::vector<const google::protobuf::FieldDescriptor*> Selection::CollectFields() {
+        const auto& child_ius = child_->CollectFields();
         return child_ius;
     }
 
-    void Selection::Prepare(const std::vector<const IU*> &required, Operator* consumer) {
-        required_ius_ = required;
+    void Selection::Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator* consumer) {
+        required_fields_ = required;
         consumer_ = consumer;
 
-        std::vector<const IU*>& required_from_child = required_ius_;
+        std::vector<const google::protobuf::FieldDescriptor*>& required_from_child = required_fields_;
         for (auto& p : predicates_) {
             if (std::find(required_from_child.begin(), required_from_child.end(), p.first) == required_from_child.end()) {
                 required_from_child.push_back(p.first);
@@ -37,7 +37,7 @@ namespace imlab {
 
         _o << "if (";
         for (auto& [IU, p] : predicates_) {
-            _o << IU->table << "_" << IU->column << " == " << p << " && ";
+           // _o << IU->table << "_" << IU->column << " == " << p << " && ";
         }
         _o << "true) {" << std::endl;
 

@@ -46,12 +46,12 @@ class TestClass : public imlab::schema::DocumentTable {
     }
 
     void print() {
-        _print(DocId);
-        _print(Links_Backward);
-        _print(Links_Forward);
-        _print(Name_Language_Code);
-        _print(Name_Language_Country);
-        _print(Name_Url);
+        _print(DocId_Column);
+        _print(Links_Backward_Column);
+        _print(Links_Forward_Column);
+        _print(Name_Language_Code_Column);
+        _print(Name_Language_Country_Column);
+        _print(Name_Url_Column);
     }
 };
 
@@ -165,19 +165,19 @@ TEST(DremelTest, ShreddingDocumentRecordSmall) {
     tc->print();
 
     ASSERT_EQ(db.documentTable.size(), 1);
-    ASSERT_EQ(tc->DocId.size(), 1);
-    ASSERT_EQ(tc->DocId.get(0), (DremelRow<Integer>{{Integer(20)}, 0, 0}));
-    ASSERT_EQ(tc->Links_Backward.size(), 2);
-    ASSERT_EQ(tc->Links_Backward.get(0), (DremelRow<Integer>{{Integer(10)}, 0, 2}));
-    ASSERT_EQ(tc->Links_Backward.get(1), (DremelRow<Integer>{{Integer(30)}, 1, 2}));
-    ASSERT_EQ(tc->Links_Forward.size(), 1);
-    ASSERT_EQ(tc->Links_Forward.get(0), (DremelRow<Integer>{{Integer(80)}, 0, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.size(), 1);
-    ASSERT_EQ(tc->Name_Language_Code.get(0), (DremelRow<Varchar<30>>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Name_Language_Country.size(), 1);
-    ASSERT_EQ(tc->Name_Language_Country.get(0), (DremelRow<Varchar<30>>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Name_Url.size(), 1);
-    ASSERT_EQ(tc->Name_Url.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://C")}, 0, 2}));
+    ASSERT_EQ(tc->DocId_Column.size(), 1);
+    ASSERT_EQ(tc->DocId_Column.get(0), (DremelRow<int64_t>{{20}, 0, 0}));
+    ASSERT_EQ(tc->Links_Backward_Column.size(), 2);
+    ASSERT_EQ(tc->Links_Backward_Column.get(0), (DremelRow<int64_t>{{10}, 0, 2}));
+    ASSERT_EQ(tc->Links_Backward_Column.get(1), (DremelRow<int64_t>{{30}, 1, 2}));
+    ASSERT_EQ(tc->Links_Forward_Column.size(), 1);
+    ASSERT_EQ(tc->Links_Forward_Column.get(0), (DremelRow<int64_t>{{80}, 0, 2}));
+    ASSERT_EQ(tc->Name_Language_Code_Column.size(), 1);
+    ASSERT_EQ(tc->Name_Language_Code_Column.get(0), (DremelRow<std::string>{std::nullopt, 0, 1}));
+    ASSERT_EQ(tc->Name_Language_Country_Column.size(), 1);
+    ASSERT_EQ(tc->Name_Language_Country_Column.get(0), (DremelRow<std::string>{std::nullopt, 0, 1}));
+    ASSERT_EQ(tc->Name_Url_Column.size(), 1);
+    ASSERT_EQ(tc->Name_Url_Column.get(0), (DremelRow<std::string>{{"http://C"}, 0, 2}));
 }
 
 // This test corresponds to the example from the Dremel paper in Figure 2 and Figure 3.
@@ -191,28 +191,28 @@ TEST(DremelTest, ShreddingDocumentRecordLarge) {
     tc->print();
 
     ASSERT_EQ(db.documentTable.size(), 1);
-    ASSERT_EQ(tc->DocId.size(), 1);
-    ASSERT_EQ(tc->DocId.get(0), (DremelRow<Integer>{{Integer(10)}, 0, 0}));
-    ASSERT_EQ(tc->Links_Backward.size(), 1);
-    ASSERT_EQ(tc->Links_Backward.get(0), (DremelRow<Integer>{std::nullopt, 0, 1}));
-    ASSERT_EQ(tc->Links_Forward.size(), 3);
-    ASSERT_EQ(tc->Links_Forward.get(0), (DremelRow<Integer>{{Integer(20)}, 0, 2}));
-    ASSERT_EQ(tc->Links_Forward.get(1), (DremelRow<Integer>{{Integer(40)}, 1, 2}));
-    ASSERT_EQ(tc->Links_Forward.get(2), (DremelRow<Integer>{{Integer(60)}, 1, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.size(), 4);
-    ASSERT_EQ(tc->Name_Language_Code.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("en-us")}, 0, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.get(1), (DremelRow<Varchar<30>>{{Varchar<30>::build("en")}, 2, 2}));
-    ASSERT_EQ(tc->Name_Language_Code.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
-    ASSERT_EQ(tc->Name_Language_Code.get(3), (DremelRow<Varchar<30>>{{Varchar<30>::build("en-gb")}, 1, 2}));
-    ASSERT_EQ(tc->Name_Language_Country.size(), 4);
-    ASSERT_EQ(tc->Name_Language_Country.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("us")}, 0, 3}));
-    ASSERT_EQ(tc->Name_Language_Country.get(1), (DremelRow<Varchar<30>>{std::nullopt, 2, 2}));
-    ASSERT_EQ(tc->Name_Language_Country.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
-    ASSERT_EQ(tc->Name_Language_Country.get(3), (DremelRow<Varchar<30>>{{Varchar<30>::build("gb")}, 1, 3}));
-    ASSERT_EQ(tc->Name_Url.size(), 3);
-    ASSERT_EQ(tc->Name_Url.get(0), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://A")}, 0, 2}));
-    ASSERT_EQ(tc->Name_Url.get(1), (DremelRow<Varchar<30>>{{Varchar<30>::build("http://B")}, 1, 2}));
-    ASSERT_EQ(tc->Name_Url.get(2), (DremelRow<Varchar<30>>{std::nullopt, 1, 1}));
+    ASSERT_EQ(tc->DocId_Column.size(), 1);
+    ASSERT_EQ(tc->DocId_Column.get(0), (DremelRow<int64_t>{{10}, 0, 0}));
+    ASSERT_EQ(tc->Links_Backward_Column.size(), 1);
+    ASSERT_EQ(tc->Links_Backward_Column.get(0), (DremelRow<int64_t>{std::nullopt, 0, 1}));
+    ASSERT_EQ(tc->Links_Forward_Column.size(), 3);
+    ASSERT_EQ(tc->Links_Forward_Column.get(0), (DremelRow<int64_t>{{20}, 0, 2}));
+    ASSERT_EQ(tc->Links_Forward_Column.get(1), (DremelRow<int64_t>{{40}, 1, 2}));
+    ASSERT_EQ(tc->Links_Forward_Column.get(2), (DremelRow<int64_t>{{60}, 1, 2}));
+    ASSERT_EQ(tc->Name_Language_Code_Column.size(), 4);
+    ASSERT_EQ(tc->Name_Language_Code_Column.get(0), (DremelRow<std::string>{{"en-us"}, 0, 2}));
+    ASSERT_EQ(tc->Name_Language_Code_Column.get(1), (DremelRow<std::string>{{"en"}, 2, 2}));
+    ASSERT_EQ(tc->Name_Language_Code_Column.get(2), (DremelRow<std::string>{std::nullopt, 1, 1}));
+    ASSERT_EQ(tc->Name_Language_Code_Column.get(3), (DremelRow<std::string>{{"en-gb"}, 1, 2}));
+    ASSERT_EQ(tc->Name_Language_Country_Column.size(), 4);
+    ASSERT_EQ(tc->Name_Language_Country_Column.get(0), (DremelRow<std::string>{{"us"}, 0, 3}));
+    ASSERT_EQ(tc->Name_Language_Country_Column.get(1), (DremelRow<std::string>{std::nullopt, 2, 2}));
+    ASSERT_EQ(tc->Name_Language_Country_Column.get(2), (DremelRow<std::string>{std::nullopt, 1, 1}));
+    ASSERT_EQ(tc->Name_Language_Country_Column.get(3), (DremelRow<std::string>{{"gb"}, 1, 3}));
+    ASSERT_EQ(tc->Name_Url_Column.size(), 3);
+    ASSERT_EQ(tc->Name_Url_Column.get(0), (DremelRow<std::string>{{"http://A"}, 0, 2}));
+    ASSERT_EQ(tc->Name_Url_Column.get(1), (DremelRow<std::string>{{"http://B"}, 1, 2}));
+    ASSERT_EQ(tc->Name_Url_Column.get(2), (DremelRow<std::string>{std::nullopt, 1, 1}));
 }
 
 // ---------------------------------------------------------------------------

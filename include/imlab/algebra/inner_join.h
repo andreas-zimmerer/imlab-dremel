@@ -19,10 +19,10 @@ class InnerJoin: public Operator {
     // Right child operator
     std::unique_ptr<Operator> right_child_;
     // Hash preodicates
-    std::vector<std::pair<const IU*, const IU*>> hash_predicates_;
+    std::vector<std::pair<const google::protobuf::FieldDescriptor*, const google::protobuf::FieldDescriptor*>> hash_predicates_;
 
     // Required ius
-    std::vector<const IU*> required_ius_;
+    std::vector<const google::protobuf::FieldDescriptor*> required_fields_;
     // Consumer
     Operator *consumer_;
 
@@ -30,14 +30,14 @@ class InnerJoin: public Operator {
     // Constructor
     InnerJoin(std::unique_ptr<Operator> left,
             std::unique_ptr<Operator> right,
-            std::vector<std::pair<const IU*, const IU*>> predicates)
+            std::vector<std::pair<const google::protobuf::FieldDescriptor*, const google::protobuf::FieldDescriptor*>> predicates)
         : left_child_(std::move(left)), right_child_(std::move(right)), hash_predicates_(predicates) {}
 
     // Collect all IUs produced by the operator
-    std::vector<const IU*> CollectIUs() override;
+    std::vector<const google::protobuf::FieldDescriptor*> CollectFields() override;
 
     // Prepare the operator
-    void Prepare(const std::vector<const IU*> &required, Operator* consumer) override;
+    void Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator* consumer) override;
     // Produce all tuples
     void Produce(std::ostream& _o) override;
     // Consume tuple

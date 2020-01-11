@@ -19,7 +19,7 @@ class Shredder {
     /// The value being inserted is a Protobuf message.
     static void DissectRecord(TableBase& table, Message& msg) {
         // For the top level we can be 100% sure that this is a ComplexFieldWriter
-        DissectRecordInternal(&msg, dynamic_cast<ComplexFieldWriter*>(table.get_record_writer()), 0);
+        DissectRecordInternal(&msg, dynamic_cast<ComplexFieldWriter*>(table.record_writer()), 0);
     }
 
  private:

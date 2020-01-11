@@ -17,7 +17,7 @@ class TableScan: public Operator {
     const char *table_;
 
     // Required ius
-    std::vector<const IU*> required_ius_;
+    std::vector<const google::protobuf::FieldDescriptor*> required_fields_;
     // Consumer
     Operator *consumer_;
 
@@ -26,10 +26,10 @@ class TableScan: public Operator {
     explicit TableScan(const char *table) : table_(table) {}
 
     // Collect all IUs produced by the operator
-    std::vector<const IU*> CollectIUs() override;
+    std::vector<const google::protobuf::FieldDescriptor*> CollectFields() override;
 
     // Prepare the operator
-    void Prepare(const std::vector<const IU*> &required, Operator* consumer) override;
+    void Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator* consumer) override;
     // Produce all tuples
     void Produce(std::ostream& _o) override;
     // Consume tuple

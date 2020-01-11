@@ -63,13 +63,13 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
     std::vector<TableScan> scans {};
     std::vector<Selection> selections {};
     std::vector<InnerJoin> joins {};
-    std::vector<const IU*> columns_to_print {};
+    std::vector<const google::protobuf::FieldDescriptor*> columns_to_print {};
 
     // Helper structures that collect all the info we get during the processing step
     std::vector<Table*> involved_tables {};
-    std::set<const IU*> involved_ius {};
-    std::vector<std::pair<const IU*, std::string>> selection_attr {};
-    std::vector<std::pair<const IU*, const IU*>> join_attr {};
+    std::set<const google::protobuf::FieldDescriptor*> involved_ius {};
+    std::vector<std::pair<const google::protobuf::FieldDescriptor*, std::string>> selection_attr {};
+    std::vector<std::pair<const google::protobuf::FieldDescriptor*, const google::protobuf::FieldDescriptor*>> join_attr {};
 
     // Get all the involved tables, e.g. resolve all strings after the "from ..." clause in the query.
     // A table also means that we create a table scan for it.
@@ -93,13 +93,13 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
     // The first set is just used for the print statement; the second set actually needs some processing afterwards.
 
     // Resolves a column name to an IU by searching all tables that are used for this query.
-    auto find_iu_by_column = [&](const std::string& column) -> std::optional<const IU*> {
+    auto find_iu_by_column = [&](const std::string& column) -> std::optional<const google::protobuf::FieldDescriptor*> {
         for (auto& s : scans) {
-            const auto& ius = s.CollectIUs();
-            auto it_iu = std::find_if(ius.begin(), ius.end(), [&](const auto& iu) { return std::string(iu->column) == column; });
-            if (it_iu != ius.end()) {
-                return *it_iu;
-            }
+            const auto& ius = s.CollectFields();
+//TODO            auto it_iu = std::find_if(ius.begin(), ius.end(), [&](const auto& iu) { return std::string(iu->column) == column; });
+//TODO            if (it_iu != ius.end()) {
+//TODO                return *it_iu;
+//TODO            }
         }
         return {};
     };
@@ -141,7 +141,7 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
             auto &select_iu = (iu_1) ? *iu_1 : *iu_2;
             auto &select_value_raw = (iu_1) ? column2 : column1;
             auto select_value =
-                    SchemaCompiler::generateTypeName(select_iu->type) + "::castString(\"" + select_value_raw + "\", " +
+                    std::string(select_iu->cpp_type_name()) + "::castString(\"" + select_value_raw + "\", " +
                     std::to_string(select_value_raw.length()) + ")";
             selection_attr.emplace_back(select_iu, select_value);
             continue;
@@ -161,11 +161,11 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
         auto& scan = scans[i];
         auto& table = involved_tables[i];
 
-        std::vector<std::pair<const IU*, std::string>> predicates {};
+        std::vector<std::pair<const google::protobuf::FieldDescriptor*, std::string>> predicates {};
         for (auto& selection : selection_attr) {
-            if (table->id == std::string(selection.first->table)) {
-                predicates.push_back(selection);
-            }
+//TODO            if (table->id == std::string(selection.first->table)) {
+//TODO                predicates.push_back(selection);
+//TODO            }
         }
         Selection s(std::make_unique<TableScan>(scan), predicates);
         selections.push_back(std::move(s));
@@ -178,11 +178,11 @@ void QueryParseContext::CreateSqlQuery(const std::vector<std::string> &select_co
     for (auto it = selections.begin() + 1; it != selections.end(); it++) {
         Selection* right_operator = &*it;
 
-        const auto& left_ius = left_operator->CollectIUs();
-        const auto& right_ius = right_operator->CollectIUs();
+        const auto& left_ius = left_operator->CollectFields();
+        const auto& right_ius = right_operator->CollectFields();
 
         // Now look through all join predicates and see if some of them are applicable to this join
-        std::vector<std::pair<const IU*, const IU*>> applicable_join_predicates {};
+        std::vector<std::pair<const google::protobuf::FieldDescriptor*, const google::protobuf::FieldDescriptor*>> applicable_join_predicates {};
         for (auto& attr : join_attr) {
             if (std::find(left_ius.begin(), left_ius.end(), attr.first) != left_ius.end()
                 && std::find(right_ius.begin(), right_ius.end(), attr.second) != right_ius.end()) {

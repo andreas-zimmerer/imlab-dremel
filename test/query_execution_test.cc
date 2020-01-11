@@ -29,10 +29,10 @@ class QueryExecutionTest : public ::testing::Test {
     std::vector<Document> documents {};
 };
 
-TEST_F(QueryExecutionTest, Scan) {
+TEST_F(QueryExecutionTest, FullScan) {
     TableScan scan("Document");
     Print print(std::make_unique<TableScan>(std::move(scan)));
-    print.Prepare({}, nullptr);  // TODO: some IUs
+    print.Prepare(imlab::schema::DocumentTable::fields(), nullptr);
     Query query {std::move(print)};
 
     db.RunQuery(query);

@@ -23,7 +23,7 @@ class TableBase {
  public:
     uint64_t size() { return _size; }
 
-    virtual FieldWriter* get_record_writer() = 0;
+    virtual FieldWriter* record_writer() = 0;
  protected:
     uint64_t _size = 0;
 };

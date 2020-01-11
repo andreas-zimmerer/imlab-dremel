@@ -3,7 +3,6 @@
 
 #include "gflags/gflags.h"
 #include "imlab/algebra/inner_join.h"
-#include "imlab/algebra/iu.h"
 #include "imlab/algebra/operator.h"
 #include "imlab/algebra/print.h"
 #include "imlab/algebra/selection.h"

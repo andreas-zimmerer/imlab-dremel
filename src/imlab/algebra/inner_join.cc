@@ -9,24 +9,24 @@
 
 namespace imlab {
 
-    std::vector<const IU *> InnerJoin::CollectIUs() {
-        const auto &ius_left = left_child_->CollectIUs();
-        const auto &ius_right = right_child_->CollectIUs();
+    std::vector<const google::protobuf::FieldDescriptor*> InnerJoin::CollectFields() {
+        const auto &ius_left = left_child_->CollectFields();
+        const auto &ius_right = right_child_->CollectFields();
 
-        std::vector<const IU *> ius_combined{};
-        ius_combined.reserve(ius_left.size() + ius_right.size());
-        ius_combined.insert(ius_combined.end(), ius_left.begin(), ius_left.end());
-        ius_combined.insert(ius_combined.end(), ius_right.begin(), ius_right.end());
+        std::vector<const google::protobuf::FieldDescriptor*> fields_combined{};
+        fields_combined.reserve(ius_left.size() + ius_right.size());
+        fields_combined.insert(fields_combined.end(), ius_left.begin(), ius_left.end());
+        fields_combined.insert(fields_combined.end(), ius_right.begin(), ius_right.end());
 
-        return ius_combined;
+        return fields_combined;
     }
 
-    void InnerJoin::Prepare(const std::vector<const IU *> &required, Operator *consumer) {
-        required_ius_ = required;
+    void InnerJoin::Prepare(const std::vector<const google::protobuf::FieldDescriptor*> &required, Operator *consumer) {
+        required_fields_ = required;
         consumer_ = consumer;
 
-        std::vector<const IU *> required_from_left_child {};
-        std::vector<const IU *> required_from_right_child {};
+        std::vector<const google::protobuf::FieldDescriptor*> required_from_left_child {};
+        std::vector<const google::protobuf::FieldDescriptor*> required_from_right_child {};
 
         // First of all, we of course need the columns that are required for the join.
         // Searching the vectors before insert to maintain uniqueness (is this required?)
@@ -44,8 +44,8 @@ namespace imlab {
         // Now we also need to sort out where we can get the required columns from our parent from.
         // Because our parents requires a certain set of columns and they can either come from the left or right
         // join relation, this is a little trickier.
-        const auto &left_child_collected_ius = left_child_->CollectIUs();
-        const auto &right_child_collected_ius = right_child_->CollectIUs();
+        const auto &left_child_collected_ius = left_child_->CollectFields();
+        const auto &right_child_collected_ius = right_child_->CollectFields();
 
         for (auto &r_iu : required) {
             if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r_iu) !=
@@ -62,7 +62,7 @@ namespace imlab {
                 }
             } else {
                 // If we got here, our parent requested an IU that we can not provide -> Error
-                std::cout << "Required column not found in neither of the join relations: " << r_iu->table << "->" << r_iu->column << std::endl;
+                std::cout << "Required column not found in neither of the join relations: " << r_iu->full_name() << std::endl;
             }
         }
 
@@ -71,8 +71,8 @@ namespace imlab {
     }
 
     std::string InnerJoin::GenerateHashmapName() {
-        const char *left_relation = hash_predicates_[0].first->table;
-        const char *right_relation = hash_predicates_[0].second->table;
+        const std::string left_relation = hash_predicates_[0].first->full_name();
+        const std::string right_relation = hash_predicates_[0].second->full_name();
 
         std::stringstream ss {};
         ss << left_relation << "_" << right_relation << "_hashmap";
@@ -80,18 +80,18 @@ namespace imlab {
     }
 
     void InnerJoin::Produce(std::ostream &_o) {
-        const auto &left_child_collected_ius = left_child_->CollectIUs();
+        const auto &left_child_collected_ius = left_child_->CollectFields();
 
         _o << "LazyMultiMap<Key<";
         for (auto &p : hash_predicates_) {  // all hash predicates from the left side
-            _o << schemac::SchemaCompiler::generateTypeName(p.first->type) << "/*" << p.first->column << "*/"
+            _o << p.first->cpp_type_name() << "/*" << p.first->name() << "*/"
                << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
         }
         _o << ">, std::tuple<";
         bool first_value = true;
-        for (auto r : required_ius_) {  // if the value comes from the left side, it should be added to the hash table
+        for (auto r : required_fields_) {  // if the value comes from the left side, it should be added to the hash table
             if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                _o << (first_value ? "" : ", ") << schemac::SchemaCompiler::generateTypeName(r->type) << "/*" << r->column << "*/";
+                _o << (first_value ? "" : ", ") << r->cpp_type_name() << "/*" << r->name() << "*/";
                 first_value = false;
             }
         }
@@ -107,7 +107,7 @@ namespace imlab {
     }
 
     void InnerJoin::Consume(std::ostream &_o, const Operator *child) {
-        const auto &left_child_collected_ius = left_child_->CollectIUs();
+        const auto &left_child_collected_ius = left_child_->CollectFields();
 
         if (child == left_child_.get()) {
             // Print:
@@ -115,13 +115,13 @@ namespace imlab {
 
             _o << GenerateHashmapName() << ".insert({Key(";
             for (auto& p : hash_predicates_) {
-                _o << p.first->table << "_" << p.first->column << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
+                _o << p.first->full_name() << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
             }
             _o << "), std::make_tuple(";
             bool first_value = true;
-            for (auto& r : required_ius_) {  // again, only if tuple comes from left side
+            for (auto& r : required_fields_) {  // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                    _o << (first_value ? "" : ", ") << r->table << "_" << r->column;
+                    _o << (first_value ? "" : ", ") << r->full_name();
                     first_value = false;
                 }
             }
@@ -139,16 +139,16 @@ namespace imlab {
             _o << std::endl;
             _o << "auto matches = " << GenerateHashmapName() << ".equal_range(Key(";
             for (auto& p : hash_predicates_) {
-                _o << p.second->table << "_" << p.second->column << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
+                _o << p.second->full_name() << ((&p != &*hash_predicates_.end() - 1) ? ", " : "");
             }
             _o << "));" << std::endl;
             _o << "for (auto it = matches.first; it != matches.second; ++it) {" << std::endl;
             // Now we want to get out the required values from the left side
             // The values from the right side should already be in scope
             unsigned idx = 0;
-            for (auto& r : required_ius_) {  // again, only if tuple comes from left side
+            for (auto& r : required_fields_) {  // again, only if tuple comes from left side
                 if (std::find(left_child_collected_ius.begin(), left_child_collected_ius.end(), r) != left_child_collected_ius.end()) {
-                    _o << "auto& " << r->table << "_" << r->column << " = std::get<" << idx << ">(it->value);";
+                    _o << "auto& " << r->full_name() << " = std::get<" << idx << ">(it->value);";
                     idx++;
                 }
             }

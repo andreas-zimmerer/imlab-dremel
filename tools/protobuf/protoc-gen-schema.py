@@ -28,7 +28,7 @@ from google.protobuf.compiler import plugin_pb2
 from google.protobuf.descriptor_pb2 import FieldDescriptorProto
 
 
-def map_type(proto_type, schemac_type=False):
+def cpp_type_name(proto_field):
     """
     Maps a field type from Protobuf to an Imlab type.
     This is of course not a perfect mapping.
@@ -38,30 +38,26 @@ def map_type(proto_type, schemac_type=False):
      - Strings are always Varchar<30>
     """
     mapping = {
-        FieldDescriptorProto.TYPE_DOUBLE: ['Numeric<10,4>', 'schemac::Type::Numeric(10, 4)'],
-        FieldDescriptorProto.TYPE_FLOAT: ['Numeric<10,4>', 'schemac::Type::Numeric(10, 4)'],
-        FieldDescriptorProto.TYPE_INT64: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_UINT64: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_INT32: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_FIXED64: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_FIXED32: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_BOOL: [],
-        FieldDescriptorProto.TYPE_STRING: ['Varchar<30>', 'schemac::Type::Varchar(30)'],
-        FieldDescriptorProto.TYPE_GROUP: [],
-        FieldDescriptorProto.TYPE_MESSAGE: [],
-        FieldDescriptorProto.TYPE_BYTES: [],
-        FieldDescriptorProto.TYPE_UINT32: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_ENUM: [],
-        FieldDescriptorProto.TYPE_SFIXED32: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_SFIXED64: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_SINT32: ['Integer', 'schemac::Type::Integer()'],
-        FieldDescriptorProto.TYPE_SINT64: ['Integer', 'schemac::Type::Integer()'],
+        FieldDescriptorProto.TYPE_DOUBLE: 'double',
+        FieldDescriptorProto.TYPE_FLOAT: 'float',
+        FieldDescriptorProto.TYPE_INT64: 'int64_t',
+        FieldDescriptorProto.TYPE_UINT64: 'uint64_t',
+        FieldDescriptorProto.TYPE_INT32: 'int32_t',
+        FieldDescriptorProto.TYPE_FIXED64: 'uint64_t',
+        FieldDescriptorProto.TYPE_FIXED32: 'uint32_t',
+        FieldDescriptorProto.TYPE_BOOL: 'bool',
+        FieldDescriptorProto.TYPE_STRING: 'std::string',
+        FieldDescriptorProto.TYPE_GROUP: '',
+        FieldDescriptorProto.TYPE_MESSAGE: '',
+        FieldDescriptorProto.TYPE_BYTES: '',
+        FieldDescriptorProto.TYPE_UINT32: 'uint32_t',
+        FieldDescriptorProto.TYPE_ENUM: '',
+        FieldDescriptorProto.TYPE_SFIXED32: 'int32_t',
+        FieldDescriptorProto.TYPE_SFIXED64: 'int64_t',
+        FieldDescriptorProto.TYPE_SINT32: 'int32_t',
+        FieldDescriptorProto.TYPE_SINT64: 'int64_t',
     }
-    m = mapping.get(proto_type, 'invalid type')
-    if schemac_type:
-        return m[1]
-    else:
-        return m[0]
+    return mapping.get(proto_field.type, '[invalid type]')
 
 
 def flatten_fields(message, includeInner=False):
@@ -114,7 +110,6 @@ def generate_header(filedescriptorproto):
     yield '#include "imlab/dremel/storage.h"\n'
     yield '#include "imlab/dremel/field_writer.h"\n'
     yield '#include "imlab/infra/types.h"\n'
-    yield '#include "imlab/algebra/iu.h"\n'
     yield '#include <google/protobuf/descriptor.h>\n'
     yield '// ---------------------------------------------------------------------------\n'
     yield 'namespace imlab {\n'
@@ -133,16 +128,16 @@ def generate_header(filedescriptorproto):
         yield '    /// Gets a range of record from the table. `to_tid` is exclusive.\n'
         yield '    std::vector<' + message.name + '> get_range(uint64_t from_tid, uint64_t to_tid, const std::vector<const FieldDescriptor*>& fields);\n'
         yield '    /// Get the corresponding FieldWriter-tree for this table.\n'
-        yield '    FieldWriter* get_record_writer() override { return &Root_Writer; }\n'
-        yield '    /// Get a reference to the IUs in this table.\n'
-        yield '    static std::vector<const IU*> get_ius();\n'
+        yield '    FieldWriter* record_writer() override { return &Root_Writer; }\n'
+        yield '    /// Get a reference to the fields in this table.\n'
+        yield '    static std::vector<const FieldDescriptor*> fields();\n'
         yield '\n'
         yield ' protected:\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
             containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
-            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
-            yield '    ' + 'DremelColumn<' + map_type(fields[-1].type) + '> ' + column_name + ' { ' + field_descriptor + ' };\n'
+            yield '    ' + 'static inline const FieldDescriptor* ' + column_name + '_Descriptor = ' + containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '");\n'
+            yield '    ' + 'DremelColumn<' + cpp_type_name(fields[-1]) + '> ' + column_name + '_Column { ' + column_name + '_Descriptor };\n'
             yield '    ' + 'std::vector<uint64_t> ' + column_name + '_Record_TIDs;'
             yield '  // Maps the beginning of a record to a TID in the column.\n'
             yield '\n'
@@ -157,7 +152,7 @@ def generate_header(filedescriptorproto):
                     'children': previous_children
                 }
             else:
-                yield '    AtomicFieldWriter<' + map_type(fields[-1].type) + '> ' + column_name + '_Writer { &' + column_name + ' };\n'
+                yield '    AtomicFieldWriter<' + cpp_type_name(fields[-1]) + '> ' + column_name + '_Writer { &' + column_name + '_Column };\n'
 
             # Now we need to update the tree structure of FieldWriters and put the current FieldWriter as a child under its parent
             if len(fields) >= 2:
@@ -181,8 +176,6 @@ def generate_header(filedescriptorproto):
                 field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + field.lower() + '")'
             yield '    ComplexFieldWriter ' + parent + '_Writer { ' + field_descriptor + ', { ' + ', '.join(complex_field_writers[parent]['children']) + ' } };\n'
 
-        yield '\n'
-        yield '    static const std::vector<IU> IUs;\n'
         yield '};\n'
 
     yield '\n'
@@ -210,19 +203,13 @@ def generate_source(filedescriptorproto):
     yield '\n'
 
     for message in filedescriptorproto.message_type:
-        yield 'const std::vector<IU> ' + message.name + 'Table::IUs = {\n'
-        for fields in flatten_fields(message):
-            yield '    IU("' + message.name + '", "' + '.'.join([f.name for f in fields]) + '", ' + map_type(fields[-1].type, True) + '),\n'
-        yield '};\n'
-        yield '\n'
 
-        yield 'std::vector<const IU*> ' + message.name + 'Table::get_ius() {\n'
-        yield '    std::vector<const IU*> refs {};\n'
-        yield '    refs.reserve(IUs.size());\n'
-        yield '    for (auto& iu : IUs) {\n'
-        yield '        refs.push_back(&iu);\n'
-        yield '    }\n'
-        yield '    return refs;\n'
+        yield 'std::vector<const FieldDescriptor*> ' + message.name + 'Table::fields() {\n'
+        yield '    return { '
+        for fields in flatten_fields(message):
+            column_name = '_'.join([f.name for f in fields])
+            yield column_name + '_Descriptor, '
+        yield '};\n'
         yield '}\n'
         yield '\n'
 
@@ -231,7 +218,7 @@ def generate_source(filedescriptorproto):
         yield '    // They will be the starting points of the fields of the dissected record.\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
-            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '.size());\n'
+            yield '    ' + column_name + '_Record_TIDs.push_back(' + column_name + '_Column.size());\n'
         yield '\n'
         yield '    Shredder::DissectRecord(dynamic_cast<TableBase&>(*this), record);\n'
         yield '\n'
@@ -249,14 +236,12 @@ def generate_source(filedescriptorproto):
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
             yield '    uint64_t ' + column_name + '_index = ' + column_name + '_Record_TIDs[from_tid];\n'
-            yield '    FieldReader ' + column_name + '_Reader { &' + column_name + ', ' + column_name + '_index };\n'
+            yield '    FieldReader ' + column_name + '_Reader { &' + column_name + '_Column, ' + column_name + '_index };\n'
         yield '\n'
         yield '    for (auto& field : fields) {\n'
         for fields in flatten_fields(message):
             column_name = '_'.join([f.name for f in fields])
-            containing_type = message.name + ('_' + column_name.rsplit('_', 1)[0] if len(fields) > 1 else '')
-            field_descriptor = containing_type + '::descriptor()->FindFieldByName("' + fields[len(fields) - 1].name + '")'
-            yield '        if (field == ' + field_descriptor + ') {\n'
+            yield '        if (field == ' + column_name + '_Descriptor) {\n'
             yield '            readers.push_back(&' + column_name + '_Reader);\n'
             yield '        } else\n'
         yield '        {}\n'
