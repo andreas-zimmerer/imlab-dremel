@@ -17,6 +17,14 @@
 namespace {
 using namespace imlab::dremel;
 
+// FieldDescriptors:
+const auto* DocId_Field = Document::descriptor()->FindFieldByName("DocId");
+const auto* Links_Backward_Field = Document_Links::descriptor()->FindFieldByName("Backward");
+const auto* Links_Forward_Field = Document_Links::descriptor()->FindFieldByName("Forward");
+const auto* Name_Language_Code_Field = Document_Name_Language::descriptor()->FindFieldByName("Code");
+const auto* Name_Language_Country_Field = Document_Name_Language::descriptor()->FindFieldByName("Country");
+const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
+
 /// Constructs a complete finite state machine for a "Document" record.
 void BM_Construct_Complete_FSM(benchmark::State &state) {
     auto* DocId = Document::descriptor()->FindFieldByName("DocId");
@@ -61,12 +69,12 @@ void BM_Shredding_nLanguage(benchmark::State &state) {
 ///  * reading JSON
 ///  * constructing Protobuf records
 ///  * shred records into columnar format
-void BM_Load_Full_Dataset(benchmark::State &state) {
+void BM_Load_Generated_Dataset(benchmark::State &state) {
     // Generate some example data
-    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
+    system("python3 ../data/dremel/generate_dremel_data.py");
 
     imlab::Database db;
-    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+    std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
 
     for (auto _ : state) {
         db.LoadDocumentTable(dremel_file);
@@ -128,12 +136,36 @@ void BM_Assemble_Document(benchmark::State &state) {
     state.SetItemsProcessed(state.iterations());
 }
 
+/// Measures the time it takes to asseble all records from a randomly generated dataset.
+void BM_Assembly_Generated_Dataset(benchmark::State &state) {
+    // Generate some example data
+    system("python3 ../data/dremel/generate_dremel_data.py");
+
+    imlab::Database db;
+    std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
+    db.LoadDocumentTable(dremel_file);
+
+    for (auto _ : state) {
+        const auto& documents_read = db.DocumentTable.get_range(0, db.DocumentTable.size(), {
+                DocId_Field,
+                Links_Backward_Field,
+                Links_Forward_Field,
+                Name_Language_Code_Field,
+                Name_Language_Country_Field,
+                Name_Url_Field
+        });
+    }
+
+    state.SetItemsProcessed(db.DocumentTable.size());
+}
+
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
 BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
-BENCHMARK(BM_Load_Full_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_Load_Generated_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_Assemble_Document);
+BENCHMARK(BM_Assembly_Generated_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);

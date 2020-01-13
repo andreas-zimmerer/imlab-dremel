@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import csv
 import random
 import string
 
@@ -11,8 +12,8 @@ MAX_NUMBER_NAMES = 10
 MAX_NUMBER_LANGUAGES = 5
 LIKELIHOOD_OPTIONAL_FIELDS = 1.0
 
-country_codes = ['US', 'DE', 'IT', 'GB']
-country_names = ['United States', 'Germany', 'Italy', 'Great Britain']
+country_codes = ['en-us', 'en-gb', 'de-de']
+country_names = ['us', 'gb', 'de']
 
 
 def random_string(length=10):
@@ -73,4 +74,58 @@ def generate_entry(entry_id):
 # Create TOTAL_NUMBER_OF_ENTRIES random entries
 random.seed(1234)
 output = [generate_entry(i) for i in range(TOTAL_NUMBER_OF_ENTRIES)]
-print(json.dumps(output, indent=2))
+
+
+# JSON format
+with open('data.json', 'w') as file:
+    file.write(json.dumps(output, indent=2))
+
+# DB columnar format in CSV
+docId_file = open('t_docId.csv', mode='w')
+docId_writer = csv.DictWriter(docId_file, fieldnames=['DocId'])
+docId_writer.writeheader()
+links_backward_file = open('t_links_backward.csv', mode='w')
+links_backward_writer = csv.DictWriter(links_backward_file, fieldnames=['DocId', 'Links.Backward'])
+links_backward_writer.writeheader()
+links_forward_file = open('t_links_forward.csv', mode='w')
+links_forward_writer = csv.DictWriter(links_forward_file, fieldnames=['DocId', 'Links.Forward'])
+links_forward_writer.writeheader()
+name_language_code_file = open('t_name_language_code.csv', mode='w')
+name_language_code_writer = csv.DictWriter(name_language_code_file, fieldnames=['DocId', 'Name.Language.Code'])
+name_language_code_writer.writeheader()
+name_language_country_file = open('t_name_language_country.csv', mode='w')
+name_language_country_writer = csv.DictWriter(name_language_country_file, fieldnames=['DocId', 'Name.Language.Country'])
+name_language_country_writer.writeheader()
+name_url_file = open('t_name_url.csv', mode='w')
+name_url_writer = csv.DictWriter(name_url_file, fieldnames=['DocId', 'Name.Url'])
+name_url_writer.writeheader()
+
+
+for record in output:
+    docId = record['DocId']
+    docId_writer.writerow({'DocId': docId})
+    if 'Links' in record:
+        if 'Backward' in record['Links']:
+            for b in record['Links']['Backward']:
+                links_backward_writer.writerow({'DocId': docId, 'Links.Backward': b})
+        if 'Forward' in record['Links']:
+            for f in record['Links']['Forward']:
+                links_forward_writer.writerow({'DocId': docId, 'Links.Forward': f})
+    if 'Name' in  record:
+        for n in record['Name']:
+            if 'Language' in n:
+                for l in n['Language']:
+                    code = l['Code']
+                    name_language_code_writer.writerow({'DocId': docId, 'Name.Language.Code': code})
+                    if 'Country' in l:
+                        country = l['Country']
+                        name_language_country_writer.writerow({'DocId': docId, 'Name.Language.Country': country})
+            if 'Url' in n:
+                url = n['Url']
+                name_url_writer.writerow({'DocId': docId, 'Name.Url': url})
+
+links_backward_file.close()
+links_forward_file.close()
+name_language_code_file.close()
+name_language_country_file.close()
+name_url_file.close()

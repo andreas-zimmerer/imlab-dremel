@@ -392,8 +392,8 @@ TEST(DremelTest, InsertAndGetIndividual) {
     imlab::Database db {};
     std::vector<Document> documents {};
 
-    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
-    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+    system("python3 ../data/dremel/generate_dremel_data.py");
+    std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
     imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
         db.DocumentTable.insert(d);
         documents.push_back(d);
@@ -419,8 +419,8 @@ TEST(DremelTest, InsertAndGetFullRange) {
     imlab::Database db {};
     std::vector<Document> documents {};
 
-    system("python3 ../data/dremel/generate_dremel_data.py > ../data/dremel/dremel_data.json");
-    std::fstream dremel_file("../data/dremel/dremel_data.json", std::fstream::in);
+    system("python3 ../data/dremel/generate_dremel_data.py");
+    std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
     imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
         db.DocumentTable.insert(d);
         documents.push_back(d);
