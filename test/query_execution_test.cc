@@ -17,7 +17,7 @@ namespace {
 class QueryExecutionTest : public ::testing::Test {
  protected:
     void SetUp() override {
-        system("python3 ../data/dremel/generate_dremel_data.py");
+        system("python3 ../data/dremel/generate_dremel_data.py 10000 500");
         std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
         imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
             db.DocumentTable.insert(d);

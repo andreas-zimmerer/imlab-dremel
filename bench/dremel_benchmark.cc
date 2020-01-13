@@ -71,7 +71,7 @@ void BM_Shredding_nLanguage(benchmark::State &state) {
 ///  * shred records into columnar format
 void BM_Load_Generated_Dataset(benchmark::State &state) {
     // Generate some example data
-    system("python3 ../data/dremel/generate_dremel_data.py");
+    system("python3 ../data/dremel/generate_dremel_data.py 102400 1024 > /dev/null");  // ~ 100 MiB
 
     imlab::Database db;
     std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
@@ -81,6 +81,7 @@ void BM_Load_Generated_Dataset(benchmark::State &state) {
     }
 
     state.SetItemsProcessed(db.DocumentTable.size());
+    state.SetBytesProcessed(102400 * 1024);  // only rough estimation
 }
 
 /// Load a record into the database and retrieve it.
@@ -137,13 +138,18 @@ void BM_Assemble_Document(benchmark::State &state) {
 }
 
 /// Measures the time it takes to asseble all records from a randomly generated dataset.
+/// You can pass the average record size in byte as an parameter of this benchmark.
 void BM_Assembly_Generated_Dataset(benchmark::State &state) {
+    uint64_t number_of_records = 100 * 1024 * 1024 / state.range(0);  // ~ 100 MiB
+    uint64_t average_record_size = state.range(0);
+
     // Generate some example data
-    system("python3 ../data/dremel/generate_dremel_data.py");
+    system(("python3 ../data/dremel/generate_dremel_data.py " + std::to_string(number_of_records) + " " + std::to_string(average_record_size) + " > /dev/null").c_str());
 
     imlab::Database db;
     std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
     db.LoadDocumentTable(dremel_file);
+    assert(db.DocumentTable.size() == number_of_records);
 
     for (auto _ : state) {
         const auto& documents_read = db.DocumentTable.get_range(0, db.DocumentTable.size(), {
@@ -156,16 +162,17 @@ void BM_Assembly_Generated_Dataset(benchmark::State &state) {
         });
     }
 
-    state.SetItemsProcessed(db.DocumentTable.size());
+    state.SetItemsProcessed(number_of_records);
+    state.SetBytesProcessed(number_of_records * average_record_size);  // only rough estimation
 }
 
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
 BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
-BENCHMARK(BM_Load_Generated_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_Load_Generated_Dataset)->Iterations(2)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_Assemble_Document);
-BENCHMARK(BM_Assembly_Generated_Dataset)->Iterations(1)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_Assembly_Generated_Dataset)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(64, 4096);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);

@@ -1,16 +1,26 @@
 #!/usr/bin/env python
 
+"""
+Call this script like:
+./generate_dremel_data.py <number> <size>
+
+ <number>   Number of records to generate.
+ <size>     Average size of one record in bytes.
+"""
+
+import sys
 import json
 import csv
 import random
 import string
 
-TOTAL_NUMBER_OF_ENTRIES = 1000
-MAX_NUMBER_BACKWARD_LINKS = 20
-MAX_NUMBER_FORWARD_LINKS = 20
-MAX_NUMBER_NAMES = 10
-MAX_NUMBER_LANGUAGES = 5
-LIKELIHOOD_OPTIONAL_FIELDS = 1.0
+if len(sys.argv) != 3:
+    print('Script requires two arguments: <number> and <size>')
+    sys.exit(0)
+
+TOTAL_NUMBER_OF_RECORDS = int(sys.argv[1])
+AVG_SIZE_OF_RECORD = int(sys.argv[2])
+LIKELIHOOD_OPTIONAL_FIELDS = 1  # AVG_SIZE only works with 1 right now
 
 country_codes = ['en-us', 'en-gb', 'de-de']
 country_names = ['us', 'gb', 'de']
@@ -22,39 +32,59 @@ def random_string(length=10):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def generate_entry(entry_id):
+def calculate_record_size(record):
+    size = 0
+    if type(record) == dict:
+        for key, value in record.items():
+            size += calculate_record_size(value)
+    elif type(record) == list:
+        for l in record:
+            size += calculate_record_size(l)
+    elif type(record) == int:
+        size += 8  # 64 bit integer
+    elif type(record) == str:
+        size += len(record)
+    else:
+        print(type(record))
+    return size
+
+
+def generate_record(entry_id):
     entry = {'DocId': entry_id}
 
     # Optionally create a "Links" field
     if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
-        entry['Links'] = {}
-
         # Create a random number of "Backward" links
-        number_backward = random.randrange(MAX_NUMBER_BACKWARD_LINKS)
+        avg_bytes_links = (AVG_SIZE_OF_RECORD - 8) / 2
+        number_backward = random.randrange(0, round(avg_bytes_links / 2 / 8) * 2)
         if number_backward > 0:
+            if 'Links' not in entry:
+                entry['Links'] = {}
             entry['Links']['Backward'] = []
         for b in range(number_backward):
             entry['Links']['Backward'].append(random.randrange(1000))
 
         # Create a random number of "Forward" links
-        number_forward = random.randrange(MAX_NUMBER_FORWARD_LINKS)
+        number_forward = random.randrange(0, round(avg_bytes_links / 2 / 8) * 2)
         if number_forward > 0:
+            if 'Links' not in entry:
+                entry['Links'] = {}
             entry['Links']['Forward'] = []
         for f in range(number_forward):
             entry['Links']['Forward'].append(random.randrange(1000))
 
-    # Random number of "Name" entries
-    number_name = random.randrange(MAX_NUMBER_NAMES)
+    avg_bytes_names = (AVG_SIZE_OF_RECORD - 8) / 2
+    number_name = random.randrange(0, round(avg_bytes_names / 41) * 2)
     if number_name > 0:
         entry['Name'] = []
-        for n in range(number_name):
+        for n in range(number_name):  # because avg. 3 languages per name -> size of name is on average 28
             name = {}
 
             # Create a random number of "Languages"
-            number_language = random.randrange(MAX_NUMBER_LANGUAGES)
+            number_language = random.randrange(0, 3 * 2)  # on average 3 languages per name
             if number_language > 0:
                 name['Language'] = []
-                for l in range(number_language):
+                for l in range(number_language):  # one language field has on average a size of 6
                     country_idx = random.randrange(0, len(country_codes))
                     language = {'Code': country_codes[country_idx]}
 
@@ -66,19 +96,26 @@ def generate_entry(entry_id):
             # Optionally create a "Url" for a "Name
             if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
                 name['Url'] = 'http://' + random_string() + '.' + random_string(2)
-            entry['Name'].append(name)
+
+            if number_language > 0 or 'Url' in name:  # only add name if it contains something
+                entry['Name'].append(name)
 
     return entry
 
 
 # Create TOTAL_NUMBER_OF_ENTRIES random entries
 random.seed(1234)
-output = [generate_entry(i) for i in range(TOTAL_NUMBER_OF_ENTRIES)]
+records = [generate_record(i) for i in range(TOTAL_NUMBER_OF_RECORDS)]
 
+total_size = 0
+for r in records:
+    total_size += calculate_record_size(r)
+print('Generated ' + str(TOTAL_NUMBER_OF_RECORDS) + ' random records with total size of ' + str(total_size) + ' bytes.')
+print('Avg. ' + str(total_size / TOTAL_NUMBER_OF_RECORDS) + ' bytes per record.')
 
 # JSON format
 with open('data.json', 'w') as file:
-    file.write(json.dumps(output, indent=2))
+    file.write(json.dumps(records, indent=2))
 
 # DB columnar format in CSV
 docId_file = open('t_docId.csv', mode='w')
@@ -101,7 +138,7 @@ name_url_writer = csv.DictWriter(name_url_file, fieldnames=['DocId', 'Name.Url']
 name_url_writer.writeheader()
 
 
-for record in output:
+for record in records:
     docId = record['DocId']
     docId_writer.writerow({'DocId': docId})
     if 'Links' in record:
