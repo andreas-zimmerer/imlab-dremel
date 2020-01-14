@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include "tbb/tbb.h"
 #include "../tools/protobuf/gen/schema.h"
 #include "imlab/dremel/record_fsm.h"
 #include "imlab/dremel/shredding.h"
@@ -166,6 +167,37 @@ void BM_Assembly_Generated_Dataset(benchmark::State &state) {
     state.SetBytesProcessed(number_of_records * average_record_size);  // only rough estimation
 }
 
+/// Measures the time it takes to asseble all records from a randomly generated dataset.
+/// You can pass the average record size in byte as an parameter of this benchmark.
+    void BM_Assembly_Generated_Dataset_Multithreaded(benchmark::State &state) {
+        uint64_t number_of_records = 100 * 1024 * 1024 / state.range(0);  // ~ 100 MiB
+        uint64_t average_record_size = state.range(0);
+
+        // Generate some example data
+        system(("cd ../data/dremel && python3 generate_dremel_data.py " + std::to_string(number_of_records) + " " + std::to_string(average_record_size) + " > /dev/null").c_str());
+
+        imlab::Database db;
+        std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
+        db.LoadDocumentTable(dremel_file);
+        assert(db.DocumentTable.size() == number_of_records);
+
+        for (auto _ : state) {
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, db.DocumentTable.size()), [&](const tbb::blocked_range<size_t>& index_range) {
+                const auto &documents_read = db.DocumentTable.get_range(index_range.begin(), index_range.end(), {
+                        DocId_Field,
+                        Links_Backward_Field,
+                        Links_Forward_Field,
+                        Name_Language_Code_Field,
+                        Name_Language_Country_Field,
+                        Name_Url_Field
+                });
+            });
+        }
+
+        state.SetItemsProcessed(number_of_records);
+        state.SetBytesProcessed(number_of_records * average_record_size);  // only rough estimation
+    }
+
 }  // namespace
 
 BENCHMARK(BM_Construct_Complete_FSM);
@@ -173,6 +205,7 @@ BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
 BENCHMARK(BM_Load_Generated_Dataset)->Iterations(2)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_Assemble_Document);
 BENCHMARK(BM_Assembly_Generated_Dataset)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(64, 4096);
+BENCHMARK(BM_Assembly_Generated_Dataset_Multithreaded)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(64, 4096);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
