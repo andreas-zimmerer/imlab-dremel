@@ -17,7 +17,7 @@ namespace {
 class QueryExecutionTest : public ::testing::Test {
  protected:
     void SetUp() override {
-        system("python3 ../data/dremel/generate_dremel_data.py 10000 500");
+        system("cd ../data/dremel && python3 generate_dremel_data.py 10240 1024");  // ~ 10 MiB
         std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
         imlab::Database::DecodeJson(dremel_file, [&](auto& d) {
             db.DocumentTable.insert(d);
@@ -35,7 +35,11 @@ TEST_F(QueryExecutionTest, FullScan) {
     print.Prepare(imlab::schema::DocumentTable::fields(), nullptr);
     Query query {std::move(print)};
 
-    db.RunQuery(query);
+    const auto& stats = db.RunQuery(query);
+
+    std::cout << "Generating code: " << stats.code_generation_duration << " ms" << std::endl;
+    std::cout << "Compiling query: " << stats.code_compilation_duration << " ms" << std::endl;
+    std::cout << "Query execution: " << stats.query_execution_duration << " ms" << std::endl;
 }
 
 TEST_F(QueryExecutionTest, Selection) {

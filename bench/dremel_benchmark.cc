@@ -71,7 +71,7 @@ void BM_Shredding_nLanguage(benchmark::State &state) {
 ///  * shred records into columnar format
 void BM_Load_Generated_Dataset(benchmark::State &state) {
     // Generate some example data
-    system("python3 ../data/dremel/generate_dremel_data.py 102400 1024 > /dev/null");  // ~ 100 MiB
+    system("cd ../data/dremel && python3 generate_dremel_data.py 10240 1024 > /dev/null");  // ~ 100 MiB
 
     imlab::Database db;
     std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
@@ -144,7 +144,7 @@ void BM_Assembly_Generated_Dataset(benchmark::State &state) {
     uint64_t average_record_size = state.range(0);
 
     // Generate some example data
-    system(("python3 ../data/dremel/generate_dremel_data.py " + std::to_string(number_of_records) + " " + std::to_string(average_record_size) + " > /dev/null").c_str());
+    system(("cd ../data/dremel && python3 generate_dremel_data.py " + std::to_string(number_of_records) + " " + std::to_string(average_record_size) + " > /dev/null").c_str());
 
     imlab::Database db;
     std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
