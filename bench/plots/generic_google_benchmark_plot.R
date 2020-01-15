@@ -2,8 +2,19 @@
 
 library(ggplot2)
 library(tidyr)
+library("optparse")
 
-theme_set(theme_classic())
+
+option_list <- list(
+  make_option(c("-n", "--name"), type="character", default=NULL,
+              help="Name of the benchmark. Will influence plot title and the file it is saved to.", metavar="character"),
+  make_option(c("-p", "--parameter"), type="character", default=NULL,
+              help="If the benchmark has a parameter (plotted on x-axis), how should the axis be labeld?", metavar="character")
+);
+opt_parser <- OptionParser(option_list=option_list);
+opt <- parse_args(opt_parser);
+
+theme_set(theme_minimal())
 
 # Colorblind-friendly palette
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
@@ -20,8 +31,9 @@ benchmark_data <- separate(benchmark_data, "name", c("name", "parameter"), sep =
 
 ggplot(benchmark_data, aes(x = parameter, y = cpu_time)) +
   geom_path(aes(color = name)) +
+  expand_limits(y = 0) +
   scale_color_manual(values = cbPalette) +
-  labs(color = "Type") +
+  labs(title = opt$name, color = "Type") +
   ylab("CPU Time") +
-  xlab("Parameter") +
-  ggsave("benchmark_plot.pdf", width = 10, height = 5, device = cairo_pdf)
+  xlab(opt$parameter) +
+  ggsave(paste0(opt$name, ".pdf"), width = 10, height = 5, device = cairo_pdf)

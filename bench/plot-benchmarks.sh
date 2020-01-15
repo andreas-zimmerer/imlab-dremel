@@ -8,6 +8,6 @@ cd ../cmake-build-release
 
 cd ../bench/plots
 
-cat bench_construct_fsm.csv | ./generic_google_benchmark_plot.R
-cat bench_assemble_document.csv | ./generic_google_benchmark_plot.R
-cat bench_assemble_dataset.csv | ./generic_google_benchmark_plot.R
+cat bench_construct_fsm.csv | ./generic_google_benchmark_plot.R --name "FSM Construction Time" --parameter "Number of Fields in the FSM"
+cat bench_assemble_document.csv | ./generic_google_benchmark_plot.R --name "Document Assemling Time" --parameter "Number of Fields in the Assembled Document"
+cat bench_assemble_dataset.csv | ./generic_google_benchmark_plot.R --name "Assembling a generated Dataset of 10 MiB" --parameter "Average Size of a Record from the Dataset in Bytes"
