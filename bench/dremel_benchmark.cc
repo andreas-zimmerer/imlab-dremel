@@ -26,17 +26,23 @@ const auto* Name_Language_Code_Field = Document_Name_Language::descriptor()->Fin
 const auto* Name_Language_Country_Field = Document_Name_Language::descriptor()->FindFieldByName("Country");
 const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
 
-/// Constructs a complete finite state machine for a "Document" record.
-void BM_Construct_Complete_FSM(benchmark::State &state) {
-    auto* DocId = Document::descriptor()->FindFieldByName("DocId");
-    auto* Links_Backward = Document_Links::descriptor()->FindFieldByName("Backward");
-    auto* Links_Forward = Document_Links::descriptor()->FindFieldByName("Forward");
-    auto* Name_Language_Code = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    auto* Name_Language_Country = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    auto* Name_Url = Document_Name::descriptor()->FindFieldByName("Url");
+
+/// Constructs a finite state machine for a "Document" record with a given number of fields.
+/// Pass the number of fields as a parameter to this benchmark.
+void BM_Construct_FSM_Fields(benchmark::State &state) {
+    std::vector<const FieldDescriptor*> available_fields = {
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    };
+    assert(state.range(0) <= available_fields.size());
+    std::vector<const FieldDescriptor*> fields_for_construction = { available_fields.begin(), available_fields.begin() + state.range(0) };
 
     for (auto _ : state) {
-        RecordFSM fsm { std::vector<const FieldDescriptor*>{DocId, Links_Backward, Links_Forward, Name_Language_Code, Name_Language_Country, Name_Url} };
+        RecordFSM fsm { std::vector<const FieldDescriptor*>{fields_for_construction}};
     }
 
     state.SetItemsProcessed(state.iterations());
@@ -89,6 +95,7 @@ void BM_Load_Generated_Dataset(benchmark::State &state) {
 /// Measure the time it takes for the get()-operation. Involves:
 ///  * building the FSM to get the appropriate fields.
 ///  * assemble record
+/// Pass the number of fields in the assembled record as a parameter to this benchmark.
 void BM_Assemble_Document(benchmark::State &state) {
     imlab::Database db {};
 
@@ -115,24 +122,19 @@ void BM_Assemble_Document(benchmark::State &state) {
 
     db.DocumentTable.insert(document);
 
-    // FieldDescriptors of fields we want to retrieve.
-    const auto* DocId_Field = Document::descriptor()->FindFieldByName("DocId");
-    const auto& Links_Field = Document::descriptor()->FindFieldByName("links");
-    const auto* Links_Backward_Field = Document_Links::descriptor()->FindFieldByName("Backward");
-    const auto* Links_Forward_Field = Document_Links::descriptor()->FindFieldByName("Forward");
-    const auto* Name_Language_Code_Field = Document_Name_Language::descriptor()->FindFieldByName("Code");
-    const auto* Name_Language_Country_Field = Document_Name_Language::descriptor()->FindFieldByName("Country");
-    const auto* Name_Url_Field = Document_Name::descriptor()->FindFieldByName("Url");
+    std::vector<const FieldDescriptor*> available_fields = {
+        DocId_Field,
+        Links_Backward_Field,
+        Links_Forward_Field,
+        Name_Language_Code_Field,
+        Name_Language_Country_Field,
+        Name_Url_Field
+    };
+    assert(state.range(0) <= available_fields.size());
+    std::vector<const FieldDescriptor*> fields_for_construction = { available_fields.begin(), available_fields.begin() + state.range(0) };
 
     for (auto _ : state) {
-        const auto& record = db.DocumentTable.get(0, {
-            DocId_Field,
-            Links_Backward_Field,
-            Links_Forward_Field,
-            Name_Language_Code_Field,
-            Name_Language_Country_Field,
-            Name_Url_Field
-        });
+        const auto& record = db.DocumentTable.get(0, fields_for_construction);
     }
 
     state.SetItemsProcessed(state.iterations());
@@ -140,8 +142,8 @@ void BM_Assemble_Document(benchmark::State &state) {
 
 /// Measures the time it takes to asseble all records from a randomly generated dataset.
 /// You can pass the average record size in byte as an parameter of this benchmark.
-void BM_Assembly_Generated_Dataset(benchmark::State &state) {
-    uint64_t number_of_records = 100 * 1024 * 1024 / state.range(0);  // ~ 100 MiB
+void BM_Assembly_Generated_Dataset_Singlethreaded(benchmark::State &state) {
+    uint64_t number_of_records = 50 * 1024 * 1024 / state.range(0);  // ~ 50 MiB
     uint64_t average_record_size = state.range(0);
 
     // Generate some example data
@@ -170,7 +172,7 @@ void BM_Assembly_Generated_Dataset(benchmark::State &state) {
 /// Measures the time it takes to asseble all records from a randomly generated dataset.
 /// You can pass the average record size in byte as an parameter of this benchmark.
     void BM_Assembly_Generated_Dataset_Multithreaded(benchmark::State &state) {
-        uint64_t number_of_records = 100 * 1024 * 1024 / state.range(0);  // ~ 100 MiB
+        uint64_t number_of_records = 50 * 1024 * 1024 / state.range(0);  // ~ 50 MiB
         uint64_t average_record_size = state.range(0);
 
         // Generate some example data
@@ -200,12 +202,12 @@ void BM_Assembly_Generated_Dataset(benchmark::State &state) {
 
 }  // namespace
 
-BENCHMARK(BM_Construct_Complete_FSM);
-BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
-BENCHMARK(BM_Load_Generated_Dataset)->Iterations(2)->Unit(benchmark::kMillisecond);
-BENCHMARK(BM_Assemble_Document);
-BENCHMARK(BM_Assembly_Generated_Dataset)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(64, 4096);
-BENCHMARK(BM_Assembly_Generated_Dataset_Multithreaded)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(64, 4096);
+BENCHMARK(BM_Construct_FSM_Fields)->DenseRange(1, 6);
+//BENCHMARK(BM_Shredding_nLanguage)->RangeMultiplier(2)->Range(1, 1024);
+//BENCHMARK(BM_Load_Generated_Dataset)->Iterations(2)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_Assemble_Document)->DenseRange(1, 6);
+BENCHMARK(BM_Assembly_Generated_Dataset_Singlethreaded)->Unit(benchmark::kMillisecond)->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
+BENCHMARK(BM_Assembly_Generated_Dataset_Multithreaded)->Unit(benchmark::kMillisecond)->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
