@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------------
-# MODERNDBS
+# IMLAB
 # ---------------------------------------------------------------------------
 
 include(ExternalProject)
 find_package(Git REQUIRED)
 
-# Get gflags
+# Get benchmark
 ExternalProject_Add(
     benchmark_src
     PREFIX "vendor/benchmark"
@@ -22,7 +22,7 @@ ExternalProject_Add(
     BUILD_BYPRODUCTS <INSTALL_DIR>/lib/libbenchmark.a
 )
 
-# Prepare gflags
+# Prepare benchmark
 ExternalProject_Get_Property(benchmark_src install_dir)
 set(BENCHMARK_INCLUDE_DIR ${install_dir}/include)
 set(BENCHMARK_LIBRARY_PATH ${install_dir}/lib/libbenchmark.a)
