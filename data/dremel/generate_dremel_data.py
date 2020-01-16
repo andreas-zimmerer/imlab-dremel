@@ -13,6 +13,7 @@ import json
 import csv
 import random
 import string
+import os.path
 
 if len(sys.argv) != 3:
     print('Script requires two arguments: <number> and <size>')
@@ -103,6 +104,11 @@ def generate_record(entry_id):
     return entry
 
 
+# Check if file already exists
+json_filename = 'generated_data_' + str(TOTAL_NUMBER_OF_RECORDS) + '_' + str(AVG_SIZE_OF_RECORD) + '.json'
+if os.path.isfile(json_filename):
+    sys.exit(0)
+
 # Create TOTAL_NUMBER_OF_ENTRIES random entries
 random.seed(1234)
 records = [generate_record(i) for i in range(TOTAL_NUMBER_OF_RECORDS)]
@@ -114,7 +120,7 @@ print('Generated ' + str(TOTAL_NUMBER_OF_RECORDS) + ' random records with total 
 print('Avg. ' + str(total_size / TOTAL_NUMBER_OF_RECORDS) + ' bytes per record.')
 
 # JSON format
-with open('data.json', 'w') as file:
+with open(json_filename, 'w') as file:
     file.write(json.dumps(records, indent=2))
 
 # DB columnar format in CSV

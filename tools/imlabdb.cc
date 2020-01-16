@@ -18,7 +18,8 @@ using QueryCompiler = imlab::queryc::QueryCompiler;
 imlab::Database loadDatabase() {
     imlab::Database database{};
 
-    std::fstream dremel_file("../data/dremel/data.json", std::fstream::in);
+    system("cd ../data/dremel && python3 generate_dremel_data.py 10240 1024");  // ~ 10 MiB
+    std::fstream dremel_file("../data/dremel/generated_data_10240_1024.json", std::fstream::in);
     database.LoadDocumentTable(dremel_file);
 
     return database;
