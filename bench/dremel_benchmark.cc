@@ -231,6 +231,7 @@ void BM_Apache_Drill_Json(benchmark::State &state) {
         d1.ParseStream(stream1);
         std::string query_id = d1["queryId"].GetString();
 
+        // Get statistics about the query
         std::stringstream ss2;
         ss2 << "curl -s http://localhost:8047/profiles/" << query_id << ".json > /tmp/drill_response.json";
         auto cmd2 = ss2.str();
@@ -241,8 +242,63 @@ void BM_Apache_Drill_Json(benchmark::State &state) {
         d2.ParseStream(stream2);
         uint64_t duration_millis = d2["end"].GetInt64() - d2["planEnd"].GetInt64();
 
-        state.SetIterationTime(duration_millis);
+        state.SetIterationTime((double)duration_millis / 1000);
     }
+
+    state.SetItemsProcessed(number_of_records);
+    state.SetBytesProcessed(number_of_records * average_record_size);  // only rough estimation
+}
+
+/// I am NOT proud of how this benchmark is written.
+void BM_Apache_Drill_Parquet(benchmark::State &state) {
+    uint64_t number_of_records = 50 * 1024 * 1024 / state.range(0);  // ~ 50 MiB
+    uint64_t average_record_size = state.range(0);
+
+    std::string test_data_file = GenerateTestData(number_of_records, average_record_size);
+
+    // Setup: Convert the JSON file to a Parquet table
+    std::stringstream ss1;
+    ss1 << "curl -s -X POST -H \"Content-Type: application/json\" ";
+    ss1 << R"(-d '{"queryType":"SQL", "query": "CREATE TABLE dfs.tmp.benchmark_parquet AS (SELECT DocId, Name FROM dfs.`)" << std::filesystem::current_path().string() << "/" << test_data_file << R"##(`)", "autoLimit":0}' )##";
+    ss1 << "http://localhost:8047/query.json > /tmp/drill_response.json";
+    auto cmd1 = ss1.str();
+    system(cmd1.c_str());
+
+    for (auto _ : state) {
+        // Submit query and get its id
+        std::stringstream ss2;
+        ss2 << "curl -s -X POST -H \"Content-Type: application/json\" ";
+        ss2 << R"(-d '{"queryType":"SQL", "query": "select * from dfs.tmp.benchmark_parquet", "autoLimit":0}' )";
+        ss2 << "http://localhost:8047/query.json > /tmp/drill_response.json";
+        auto cmd2 = ss2.str();
+        system(cmd2.c_str());
+        std::ifstream s2("/tmp/drill_response.json");
+        rapidjson::IStreamWrapper stream1(s2);
+        rapidjson::Document d2;
+        d2.ParseStream(stream1);
+        std::string query_id = d2["queryId"].GetString();
+
+        // Get statistics about the query
+        std::stringstream ss3;
+        ss3 << "curl -s http://localhost:8047/profiles/" << query_id << ".json > /tmp/drill_response.json";
+        auto cmd3 = ss3.str();
+        system(cmd3.c_str());
+        std::ifstream s3("/tmp/drill_response.json");
+        rapidjson::IStreamWrapper stream3(s3);
+        rapidjson::Document d3;
+        d3.ParseStream(stream3);
+        uint64_t duration_millis = d3["end"].GetInt64() - d3["planEnd"].GetInt64();
+
+        state.SetIterationTime((double)duration_millis / 1000);
+    }
+
+    // Tear down: remove the Parquet table
+    std::stringstream ss4;
+    ss4 << "curl -s -X POST -H \"Content-Type: application/json\" ";
+    ss4 << R"(-d '{"queryType":"SQL", "query": "DROP TABLE dfs.tmp.benchmark_parquet", "autoLimit":0}' )";
+    ss4 << "http://localhost:8047/query.json > /tmp/drill_response.json";
+    auto cmd4 = ss4.str();
+    system(cmd4.c_str());
 
     state.SetItemsProcessed(number_of_records);
     state.SetBytesProcessed(number_of_records * average_record_size);  // only rough estimation
@@ -256,7 +312,8 @@ BENCHMARK(BM_Construct_FSM_Fields)->DenseRange(1, 6);
 BENCHMARK(BM_Assemble_Document)->DenseRange(1, 6);
 BENCHMARK(BM_Assembly_Generated_Dataset_Singlethreaded)->Unit(benchmark::kMillisecond)->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
 BENCHMARK(BM_Assembly_Generated_Dataset_Multithreaded)->Unit(benchmark::kMillisecond)->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
-BENCHMARK(BM_Apache_Drill_Json)->Unit(benchmark::kMicrosecond)->UseManualTime()->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
+BENCHMARK(BM_Apache_Drill_Json)->Unit(benchmark::kMillisecond)->UseManualTime()->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
+BENCHMARK(BM_Apache_Drill_Parquet)->Unit(benchmark::kMillisecond)->UseManualTime()->Iterations(5)->RangeMultiplier(2)->Range(64, 4096);
 
 int main(int argc, char** argv) {
     benchmark::Initialize(&argc, argv);
