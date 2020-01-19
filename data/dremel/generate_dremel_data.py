@@ -44,7 +44,7 @@ def calculate_record_size(record):
     elif type(record) == int:
         size += 8  # 64 bit integer
     elif type(record) == str:
-        size += len(record)
+        size += len(record) + 1
     else:
         print(type(record))
     return size
@@ -54,10 +54,10 @@ def generate_record(entry_id):
     entry = {'DocId': entry_id}
 
     # Optionally create a "Links" field
-    if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
+    if random.random() <= LIKELIHOOD_OPTIONAL_FIELDS:
         # Create a random number of "Backward" links
         avg_bytes_links = (AVG_SIZE_OF_RECORD - 8) / 2
-        number_backward = random.randrange(0, round(avg_bytes_links / 2 / 8) * 2)
+        number_backward = round(random.uniform(0, (avg_bytes_links / 2 / 8) * 2))
         if number_backward > 0:
             if 'Links' not in entry:
                 entry['Links'] = {}
@@ -66,7 +66,7 @@ def generate_record(entry_id):
             entry['Links']['Backward'].append(random.randrange(1000))
 
         # Create a random number of "Forward" links
-        number_forward = random.randrange(0, round(avg_bytes_links / 2 / 8) * 2)
+        number_forward = round(random.uniform(0, (avg_bytes_links / 2 / 8) * 2))
         if number_forward > 0:
             if 'Links' not in entry:
                 entry['Links'] = {}
@@ -75,17 +75,17 @@ def generate_record(entry_id):
             entry['Links']['Forward'].append(random.randrange(1000))
 
     avg_bytes_names = (AVG_SIZE_OF_RECORD - 8) / 2
-    number_name = random.randrange(0, round(avg_bytes_names / 41) * 2)
+    number_name = round(random.uniform(0, (avg_bytes_names / 48) * 2))
     if number_name > 0:
         entry['Name'] = []
-        for n in range(number_name):  # because avg. 3 languages per name -> size of name is on average 28
+        for n in range(number_name):  # because avg. 3 languages per name -> size of name is on average 48
             name = {}
 
             # Create a random number of "Languages"
-            number_language = random.randrange(0, 3 * 2)  # on average 3 languages per name
+            number_language = round(random.uniform(0, 3 * 2))  # on average 3 languages per name
             if number_language > 0:
                 name['Language'] = []
-                for l in range(number_language):  # one language field has on average a size of 6
+                for l in range(number_language):  # one language field has on average a size of 9
                     country_idx = random.randrange(0, len(country_codes))
                     language = {'Code': country_codes[country_idx]}
 
@@ -95,7 +95,7 @@ def generate_record(entry_id):
                     name['Language'].append(language)
 
             # Optionally create a "Url" for a "Name
-            if random.random() < LIKELIHOOD_OPTIONAL_FIELDS:
+            if random.random() <= LIKELIHOOD_OPTIONAL_FIELDS:
                 name['Url'] = 'http://' + random_string() + '.' + random_string(2)
 
             if number_language > 0 or 'Url' in name:  # only add name if it contains something
