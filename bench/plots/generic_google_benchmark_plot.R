@@ -35,6 +35,6 @@ ggplot(benchmark_data, aes(x = parameter, y = cpu_time)) +
   scale_x_log10(breaks = unique(benchmark_data$parameter)) +
   scale_color_manual(values = cbPalette) +
   labs(title = opt$name, color = "Type") +
-  ylab("CPU Time") +
+  ylab(paste0("CPU Time ", "[", levels(benchmark_data$time_unit), "]")) +
   xlab(opt$parameter) +
   ggsave(paste0(opt$name, ".pdf"), width = 10, height = 5, device = cairo_pdf)
